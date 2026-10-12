@@ -1,0 +1,16 @@
+@use '@angular/material' as mat;
+
+// Standalone bootstrap only. Federated consumers inherit their host's theme.
+html {
+  @include mat.theme((
+    color: mat.$azure-palette,
+    typography: Roboto,
+    density: 0,
+  ));
+}
+body {
+  margin: 0;
+  font-family: Roboto, sans-serif;
+  color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-surface);
+}
