@@ -5,20 +5,13 @@ Connect a gateway, discover its tools, and inspect public workshop summaries,
 ordered workshop outlines and published coding labs with expandable JSON results.
 The current gateway is read-only; this remote does not publish or modify content.
 
+## Connection
+
+Open the [production console](https://admin.ngx-workshop.io/ai-publisher/console) and choose **Connect Ngx Workshop**. Sign in with your Ngx Workshop account and approve catalog:read consent. The public browser client uses PKCE; no pasted token or client secret is needed. Tokens stay in memory, expire within ten minutes and require reconnection. The shell’s legacy session is separate from MCP authorization.
+
 ## Development
 
-Use Node 22, then `npm ci` and `npm start`. The console runs on port 4201;
-its local `/mcp` proxy forwards to `http://127.0.0.1:3011/mcp`. Start the gateway
-and its catalog owners separately. Supply an OAuth access token with `catalog:read`
-for the gateway resource. Tokens stay in memory, are cleared from the form after
-connection, and are discarded on disconnect/navigation. A blank token works only
-with a gateway explicitly configured for local-public development.
-
-The deployed gateway is `https://mcp.ngx-workshop.io/mcp`. Browser connectivity
-requires an approved origin plus MCP CORS, or a correctly configured same-origin
-proxy. The current admin host does not yet provide the default `/mcp` route.
-The Angular dev proxy is not deployed. Browser OAuth sign-in needs an approved
-client registration/callback; the shell’s existing session cookies are not bearer access.
+Use Node 22, `npm ci` and `npm start`. The remote runs on port 4201. Full-page OAuth requires its exact production callback; standalone development uses test doubles. Preserve federation exports and use published gateway contracts. See [OAuth handoff](specs/003-console-oauth/handoff.md) for deployment evidence and backend configuration.
 
 ## Checks
 
