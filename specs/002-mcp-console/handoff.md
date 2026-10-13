@@ -1,3 +1,5 @@
+> The browser connection and deployment handoff is superseded by [003 console OAuth](../003-console-oauth/handoff.md). Manual token-entry guidance below is historical.
+
 # Handoff: MCP catalog console
 Status: Implemented; integration pending
 Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Tasks: [tasks.md](tasks.md)
