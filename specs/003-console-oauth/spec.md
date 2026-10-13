@@ -1,5 +1,5 @@
 # Browser OAuth connection
-Status: In progress
+Status: Complete; production browser acceptance verified
 
 FR-001: The production console connects through Ngx Workshop sign-in and explicit catalog:read consent using a dedicated public client and S256 PKCE. No pasted credential or browser client secret.
 FR-002: The exact callback is https://admin.ngx-workshop.io/ai-publisher/console; issuer and resource are fixed. Validate single-use state, issuer, callback and ten-minute transaction lifetime. Remove callback parameters before token redemption.
