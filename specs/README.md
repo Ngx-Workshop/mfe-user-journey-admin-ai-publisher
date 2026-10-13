@@ -21,3 +21,5 @@ the largest folder number is not automatically the active feature.
 | 003 Browser OAuth connection | Complete | [Spec](003-console-oauth/spec.md) | [Plan](003-console-oauth/plan.md) | [Tasks](003-console-oauth/tasks.md) | [Handoff](003-console-oauth/handoff.md) |
 
 | 004 Workshop publishing | Implemented; live integration pending | [Spec](004-workshop-publishing/spec.md) | [Plan](004-workshop-publishing/plan.md) | [Tasks](004-workshop-publishing/tasks.md) | [Handoff](004-workshop-publishing/handoff.md) |
+
+| 005 MCP Gateway migration | Implemented; integration pending | [Spec](005-mcp-gateway-migration/spec.md) | [Plan](005-mcp-gateway-migration/plan.md) | [Tasks](005-mcp-gateway-migration/tasks.md) | [Handoff](005-mcp-gateway-migration/handoff.md) |

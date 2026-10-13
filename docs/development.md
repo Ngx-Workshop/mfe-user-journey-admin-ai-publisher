@@ -1,30 +1,19 @@
 # Development and verification
-Updated 2026-10-12. Use Node 22 and the committed lockfile.
+
+Updated 2026-10-13. Use Node 22 and the committed lockfile.
 
 | Purpose | Command |
 | --- | --- |
-| Install | `npm ci` |
-| Architecture | `npm run check:architecture` |
-| Local dev with MCP proxy | `npm start` |
-| Production build | `npm run build` |
-| Isolated verification build | `npm run build -- --output-path dist/console-verification` |
-| Behavior tests | `npm test -- --watch=false --browsers=ChromeHeadless` |
-| Strict source/unused checks | `npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p tsconfig.app.json` |
-| Test types | `npx tsc --noEmit -p tsconfig.spec.json` |
+| Install | npm ci |
+| Architecture | npm run check:architecture |
+| Local dev | npm start |
+| Isolated production build | npm run build -- --output-path dist/migration-verification |
+| Behavior tests | npm test -- --watch=false --browsers=ChromeHeadless |
+| Strict source checks | npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p tsconfig.app.json |
+| Test types | npx tsc --noEmit -p tsconfig.spec.json |
 
-Production connection uses the Connect Ngx Workshop button, real account login and catalog consent. No pasted bearer token is required. Full-page OAuth must start on the exact registered production console callback; standalone development builds can exercise the protocol with test doubles. Do not put credentials in files, URLs or source configuration. Browser bearer tokens last at most ten minutes and reconnect explicitly; legacy shell sessions do not authorize MCP.
+Tests mirror runtime folders under testing/app and use HTTP/store doubles for publishing and application composition. Manual acceptance covers section browsing, generation, JSON import/edit, draft validation/review, publication and receipt recovery. These actions require a real administrator shell session and configured server-side model/owner services. Synthetic tests do not prove live generation or publication.
 
-Tests in testing/app mirror runtime folders. The protocol test intercepts fetch
-and validates the real SDK’s modern handshake/discovery/call headers and arguments.
-Store tests cover errors, schema validation, duplicate requests and disconnect races.
-Presentation tests cover empty lists, ordered outline/drilldown and inert lab content.
-These are synthetic doubles, not live OAuth/catalog verification.
+The local proxy routes /api/publisher to the gateway publishing facade. The API has a 180-second timeout; a timeout may leave a server run active. Keep the displayed request ID and inspect its receipt before another publish. The shell's localhost remote override can load the local bundle. Build in an isolated output directory to avoid competing with a running watcher.
 
-Manual acceptance: check disconnected/loading/error/empty/content states, labeled
-keyboard submissions, narrow and desktop layouts, expiry and callback validation and disconnect during
-requests. Use the admin shell’s remote override for localhost:4201/remoteEntry.js.
-See specs/003-console-oauth/handoff.md for production registration and evidence. CI and deployment retain architecture/tests/build checks.
-
-## Publishing acceptance
-
-The local proxy routes /api/publisher to the local gateway /publisher facade. Publishing requires an actual platform administrator sign-in and an enabled gateway even in local-public catalog mode. Standalone preview can display forms without signing in. The API has a 180-second timeout; a timeout may leave the server run active. Keep the displayed request ID and inspect the receipt before another publish. Model generation needs server-only model/API credentials. Live model and owning-service acceptance remains pending; synthetic behavior tests do not prove deployment.
+MCP catalog/SDK/OAuth verification now belongs to mfe-user-journey-admin-mcp-gateway at /mcp-gateway/overview. See [migration handoff](../specs/005-mcp-gateway-migration/handoff.md).

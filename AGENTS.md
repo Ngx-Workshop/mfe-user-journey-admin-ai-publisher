@@ -1,6 +1,6 @@
 # Agent entry point — mfe-user-journey-admin-ai-publisher
 
-This repository is the Angular admin MCP catalog console for Ngx-Workshop. Assume you have
+This repository is the Angular administrator workshop publishing console for Ngx-Workshop. Assume you have
 access to this repository only. The shell, gateway, services, and shared libraries
 are separate repositories; their source is not required to understand this remote.
 

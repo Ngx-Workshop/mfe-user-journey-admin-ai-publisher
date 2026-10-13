@@ -1,58 +1,38 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { App } from '../../src/app/app';
-import { McpApiService } from '../../src/app/features/mcp-console/api/mcp-api.service';
-import { McpConsoleStore } from '../../src/app/features/mcp-console/state/mcp-console.store';
-import { mcpCatalogContract } from '@tmdjr/service-mcp-gateway-contracts';
+import { Routes } from '../../src/app/app.routes';
 
-describe('MCP console journey', () => {
-  beforeEach(() =>
+describe('AI Publisher journey', () => {
+  let http: HttpTestingController;
+  beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [App],
-      providers: [
-        provideZonelessChangeDetection(),
-        {
-          provide: McpApiService,
-          useValue: {
-            open: async () => ({
-              server: 'Test gateway · 1',
-              tools: mcpCatalogContract.tools,
-              call: async () => ({
-                content: [],
-                structuredContent: { workshops: [] },
-              }),
-              close: async () => undefined,
-            }),
-          },
-        },
-      ],
-    })
-  );
-  it('renders a disconnected console without issuing automatic requests', async () => {
+      providers: [provideZonelessChangeDetection(), provideHttpClient(), provideHttpClientTesting()],
+    });
+    http = TestBed.inject(HttpTestingController);
+  });
+  afterEach(() => http.verify());
+
+  it('renders publishing controls without the MCP explorer or automatic HTTP requests', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
-    fixture.detectChanges();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('h1')?.textContent).toContain(
-      'Create and publish workshops.'
-    );
-    expect(el.textContent).toContain('Disconnected');
-    expect(el.textContent).toContain('AI workshop publisher');
-    expect(el.querySelectorAll('.console__tool').length).toBe(3);
-    expect(el.querySelector('input[type="password"]')).toBeNull();
-    expect(el.textContent).toContain('Connect Ngx Workshop');
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('h1')?.textContent).toContain('Create and publish workshops.');
+    expect(element.textContent).toContain('Work with your Publishing Agent');
+    expect(element.textContent).toContain('Check publishing receipt');
+    expect(element.querySelector('ngx-workshop-publishing')).not.toBeNull();
+    expect(element.querySelector('ngx-mcp-console')).toBeNull();
+    expect(element.textContent).not.toContain('Connect Ngx Workshop');
+    http.expectNone(() => true);
   });
-  it('renders connected identity and an honest empty result', async () => {
-    const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
-    const store = TestBed.inject(McpConsoleStore);
-    await store.connect({ endpoint: '/mcp', token: '' });
-    await store.run('list_workshops', { sectionId: 'angular' });
-    fixture.detectChanges();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('Test gateway · 1');
-    expect(el.textContent).toContain('No workshops in this section');
-    expect(el.textContent).toContain('View response JSON');
+
+  it('keeps the console route and compatibility redirect', () => {
+    expect(Routes.find(route => route.path === '')?.redirectTo).toBe('console');
+    expect(Routes.find(route => route.path === 'console')?.component).toBe(App);
+    expect(Routes.find(route => route.path === 'hello-world')?.redirectTo).toBe('console');
   });
 });
