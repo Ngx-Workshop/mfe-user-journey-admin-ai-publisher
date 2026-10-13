@@ -1,3 +1,4 @@
+import { PublishingComponent } from '../../../workshop-publishing/pages/publishing.component';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,16 +10,17 @@ import { ResultComponent } from '../../components/result/result.component';
 
 @Component({
   selector: 'ngx-mcp-console',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatProgressBarModule, ResultComponent],
+  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatProgressBarModule, ResultComponent, PublishingComponent],
   providers: [ConsoleViewModel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="console">
       <header class="console__header">
-        <div><p class="console__eyebrow">NGX WORKSHOP / AI PUBLISHER</p><h1>Your catalog, connected.</h1>
-          <p class="console__intro">Explore the content your MCP server makes available to AI clients.</p></div>
-        <span class="console__badge">Read-only catalog</span>
+        <div><p class="console__eyebrow">NGX WORKSHOP / AI PUBLISHER</p><h1>Create and publish workshops.</h1>
+          <p class="console__intro">Create learning materials with your Publishing Agent and explore the workshop catalog.</p></div>
+        <span class="console__badge">AI workshop publisher</span>
       </header>
+      <ngx-workshop-publishing />
       <section class="console__connection" aria-labelledby="connection-title">
         <div class="console__section-heading"><div><p class="console__eyebrow">01 / CONNECT</p><h2 id="connection-title">MCP gateway</h2></div>
           <span class="console__status" role="status">{{ vm.status() === 'connected' ? '● Connected' : vm.status() === 'connecting' ? '◌ Connecting…' : '○ Disconnected' }}</span></div>

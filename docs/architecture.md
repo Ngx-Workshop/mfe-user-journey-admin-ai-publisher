@@ -2,7 +2,7 @@
 Updated 2026-10-12 for [002 MCP console](../specs/002-mcp-console/spec.md).
 
 ## Responsibilities and source map
-The remote owns an administrator’s read-only MCP exploration journey. The gateway
+The remote owns an administrator’s workshop publishing and read-only MCP exploration journey. The gateway
 owns tools, authentication enforcement and public domain projections. The shell
 owns navigation, theme and legacy browser authentication.
 
@@ -48,3 +48,7 @@ Both backend production profiles approve https://admin.ngx-workshop.io alongside
 
 Build output and deployment target remain dist/mfe-user-journey-admin-ai-publisher
 and /opt/mfe-remotes/mfe-user-journey-admin-ai-publisher. Deployment and acceptance evidence belong in specs/003-console-oauth/handoff.md.
+
+## Workshop publishing
+
+features/workshop-publishing provides a stateless HTTP facade client, singleton execution/section store, scoped draft-review VM, and an OnPush publishing view. The existing shell administrator session authorizes /api/publisher/tools; catalog OAuth remains independent. Administrators can browse sections, generate a brief-based draft or import JSON, inspect documentation/labs/assessment, validate edits, explicitly publish, and inspect receipts. Inputs and request ID survive failed publication. Editing invalidates the reviewed draft; a publish attempt blocks repeat submission until receipt reconciliation. Shared store blocks overlapping commands; disposed views do not accept late results. Credentials remain in the existing shell session; model credentials stay server-side. Generated contract types/schemas use a committed vendor 1.1.0 package until registry publication.

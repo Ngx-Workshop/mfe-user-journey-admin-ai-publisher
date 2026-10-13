@@ -3,5 +3,13 @@
     "target": "http://127.0.0.1:3011",
     "secure": false,
     "changeOrigin": true
+  },
+  "/api/publisher": {
+    "target": "http://127.0.0.1:3011",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/publisher": "/publisher"
+    }
   }
 }

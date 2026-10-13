@@ -16,8 +16,8 @@ describe('MCP console journey', () => {
     const fixture = TestBed.createComponent(App); fixture.detectChanges();
     await fixture.whenStable(); fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('h1')?.textContent).toContain('Your catalog, connected.');
-    expect(el.textContent).toContain('Disconnected'); expect(el.textContent).toContain('Read-only catalog');
+    expect(el.querySelector('h1')?.textContent).toContain('Create and publish workshops.');
+    expect(el.textContent).toContain('Disconnected'); expect(el.textContent).toContain('AI workshop publisher');
     expect(el.querySelectorAll('.console__tool').length).toBe(3);
     expect(el.querySelector('input[type="password"]')).toBeNull();
     expect(el.textContent).toContain('Connect Ngx Workshop');

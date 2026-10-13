@@ -24,3 +24,7 @@ Manual acceptance: check disconnected/loading/error/empty/content states, labele
 keyboard submissions, narrow and desktop layouts, expiry and callback validation and disconnect during
 requests. Use the admin shell’s remote override for localhost:4201/remoteEntry.js.
 See specs/003-console-oauth/handoff.md for production registration and evidence. CI and deployment retain architecture/tests/build checks.
+
+## Publishing acceptance
+
+The local proxy routes /api/publisher to the local gateway /publisher facade. Publishing requires an actual platform administrator sign-in and an enabled gateway even in local-public catalog mode. Standalone preview can display forms without signing in. The API has a 180-second timeout; a timeout may leave the server run active. Keep the displayed request ID and inspect the receipt before another publish. Model generation needs server-only model/API credentials. Live model and owning-service acceptance remains pending; synthetic behavior tests do not prove deployment.
