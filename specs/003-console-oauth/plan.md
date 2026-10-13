@@ -1,0 +1,4 @@
+# Plan
+Use a stateless OAuth API for the fixed authorization server, Web Crypto PKCE and single-use tab transaction. A scoped VM orchestrates authorization and gateway connection. The existing root MCP store owns timed connection disposal and generation fencing. Keep published gateway contracts and official SDK transport unchanged.
+Register public client ngx-workshop-ai-publisher-prod with the exact console callback. Existing oidc-provider client-based CORS and MCP preflight gates support exact approved origins; configure both runtimes without rotating persistent keys. Existing interaction CSP derives the registered callback origin.
+Run architecture/types, behavioral tests and production build, deploy through the existing frontend workflow, and verify browser authorization and three catalog calls. No Nest auth client is imported into Angular: its confidential introspection belongs at the server boundary.

@@ -12,6 +12,10 @@ below with relative links. A feature folder contains `spec.md`, `plan.md`,
 | --- | --- | --- | --- | --- | --- |
 | 001 MVVM starter | Complete | [Spec](001-mvvm-starter/spec.md) | [Plan](001-mvvm-starter/plan.md) | [Tasks](001-mvvm-starter/tasks.md) | [Handoff](001-mvvm-starter/handoff.md) |
 
+| 002 MCP catalog console | Implemented; integration pending | [Spec](002-mcp-console/spec.md) | [Plan](002-mcp-console/plan.md) | [Tasks](002-mcp-console/tasks.md) | [Handoff](002-mcp-console/handoff.md) |
+
 Keep one row per feature, retain completed records for rationale, and update
 status when work changes. Select work from the user's request and this index;
 the largest folder number is not automatically the active feature.
+
+| 003 Browser OAuth connection | In progress | [Spec](003-console-oauth/spec.md) | [Plan](003-console-oauth/plan.md) | [Tasks](003-console-oauth/tasks.md) | [Handoff](003-console-oauth/handoff.md) |
