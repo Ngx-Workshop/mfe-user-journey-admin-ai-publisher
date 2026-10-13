@@ -1,0 +1,7 @@
+{
+  "/mcp": {
+    "target": "http://127.0.0.1:3011",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

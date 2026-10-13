@@ -1,8 +1,8 @@
 # Agent entry point — mfe-user-journey-admin-ai-publisher
 
-This repository is the Angular remote seed for Ngx-Workshop. Assume you have
+This repository is the Angular admin MCP catalog console for Ngx-Workshop. Assume you have
 access to this repository only. The shell, gateway, services, and shared libraries
-are separate repositories; their source is not required to understand this seed.
+are separate repositories; their source is not required to understand this remote.
 
 ## Read before implementation
 
@@ -39,7 +39,7 @@ All links above resolve within this checkout. Do not assume a sibling repository
 - Use switchMap for replaceable reads, concatMap for ordered writes when required,
   exhaustMap for duplicate-sensitive commands and lifetime-bound subscriptions.
 - Run `npm run check:architecture` alongside appropriate tests/builds.
-- Keep API calls in stateless API clients and use published contract types. Do not recreate a
+- Keep HTTP/MCP calls in stateless API clients and use published contract types. Do not recreate a
   backend or load another remote inside this remote to work around missing access.
 - Resolve routine implementation choices and record assumptions. Ask only for
   missing decisions that materially affect requirements or external compatibility;

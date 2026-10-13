@@ -46,6 +46,7 @@ jobs:
         run: |
           npm ci
           npm run check:architecture
+          npm test -- --watch=false --browsers=ChromeHeadless
           npm run build -- --configuration production
           test -f dist/mfe-user-journey-admin-ai-publisher/index.html
 

@@ -1,45 +1,26 @@
 # Development and verification
+Updated 2026-10-12. Use Node 22 and the committed lockfile.
 
-Use Node 22 (CI baseline) and the committed lockfile. Private registry access may
-be needed for npm ci; no sibling repository is required.
+| Purpose | Command |
+| --- | --- |
+| Install | `npm ci` |
+| Architecture | `npm run check:architecture` |
+| Local dev with MCP proxy | `npm start` |
+| Production build | `npm run build` |
+| Isolated verification build | `npm run build -- --output-path dist/console-verification` |
+| Behavior tests | `npm test -- --watch=false --browsers=ChromeHeadless` |
+| Strict source/unused checks | `npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p tsconfig.app.json` |
+| Test types | `npx tsc --noEmit -p tsconfig.spec.json` |
 
-| Purpose | Command | Notes |
-| --- | --- | --- |
-| Install | `npm ci` | Uses existing dependency versions |
-| Architecture | `npm run check:architecture` | Folder/API/state/inline/BEM/typed-code guard; >230 component lines requests review |
-| Dev server | `npm start` | Port 4201; no backend supplied |
-| Local bundle | `npm run dev:bundle` | Production watch + static CORS server; avoid competing servers |
-| Build | `npm run build` | Production federation bundle |
-| Isolated build | `npm run build -- --output-path dist/starter-verification` | Avoid overwriting an existing watcher output |
-| Tests | `npm test -- --watch=false --browsers=ChromeHeadless` | HTTP doubles; set CHROME_BIN when needed |
-| Types | `npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p tsconfig.app.json` | Source types/unused symbols |
+Production connection uses the Connect Ngx Workshop button, real account login and catalog consent. No pasted bearer token is required. Full-page OAuth must start on the exact registered production console callback; standalone development builds can exercise the protocol with test doubles. Do not put credentials in files, URLs or source configuration. Browser bearer tokens last at most ten minutes and reconnect explicitly; legacy shell sessions do not authorize MCP.
 
-Specs are under testing/app, mirroring src/app; synthetic DTOs live in
-testing/fixtures. See [testing guide](../testing/README.md) for focused commands.
+Tests in testing/app mirror runtime folders. The protocol test intercepts fetch
+and validates the real SDK’s modern handshake/discovery/call headers and arguments.
+Store tests cover errors, schema validation, duplicate requests and disconnect races.
+Presentation tests cover empty lists, ordered outline/drilldown and inert lab content.
+These are synthetic doubles, not live OAuth/catalog verification.
 
-## Verification and automation
-
-Architecture checks complement compiler/tests and do not replace full lint or code
-review. The lightweight script checks explicit source conventions, not every
-semantic dependency. CI runs architecture checks, ChromeHeadless tests and a
-production build. Deployment also runs the architecture guard before building.
-Auth/gateway/host integration must be verified separately with test records.
-No end-to-end framework or general-purpose lint dependency is introduced.
-
-For UI changes inspect loading/empty/error/success states, keyboard form submission,
-validation, dialog retry and narrow layouts. Static bundle serving does not proxy
-/api; supply an explicit local gateway or synthetic fixtures. Host development
-uses the platform's session-local remote override for localhost:4201/remoteEntry.js.
-Standalone appConfig is not installed by host remote loading.
-
-## Current limits and repaired starter defects
-
-The obsolete title test, component API coupling, missing subscription teardown,
-optimized Angular federation initialization, missing standalone Material theme,
-double-slash detail URLs, unsafe casts, partial-address acceptance and false/blank
-update omission are repaired. Save failures retain the editor and its values.
-The generated DTO does not support removing a stored address; blank address edits
-preserve it and the UI explains this. No auth policy, producer change, deployment
-or live-data test is part of this starter upgrade.
-
-See [001 handoff](../specs/001-mvvm-starter/handoff.md) for actual results and limits.
+Manual acceptance: check disconnected/loading/error/empty/content states, labeled
+keyboard submissions, narrow and desktop layouts, expiry and callback validation and disconnect during
+requests. Use the admin shell’s remote override for localhost:4201/remoteEntry.js.
+See specs/003-console-oauth/handoff.md for production registration and evidence. CI and deployment retain architecture/tests/build checks.
