@@ -18,4 +18,4 @@ Keep one row per feature, retain completed records for rationale, and update
 status when work changes. Select work from the user's request and this index;
 the largest folder number is not automatically the active feature.
 
-| 003 Browser OAuth connection | In progress | [Spec](003-console-oauth/spec.md) | [Plan](003-console-oauth/plan.md) | [Tasks](003-console-oauth/tasks.md) | [Handoff](003-console-oauth/handoff.md) |
+| 003 Browser OAuth connection | Complete | [Spec](003-console-oauth/spec.md) | [Plan](003-console-oauth/plan.md) | [Tasks](003-console-oauth/tasks.md) | [Handoff](003-console-oauth/handoff.md) |
