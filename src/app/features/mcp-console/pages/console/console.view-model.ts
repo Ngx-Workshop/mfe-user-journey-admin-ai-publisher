@@ -1,10 +1,20 @@
-import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
+import {
+  computed,
+  DestroyRef,
+  inject,
+  Injectable,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { exhaustMap, from, Subject } from 'rxjs';
 import { OAuthConnectionStore } from '../../state/oauth-connection.store';
 import { McpConsoleStore } from '../../state/mcp-console.store';
-import { toolChoices, type ToolInput, type ToolName } from '../../models/console.models';
+import {
+  toolChoices,
+  type ToolInput,
+  type ToolName,
+} from '../../models/console.models';
 
 @Injectable()
 export class ConsoleViewModel {
@@ -22,8 +32,16 @@ export class ConsoleViewModel {
   readonly running = this.store.running;
   readonly selected = signal<ToolName>('list_workshops');
   readonly choices = toolChoices;
-  readonly active = computed(() => this.choices.find(tool => tool.name === this.selected())!);
-  readonly available = computed(() => this.tools().some(tool => tool.name === this.selected() && tool.annotations?.readOnlyHint === true));
+  readonly active = computed(() =>
+    this.choices.find((tool) => tool.name === this.selected())!
+  );
+  readonly available = computed(() =>
+    this.tools().some(
+      (tool) =>
+        tool.name === this.selected() &&
+        tool.annotations?.readOnlyHint === true
+    )
+  );
   readonly toolForm = new FormGroup({
     sectionId: new FormControl('', { nonNullable: true }),
     workshopId: new FormControl('', { nonNullable: true }),
@@ -34,8 +52,16 @@ export class ConsoleViewModel {
 
   constructor() {
     const destroyRef = inject(DestroyRef);
-    this.commands.pipe(exhaustMap(command => from(command())), takeUntilDestroyed(destroyRef)).subscribe();
-    destroyRef.onDestroy(() => { this.authorization.abort(); this.disconnect(); });
+    this.commands
+      .pipe(
+        exhaustMap((command) => from(command())),
+        takeUntilDestroyed(destroyRef)
+      )
+      .subscribe();
+    destroyRef.onDestroy(() => {
+      this.authorization.abort();
+      this.disconnect();
+    });
     void this.completeSignIn();
   }
 
@@ -68,16 +94,34 @@ export class ConsoleViewModel {
     const labId = value.labId.trim();
     const versionId = value.versionId.trim();
     const objectId = /^[a-f0-9]{24}$/i;
-    const identifier = (id: string) => id.length > 0 && id.length <= 120;
-    if (name !== 'get_coding_lab' && (!identifier(sectionId) || (name === 'get_workshop' && !identifier(workshopId)))) {
-      this.validation.set('Enter a section ID and, when needed, a workshop ID. Each must contain 1–120 characters.'); return;
+    const identifier = (id: string) =>
+      id.length > 0 && id.length <= 120;
+    if (
+      name !== 'get_coding_lab' &&
+      (!identifier(sectionId) ||
+        (name === 'get_workshop' && !identifier(workshopId)))
+    ) {
+      this.validation.set(
+        'Enter a section ID and, when needed, a workshop ID. Each must contain 1–120 characters.'
+      );
+      return;
     }
-    if (name === 'get_coding_lab' && (!objectId.test(labId) || (versionId !== '' && !objectId.test(versionId)))) {
-      this.validation.set('Lab ID and optional version ID must be 24 hexadecimal characters.'); return;
+    if (
+      name === 'get_coding_lab' &&
+      (!objectId.test(labId) ||
+        (versionId !== '' && !objectId.test(versionId)))
+    ) {
+      this.validation.set(
+        'Lab ID and optional version ID must be 24 hexadecimal characters.'
+      );
+      return;
     }
-    const input: ToolInput = name === 'get_coding_lab'
-      ? { labId, ...(versionId ? { versionId } : {}) }
-      : name === 'get_workshop' ? { sectionId, workshopId } : { sectionId };
+    const input: ToolInput =
+      name === 'get_coding_lab'
+        ? { labId, ...(versionId ? { versionId } : {}) }
+        : name === 'get_workshop'
+          ? { sectionId, workshopId }
+          : { sectionId };
     this.validation.set('');
     this.commands.next(() => this.store.run(name, input));
   }
