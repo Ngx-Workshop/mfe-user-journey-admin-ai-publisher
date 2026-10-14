@@ -40,3 +40,9 @@ Local T001–T004 complete. X001: approve redirect and exercise real sign-in/con
 ## Context maintenance
 
 Updated both READMEs, architecture/development/testing guides, AGENTS entry descriptions and feature indexes. Historical specs remain as historical evidence; current ownership is documented here.
+
+## Callback registration update — 2026-10-13
+
+The user reported invalid_redirect_uri after moving the console and authorized the callback update. The live public client ngx-workshop-ai-publisher-prod now also approves the exact https://admin.ngx-workshop.io/mcp-gateway/overview redirect. Retained /ai-publisher/console for rollout compatibility. No other client records, keys, origins, scopes, resource configuration or image changed. The private config was backed up under /opt/ngx-releases/mcp-overview-callback-20261014T001405Z; mounted inode/UID1000/mode0600 preserved. Production loadConfig validation passed, then the existing ngx-auth-service container was restarted and readiness passed.
+
+Live authorization checks after restart: new overview and previous console callback each redirect to the auth sign-in interaction; an unregistered /mcp-gateway/unregistered callback still returns 400 invalid_redirect_uri. This verifies registration acceptance without completing a user sign-in or issuing a token. Encrypted recovery escrow refreshed through the existing application backup operator: ops-recovery/ngx-oauth/20261014T001427Z/application-secrets.tar.gz.gpg; private upload checksum/size and anonymous-access rejection verified.

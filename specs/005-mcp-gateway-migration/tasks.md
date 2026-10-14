@@ -16,3 +16,7 @@ T001/T002: Gateway owns the moved MCP feature and tests; Publisher retains its u
 T003: Architecture, strict source types, test types, ChromeHeadless and isolated production builds pass in both MFEs. Gateway: 30 tests. Publisher: 7 tests. git diff --check passes. Existing component-size review notices are documented in architecture/plan.
 T004: Current architecture/development/README/testing guides, entry points, indexes and handoffs updated.
 X001: Pending external auth registration and live OAuth acceptance. Admin shell browser reports NG04002 for overview, while localhost:4201 renders the migrated console and workshop-tool selection correctly; shell registration/deployed or overridden remote must be confirmed.
+
+## Callback follow-up — 2026-10-13
+
+Auth registration portion of X001 is complete: exact overview URI added live, production configuration validated, existing auth restarted, new/legacy callbacks accepted and unregistered callback rejected. Full user sign-in/consent/return/expiry acceptance remains pending. See handoff for rollback and evidence.
