@@ -2,17 +2,20 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
+  OnInit,
 } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { PublishingOptionsComponent } from '../components/publishing-options.component';
 import { PublishingViewModel } from './publishing.view-model';
 @Component({
   selector: 'ngx-workshop-publishing',
   imports: [
     ReactiveFormsModule,
+    PublishingOptionsComponent,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
@@ -30,13 +33,7 @@ import { PublishingViewModel } from './publishing.view-model';
         publishing.
       </p>
       <p>Publishing uses your administrator sign-in.</p>
-      <button
-        mat-stroked-button
-        [disabled]="vm.busy() || vm.attempted()"
-        (click)="vm.loadSections()"
-      >
-        Browse workshop sections
-      </button>
+      <ngx-publishing-options />
       <form [formGroup]="vm.form" (ngSubmit)="vm.generate()">
         <mat-form-field appearance="outline"
           ><mat-label>Workshop brief</mat-label
@@ -49,32 +46,38 @@ import { PublishingViewModel } from './publishing.view-model';
           ></textarea>
         </mat-form-field>
         <div class="publisher__fields">
-          @if (vm.sections().length) {
-            <mat-form-field appearance="outline"
-              ><mat-label>Workshop section</mat-label
-              ><select
-                matNativeControl
-                formControlName="sectionId"
-                required
-              >
-                <option value="">Choose a section</option>
-                @for (section of vm.sections(); track section.id) {
-                  <option [value]="section.id">
-                    {{ section.name }}
-                  </option>
-                }
-              </select></mat-form-field
+          <mat-form-field appearance="outline">
+            <mat-label>Workshop section</mat-label>
+            <select
+              matNativeControl
+              formControlName="sectionId"
+              required
+              [attr.disabled]="
+                vm.busy() || vm.initializing() || vm.attempted()
+                  ? ''
+                  : null
+              "
             >
-          } @else {
-            <mat-form-field appearance="outline"
-              ><mat-label>Existing section ID</mat-label
-              ><input
-                matInput
-                formControlName="sectionId"
-                required
-                [readonly]="vm.busy() || vm.attempted()"
-            /></mat-form-field>
-          }
+              <option value="">
+                {{
+                  vm.initializing()
+                    ? 'Loading sections…'
+                    : 'Choose a section'
+                }}
+              </option>
+              @for (section of vm.sections(); track section.id) {
+                <option [value]="section.id">
+                  {{ section.name }}
+                </option>
+              }
+            </select>
+            @if (!vm.initializing() && !vm.sections().length) {
+              <mat-hint
+                >No sections available. Reload sections
+                above.</mat-hint
+              >
+            }
+          </mat-form-field>
           <mat-form-field appearance="outline"
             ><mat-label>Level</mat-label
             ><input
@@ -90,7 +93,13 @@ import { PublishingViewModel } from './publishing.view-model';
         <button
           mat-flat-button
           type="submit"
-          [disabled]="vm.busy() || vm.form.invalid || vm.attempted()"
+          [disabled]="
+            vm.busy() ||
+            vm.initializing() ||
+            vm.form.invalid ||
+            vm.model.invalid ||
+            vm.attempted()
+          "
         >
           Generate workshop draft
         </button>
@@ -206,6 +215,45 @@ import { PublishingViewModel } from './publishing.view-model';
           </button>
         </article>
       }
+      <details class="publisher__source">
+        <summary>Publishing request history</summary>
+        <button
+          mat-stroked-button
+          [disabled]="vm.busy() || vm.initializing()"
+          (click)="vm.loadHistory()"
+        >
+          Refresh history
+        </button>
+        @for (run of vm.history(); track run.requestId) {
+          <p class="publisher__request">
+            <code>{{ run.requestId }}</code> — {{ run.status }}
+            <button
+              mat-button
+              [disabled]="vm.busy()"
+              (click)="vm.inspectHistory(run.requestId)"
+            >
+              Inspect receipt
+            </button>
+          </p>
+        }
+        @for (id of vm.unconfirmedRequests(); track id) {
+          <p class="publisher__request">
+            <code>{{ id }}</code> — Receipt unconfirmed
+            <button
+              mat-button
+              [disabled]="vm.busy()"
+              (click)="vm.inspectHistory(id)"
+            >
+              Inspect receipt
+            </button>
+          </p>
+        }
+        @if (
+          !vm.history().length && !vm.unconfirmedRequests().length
+        ) {
+          <p>No publishing requests found.</p>
+        }
+      </details>
       <p class="publisher__request">
         Publishing request ID: <code>{{ vm.requestId() }}</code>
       </p>
@@ -235,9 +283,14 @@ import { PublishingViewModel } from './publishing.view-model';
             {{
               receipt.status === 'complete'
                 ? 'Workshop published'
-                : 'Publishing needs attention'
+                : receipt.status === 'running'
+                  ? 'Publishing in progress'
+                  : 'Publishing needs attention'
             }}
           </h3>
+          <p>
+            Request ID: <code>{{ receipt.requestId }}</code>
+          </p>
           <p>{{ receipt.message }}</p>
           @for (step of receipt.steps; track $index) {
             <details>
@@ -328,6 +381,9 @@ import { PublishingViewModel } from './publishing.view-model';
     `,
   ],
 })
-export class PublishingComponent {
+export class PublishingComponent implements OnInit {
+  ngOnInit(): void {
+    void this.vm.initialize();
+  }
   readonly vm = inject(PublishingViewModel);
 }

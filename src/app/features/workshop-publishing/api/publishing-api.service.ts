@@ -10,6 +10,8 @@ import {
 import {
   PublisherTool,
   PublishingReceipt,
+  PublishingModelCatalog,
+  WorkshopImage,
 } from '../models/publishing.models';
 const draftTool = mcpCatalogContract.publishing.tools.find(
   (t) => t.name === 'validate_workshop_draft'
@@ -67,6 +69,72 @@ export class PublishingApiService {
         return { id, name: section.sectionTitle };
       }
     );
+  }
+  async models(): Promise<PublishingModelCatalog> {
+    const value = await this.call('list_publishing_models', {});
+    const schema = mcpCatalogContract.publishing.tools.find(
+      (t) => t.name === 'list_publishing_models'
+    );
+    // The tool envelope is generic; validate consumed catalog fields explicitly.
+    if (
+      !schema ||
+      !value ||
+      typeof value !== 'object' ||
+      !('models' in value) ||
+      !Array.isArray(value.models) ||
+      !('defaultModel' in value) ||
+      !(
+        value.defaultModel === null ||
+        typeof value.defaultModel === 'string'
+      ) ||
+      !('imageModel' in value) ||
+      typeof value.imageModel !== 'string' ||
+      value.models.some(
+        (m) =>
+          !m ||
+          typeof m.id !== 'string' ||
+          !m.id ||
+          ![m.inputUsdPerMillion, m.outputUsdPerMillion].every(
+            (p) =>
+              p === null ||
+              (typeof p === 'number' && Number.isFinite(p) && p >= 0)
+          )
+      )
+    )
+      throw new Error('Invalid model catalog.');
+    return value as PublishingModelCatalog;
+  }
+  async history(): Promise<PublishingReceipt[]> {
+    const value = await this.call('list_publishing_runs', {});
+    if (!Array.isArray(value))
+      throw new Error('Invalid publishing history.');
+    return value.map((receipt) => this.receipt(receipt));
+  }
+  image(value: unknown): WorkshopImage {
+    if (
+      !value ||
+      typeof value !== 'object' ||
+      !('name' in value) ||
+      typeof value.name !== 'string' ||
+      !('storageUrl' in value) ||
+      typeof value.storageUrl !== 'string'
+    )
+      throw new Error('Image has no usable URL.');
+    const url = new URL(value.storageUrl);
+    if (url.protocol !== 'https:' || url.username || url.password)
+      throw new Error(
+        'Images require an HTTPS URL without credentials.'
+      );
+    return { name: value.name, storageUrl: value.storageUrl };
+  }
+  async images(query: string): Promise<WorkshopImage[]> {
+    const value = await this.call('workshop_image', {
+      operation: 'find',
+      query,
+    });
+    if (!Array.isArray(value))
+      throw new Error('Invalid image asset response.');
+    return value.map((image) => this.image(image));
   }
   draft(value: unknown): WorkshopDraft {
     const envelope = { draft: value };

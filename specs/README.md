@@ -23,3 +23,5 @@ the largest folder number is not automatically the active feature.
 | 004 Workshop publishing | Implemented; live integration pending | [Spec](004-workshop-publishing/spec.md) | [Plan](004-workshop-publishing/plan.md) | [Tasks](004-workshop-publishing/tasks.md) | [Handoff](004-workshop-publishing/handoff.md) |
 
 | 005 MCP Gateway migration | Implemented; integration pending | [Spec](005-mcp-gateway-migration/spec.md) | [Plan](005-mcp-gateway-migration/plan.md) | [Tasks](005-mcp-gateway-migration/tasks.md) | [Handoff](005-mcp-gateway-migration/handoff.md) |
+
+| 006-publisher-options | Implemented; live integration pending | [Spec](006-publisher-options/spec.md) | [Plan](006-publisher-options/plan.md) | [Tasks](006-publisher-options/tasks.md) | [Handoff](006-publisher-options/handoff.md) |

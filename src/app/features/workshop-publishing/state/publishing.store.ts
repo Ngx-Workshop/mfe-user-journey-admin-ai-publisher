@@ -4,10 +4,49 @@ import {
   PublisherTool,
   PublishingReceipt,
   WorkshopDraft,
+  PublishingModelCatalog,
+  WorkshopImage,
 } from '../models/publishing.models';
 @Injectable({ providedIn: 'root' })
 export class PublishingStore {
   private readonly api = inject(PublishingApiService);
+  readonly catalog = signal<PublishingModelCatalog | null>(null);
+  readonly history = signal<PublishingReceipt[]>([]);
+  readonly unconfirmedRequests = signal<string[]>([]);
+  readonly images = signal<WorkshopImage[]>([]);
+  async loadModels(): Promise<void> {
+    const catalog = await this.execute(() => this.api.models());
+    if (catalog) this.catalog.set(catalog);
+  }
+  async loadHistory(): Promise<void> {
+    const history = await this.execute(() => this.api.history());
+    if (history) {
+      this.history.set(history);
+      this.unconfirmedRequests.update((ids) =>
+        ids.filter(
+          (id) => !history.some((run) => run.requestId === id)
+        )
+      );
+    }
+  }
+  async loadImages(query: string): Promise<void> {
+    const images = await this.execute(() => this.api.images(query));
+    if (images) this.images.set(images);
+  }
+  async generateImage(
+    prompt: string,
+    name: string
+  ): Promise<WorkshopImage | undefined> {
+    return this.execute(async () =>
+      this.api.image(
+        await this.api.call('workshop_image', {
+          operation: 'generate',
+          prompt,
+          name,
+        })
+      )
+    );
+  }
   readonly busy = signal(false);
   readonly error = signal('');
   readonly sections = signal<{ id: string; name: string }[]>([]);
@@ -27,21 +66,46 @@ export class PublishingStore {
     requestId: string;
     draft: WorkshopDraft;
   }): Promise<PublishingReceipt | undefined> {
+    if (this.busy()) return undefined;
+    this.unconfirmedRequests.update((ids) =>
+      [
+        input.requestId,
+        ...ids.filter((id) => id !== input.requestId),
+      ].slice(0, 100)
+    );
     return this.execute(async () =>
-      this.api.receipt(await this.api.call('publish_workshop', input))
+      this.remember(
+        this.api.receipt(
+          await this.api.call('publish_workshop', input)
+        )
+      )
     );
   }
   async receipt(
     requestId: string
   ): Promise<PublishingReceipt | undefined> {
     return this.execute(async () =>
-      this.api.receipt(
-        await this.api.call('get_publishing_run', { requestId })
+      this.remember(
+        this.api.receipt(
+          await this.api.call('get_publishing_run', { requestId })
+        )
       )
     );
   }
   async tool(name: PublisherTool, input: unknown): Promise<unknown> {
     return this.execute(() => this.api.call(name, input));
+  }
+  private remember(receipt: PublishingReceipt): PublishingReceipt {
+    this.unconfirmedRequests.update((ids) =>
+      ids.filter((id) => id !== receipt.requestId)
+    );
+    this.history.update((rows) =>
+      [
+        receipt,
+        ...rows.filter((row) => row.requestId !== receipt.requestId),
+      ].slice(0, 100)
+    );
+    return receipt;
   }
   private async execute<T>(
     operation: () => Promise<T>
