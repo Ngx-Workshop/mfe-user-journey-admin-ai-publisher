@@ -31,3 +31,5 @@ Configure repository secrets `MFE_DROPLET_IP`, `MFE_SSH_PRIVATE_KEY` and
 `MFE_SSH_HOST_FINGERPRINT` for the frontend host. Deployment preserves the
 production target `/opt/mfe-remotes/mfe-user-journey-admin-ai-publisher/` and
 serializes production runs without cancelling an in-progress deployment.
+
+Generation failures now show fixed guidance for model configuration/access/quota/rate limits/timeouts, image lookup, incomplete/refused output and invalid generated drafts. Unknown or older gateway responses keep the generic fallback; upstream message text is never displayed. The gateway logs safe categories and bounded validation field/reason codes for operator diagnosis. A generation failure preserves the brief and does not create a publication receipt.

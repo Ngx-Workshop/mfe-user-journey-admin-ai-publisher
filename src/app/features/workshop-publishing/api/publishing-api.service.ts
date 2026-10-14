@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom, timeout } from 'rxjs';
 import Ajv from 'ajv/dist/2020';
+import { publishingError } from './publishing-error';
 import {
   mcpCatalogContract,
   type WorkshopDraft,
@@ -32,9 +33,7 @@ export class PublishingApiService {
     if (!response || typeof response !== 'object')
       throw new Error('Invalid publishing response.');
     if ('isError' in response && response.isError === true)
-      throw new Error(
-        'The publishing agent could not complete this request. Check the draft, service access and server configuration.'
-      );
+      throw new Error(publishingError(response));
     if (
       !('structuredContent' in response) ||
       !response.structuredContent ||
