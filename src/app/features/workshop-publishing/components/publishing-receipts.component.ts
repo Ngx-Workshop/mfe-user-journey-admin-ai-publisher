@@ -12,6 +12,7 @@ import { PublishingReceipt } from '../models/publishing.models';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="receipts" aria-label="Publishing requests and receipts">
+      @if (showHistory()) {
       <details class="receipts__panel">
         <summary class="receipts__summary">Publishing request history</summary>
         <button class="receipts__button" mat-stroked-button type="button"
@@ -32,6 +33,7 @@ import { PublishingReceipt } from '../models/publishing.models';
         }
         @if (!history().length && !unconfirmed().length) { <p>No publishing requests found.</p> }
       </details>
+      }
       <p class="receipts__request">Publishing request ID: <code>{{ requestId() }}</code></p>
       @if (attempted()) {
         <p>Keep this ID. Check its receipt if the connection fails before starting another workshop.</p>
@@ -56,8 +58,6 @@ import { PublishingReceipt } from '../models/publishing.models';
           }
         </div>
       }
-      <button class="receipts__button" mat-button type="button"
-        [disabled]="busy()" (click)="newDraft.emit()">Start a new workshop</button>
     </section>
   `,
   styles: [`
@@ -82,6 +82,7 @@ import { PublishingReceipt } from '../models/publishing.models';
   `],
 })
 export class PublishingReceiptsComponent {
+  readonly showHistory = input(true);
   readonly history = input.required<readonly PublishingReceipt[]>();
   readonly unconfirmed = input.required<readonly string[]>();
   readonly requestId = input.required<string>();
@@ -93,5 +94,4 @@ export class PublishingReceiptsComponent {
   readonly refresh = output<void>();
   readonly inspect = output<void>();
   readonly inspectHistory = output<string>();
-  readonly newDraft = output<void>();
 }

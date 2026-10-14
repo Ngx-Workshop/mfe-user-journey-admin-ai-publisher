@@ -43,7 +43,7 @@ The publisher API and store return cold Observables: subscribe to execute them.
 The scoped VM owns lifetime-bound command subscriptions; do not call API clients
 from views or presenters. New presenters consume typed controls/data and emit
 intent. The architecture command checks API/state stream boundaries and blocks
-VM imports in presentation components (page/options are explicit orchestrators).
+VM imports in presentation components (overview/wizard pages are explicit orchestrators).
 
 Tests cover cancellation, ordered setup after failures, duplicate commands,
 publication recovery, JSON edits, typed presentation intents and App composition.
@@ -57,3 +57,19 @@ isolated bundle, including setup reads, form gating, JSON syntax guidance and
 375px responsive layout. This does not replace paid generation, image upload,
 publication or receipt recovery acceptance. See the
 [refactor handoff](../specs/007-publisher-mvvm-refactor/handoff.md) for evidence.
+
+## Overview and AI wizard
+Standalone bootstrap now registers the remote's exported routes. The default URL
+redirects to `/overview`; `/new` opens the three-step AI wizard; `/console` redirects
+to `/new` and `/hello-world` redirects to `/overview`. In the administrator shell,
+these routes remain relative to the existing `/ai-publisher` mount. Serve the index
+fallback for direct navigation/refresh of these routes.
+
+Acceptance: search IDs/messages/step names and combine with each status, clear
+filters, retry history failures, inspect a receipt, navigate New workshop and
+Request history, generate or import/validate a draft, review images/materials,
+explicitly continue to publish and check the receipt after success or failure.
+Unpublished draft navigation requires confirmation; active operations prevent
+leaving. The wizard retains request IDs and duplicate protection. Tests use HTTP/
+store doubles; browser previews use sample read-only history/model/section data.
+No paid provider, upload or live publication calls were made for this change.

@@ -48,10 +48,12 @@ import { WorkshopDraft } from '../models/publishing.models';
           <p>{{ question.incorrectResponse }}</p>
         }
       </details>
+      @if (showPublish()) {
       <p>Publishing makes these resources available immediately. Coding labs must pass verification first.</p>
       <button mat-flat-button type="button" [disabled]="locked()" (click)="publish.emit()">
         Publish reviewed workshop
       </button>
+      }
     </article>
   `,
   styles: [`
@@ -77,5 +79,6 @@ import { WorkshopDraft } from '../models/publishing.models';
 export class PublishingReviewComponent {
   readonly draft = input.required<WorkshopDraft>();
   readonly locked = input(false);
+  readonly showPublish = input(true);
   readonly publish = output<void>();
 }

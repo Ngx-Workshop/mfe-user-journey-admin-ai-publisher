@@ -20,6 +20,8 @@ export class PublishingViewModel {
   readonly initializing = signal(false);
   readonly image = signal<WorkshopImage | null>(null);
   readonly validation = signal('');
+  readonly step = signal(0);
+  readonly reviewed = signal(false);
   readonly draft = signal<WorkshopDraft | null>(null);
   readonly receipt = signal<PublishingReceipt | null>(null);
   readonly requestId = signal(crypto.randomUUID());
@@ -139,13 +141,22 @@ export class PublishingViewModel {
     }).pipe(tap((draft) => this.accept(draft))));
   }
   edited(): void {
+    this.reviewed.set(false);
     this.draft.set(null);
+    if (!this.attempted() && this.step() > 1) this.step.set(1);
   }
   private accept(draft: WorkshopDraft): void {
+    this.reviewed.set(false);
     this.json.setValue(JSON.stringify(draft, null, 2), { emitEvent: false });
     this.draft.set(draft);
     this.validation.set('');
     this.receipt.set(null);
+    if (this.step() === 0) this.step.set(1);
+  }
+  continueToPublish(): void {
+    if (!this.draft() || this.busy() || this.attempted()) return;
+    this.reviewed.set(true);
+    this.step.set(2);
   }
   publish(): void {
     const draft = this.draft();
@@ -168,6 +179,8 @@ export class PublishingViewModel {
   }
   newDraft(): void {
     if (this.busy()) return;
+    this.step.set(0);
+    this.reviewed.set(false);
     this.requestId.set(crypto.randomUUID());
     this.attempted.set(false);
     this.receipt.set(null);

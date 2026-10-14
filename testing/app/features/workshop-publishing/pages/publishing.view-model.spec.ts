@@ -260,6 +260,26 @@ describe('PublishingViewModel', () => {
     expect(vm.validation()).toBe('Enter a valid publishing request ID.');
     expect(store.receipt).not.toHaveBeenCalled();
   });
+  it('advances only successful drafts and invalidates the publication step on edits', () => {
+    vm.form.setValue({ brief: 'Functions', sectionId: 'angular', level: 1 });
+    store.draft.and.returnValue(EMPTY);
+    vm.generate();
+    expect(vm.step()).toBe(0);
+    store.draft.and.returnValue(of(draft));
+    vm.generate();
+    expect(vm.step()).toBe(1);
+    expect(vm.reviewed()).toBeFalse();
+    vm.continueToPublish();
+    expect(vm.step()).toBe(2);
+    expect(vm.reviewed()).toBeTrue();
+    vm.json.setValue('{}');
+    expect(vm.step()).toBe(1);
+    expect(vm.reviewed()).toBeFalse();
+    vm.continueToPublish();
+    expect(vm.step()).toBe(1);
+    vm.newDraft();
+    expect(vm.step()).toBe(0);
+  });
   it('starts a new draft without losing the brief or selected model', () => {
     vm.form.controls.brief.setValue('Keep this brief');
     vm.draft.set(draft);

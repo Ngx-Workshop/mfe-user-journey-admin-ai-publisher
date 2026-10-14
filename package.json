@@ -33,6 +33,7 @@
     "@angular/build": "^21.1.0",
     "@angular/cli": "21.1.0",
     "@angular/compiler-cli": "21.1.0",
+    "@tmdjr/ngx-shared-headers": "21.0.5",
     "@tmdjr/ngx-user-metadata": "^21.0.4",
     "@types/jasmine": "~5.1.0",
     "http-server": "^14.1.1",

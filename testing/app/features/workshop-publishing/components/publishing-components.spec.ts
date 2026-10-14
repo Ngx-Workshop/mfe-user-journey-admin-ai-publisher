@@ -105,7 +105,7 @@ describe('Publishing presentation components', () => {
     expect(publish).toHaveBeenCalledTimes(1);
   });
 
-  it('renders empty history and recovery status and emits receipt/new-draft intent', () => {
+  it('renders empty history and recovery status and emits receipt intent', () => {
     const fixture = TestBed.createComponent(PublishingReceiptsComponent);
     const id = crypto.randomUUID();
     fixture.componentRef.setInput('history', []);
@@ -115,11 +115,9 @@ describe('Publishing presentation components', () => {
     const inspect = jasmine.createSpy();
     const inspectHistory = jasmine.createSpy();
     const refresh = jasmine.createSpy();
-    const newDraft = jasmine.createSpy();
     fixture.componentInstance.inspect.subscribe(inspect);
     fixture.componentInstance.inspectHistory.subscribe(inspectHistory);
     fixture.componentInstance.refresh.subscribe(refresh);
-    fixture.componentInstance.newDraft.subscribe(newDraft);
     fixture.detectChanges();
     const element: HTMLElement = fixture.nativeElement;
     expect(element.textContent).toContain('No publishing requests found.');
@@ -134,11 +132,9 @@ describe('Publishing presentation components', () => {
     buttons.find((button) => button.textContent?.includes('Inspect receipt'))?.click();
     buttons.find((button) => button.textContent?.includes('Refresh history'))?.click();
     buttons.find((button) => button.textContent?.includes('Check publishing receipt'))?.click();
-    buttons.find((button) => button.textContent?.includes('Start a new workshop'))?.click();
     expect(inspectHistory).toHaveBeenCalledWith(id);
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(inspect).toHaveBeenCalledTimes(1);
-    expect(newDraft).toHaveBeenCalledTimes(1);
     expect(element.textContent).toContain('Receipt unconfirmed');
     expect(element.textContent).toContain('Keep this ID.');
     expect(element.querySelector('[role="status"]')?.textContent).toContain('Publishing needs attention');

@@ -27,3 +27,7 @@ the largest folder number is not automatically the active feature.
 | 006-publisher-options | Implemented; live integration pending | [Spec](006-publisher-options/spec.md) | [Plan](006-publisher-options/plan.md) | [Tasks](006-publisher-options/tasks.md) | [Handoff](006-publisher-options/handoff.md) |
 
 | 007 Publisher MVVM refactor | Complete | [Spec](007-publisher-mvvm-refactor/spec.md) | [Plan](007-publisher-mvvm-refactor/plan.md) | [Tasks](007-publisher-mvvm-refactor/tasks.md) | [Handoff](007-publisher-mvvm-refactor/handoff.md) |
+
+| 008 Unified Admin Publisher layout | Implemented; shell integration pending | [Spec](008-admin-publisher-layout/spec.md) | [Plan](008-admin-publisher-layout/plan.md) | [Tasks](008-admin-publisher-layout/tasks.md) | [Handoff](008-admin-publisher-layout/handoff.md) |
+
+| 009 Publisher overview and AI wizard | Implemented; live shell integration pending | [Spec](009-publisher-overview-wizard/spec.md) | [Plan](009-publisher-overview-wizard/plan.md) | [Tasks](009-publisher-overview-wizard/tasks.md) | [Handoff](009-publisher-overview-wizard/handoff.md) |

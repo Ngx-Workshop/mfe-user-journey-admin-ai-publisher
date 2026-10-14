@@ -68,6 +68,12 @@ module.exports = withModuleFederationPlugin({
       requiredVersion: '2.8.1',
     },
 
+    '@tmdjr/ngx-shared-headers': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '21.0.5',
+    },
+
     // Metadata service
     '@tmdjr/ngx-user-metadata': {
       singleton: true,
