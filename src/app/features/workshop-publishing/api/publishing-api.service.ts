@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { firstValueFrom, timeout } from 'rxjs';
+import { map, Observable, timeout } from 'rxjs';
 import Ajv from 'ajv/dist/2020';
 import { publishingError } from './publishing-error';
 import {
@@ -22,16 +22,16 @@ const validateDraft = new Ajv({ strict: false }).compile<{
 @Injectable({ providedIn: 'root' })
 export class PublishingApiService {
   private readonly http = inject(HttpClient);
-  async call(name: PublisherTool, input: unknown): Promise<unknown> {
-    const response = await firstValueFrom(
-      this.http
+  call(name: PublisherTool, input: unknown): Observable<unknown> {
+    return this.http
         .post<unknown>(
           '/api/publisher/tools',
           { name, input },
           { withCredentials: true }
         )
-        .pipe(timeout(180000))
-    );
+        .pipe(timeout(180000), map((response) => this.unwrap(response)));
+  }
+  private unwrap(response: unknown): unknown {
     if (!response || typeof response !== 'object')
       throw new Error('Invalid publishing response.');
     if ('isError' in response && response.isError === true)
@@ -45,10 +45,12 @@ export class PublishingApiService {
       throw new Error('Invalid publishing response.');
     return response.structuredContent.data;
   }
-  async sections(): Promise<{ id: string; name: string }[]> {
-    const value = await this.call('manage_document', {
+  sections(): Observable<{ id: string; name: string }[]> {
+    return this.call('manage_document', {
       operation: 'sections',
-    });
+    }).pipe(map((value) => this.sectionList(value)));
+  }
+  private sectionList(value: unknown): { id: string; name: string }[] {
     if (
       !value ||
       typeof value !== 'object' ||
@@ -70,8 +72,12 @@ export class PublishingApiService {
       }
     );
   }
-  async models(): Promise<PublishingModelCatalog> {
-    const value = await this.call('list_publishing_models', {});
+  models(): Observable<PublishingModelCatalog> {
+    return this.call('list_publishing_models', {}).pipe(
+      map((value) => this.modelCatalog(value))
+    );
+  }
+  private modelCatalog(value: unknown): PublishingModelCatalog {
     const schema = mcpCatalogContract.publishing.tools.find(
       (t) => t.name === 'list_publishing_models'
     );
@@ -104,11 +110,12 @@ export class PublishingApiService {
       throw new Error('Invalid model catalog.');
     return value as PublishingModelCatalog;
   }
-  async history(): Promise<PublishingReceipt[]> {
-    const value = await this.call('list_publishing_runs', {});
-    if (!Array.isArray(value))
-      throw new Error('Invalid publishing history.');
-    return value.map((receipt) => this.receipt(receipt));
+  history(): Observable<PublishingReceipt[]> {
+    return this.call('list_publishing_runs', {}).pipe(map((value) => {
+      if (!Array.isArray(value))
+        throw new Error('Invalid publishing history.');
+      return value.map((receipt) => this.receipt(receipt));
+    }));
   }
   image(value: unknown): WorkshopImage {
     if (
@@ -127,14 +134,15 @@ export class PublishingApiService {
       );
     return { name: value.name, storageUrl: value.storageUrl };
   }
-  async images(query: string): Promise<WorkshopImage[]> {
-    const value = await this.call('workshop_image', {
+  images(query: string): Observable<WorkshopImage[]> {
+    return this.call('workshop_image', {
       operation: 'find',
       query,
-    });
-    if (!Array.isArray(value))
-      throw new Error('Invalid image asset response.');
-    return value.map((image) => this.image(image));
+    }).pipe(map((value) => {
+      if (!Array.isArray(value))
+        throw new Error('Invalid image asset response.');
+      return value.map((image) => this.image(image));
+    }));
   }
   draft(value: unknown): WorkshopDraft {
     const envelope = { draft: value };

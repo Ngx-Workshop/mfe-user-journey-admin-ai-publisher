@@ -3,6 +3,7 @@ import { signal } from '@angular/core';
 import { PublishingViewModel } from '../../../../../src/app/features/workshop-publishing/pages/publishing.view-model';
 import { PublishingStore } from '../../../../../src/app/features/workshop-publishing/state/publishing.store';
 import type { WorkshopDraft } from '../../../../../src/app/features/workshop-publishing/models/publishing.models';
+import { EMPTY, of, Subject } from 'rxjs';
 describe('PublishingViewModel', () => {
   let vm: PublishingViewModel;
   const draft: WorkshopDraft = {
@@ -70,19 +71,19 @@ describe('PublishingViewModel', () => {
       history: signal([]),
       images: signal([]),
       unconfirmedRequests: signal([]),
-      loadModels: jasmine.createSpy().and.resolveTo(),
-      loadHistory: jasmine.createSpy().and.resolveTo(),
-      loadImages: jasmine.createSpy().and.resolveTo(),
+      loadModels: jasmine.createSpy().and.returnValue(of(undefined)),
+      loadHistory: jasmine.createSpy().and.returnValue(of(undefined)),
+      loadImages: jasmine.createSpy().and.returnValue(of(undefined)),
       generateImage: jasmine
         .createSpy()
-        .and.resolveTo({
+        .and.returnValue(of({
           name: 'Illustration',
           storageUrl: 'https://assets.example/image.png',
-        }),
-      loadSections: jasmine.createSpy().and.resolveTo(),
-      draft: jasmine.createSpy().and.resolveTo(draft),
-      publish: jasmine.createSpy().and.resolveTo(undefined),
-      receipt: jasmine.createSpy().and.resolveTo(undefined),
+        })),
+      loadSections: jasmine.createSpy().and.returnValue(of(undefined)),
+      draft: jasmine.createSpy().and.returnValue(of(draft)),
+      publish: jasmine.createSpy().and.returnValue(EMPTY),
+      receipt: jasmine.createSpy().and.returnValue(EMPTY),
     };
     TestBed.configureTestingModule({
       providers: [
@@ -93,32 +94,34 @@ describe('PublishingViewModel', () => {
     vm = TestBed.inject(PublishingViewModel);
     vm.model.setValue('test-model');
   });
-  it('loads sections, models and receipt history in order on initialization', async () => {
+  it('loads sections, models and receipt history in order on initialization', () => {
     vm.model.setValue('');
-    await vm.initialize();
+    vm.initialize();
     expect(store.loadSections).toHaveBeenCalledTimes(1);
     expect(store.loadModels).toHaveBeenCalledTimes(1);
     expect(store.loadHistory).toHaveBeenCalledTimes(1);
     expect(vm.model.value).toBe('test-model');
     expect(vm.initializing()).toBeFalse();
   });
-  it('keeps initialization failures visible even if subsequent reads succeed', async () => {
-    store.loadSections.and.callFake(async () => {
+  it('keeps initialization failures visible even if subsequent reads succeed', () => {
+    store.loadSections.and.callFake(() => {
       store.error.set('Section access failed');
+      return EMPTY;
     });
-    store.loadModels.and.callFake(async () => {
+    store.loadModels.and.callFake(() => {
       store.error.set('');
+      return of(undefined);
     });
-    await vm.initialize();
+    vm.initialize();
     expect(vm.setupErrors()).toEqual(['Section access failed']);
   });
-  it('sends the selected model with the generation brief', async () => {
+  it('sends the selected model with the generation brief', () => {
     vm.form.setValue({
       brief: 'Teach functions',
       sectionId: 'angular',
       level: 1,
     });
-    await vm.generate();
+    vm.generate();
     expect(store.draft).toHaveBeenCalledWith(
       'generate_workshop_draft',
       {
@@ -129,14 +132,14 @@ describe('PublishingViewModel', () => {
       }
     );
   });
-  it('inspects a historical ID without changing the current publishing ID', async () => {
+  it('inspects a historical ID without changing the current publishing ID', () => {
     const current = vm.requestId();
     const historical = crypto.randomUUID();
-    await vm.inspectHistory(historical);
+    vm.inspectHistory(historical);
     expect(store.receipt).toHaveBeenCalledWith(historical);
     expect(vm.requestId()).toBe(current);
   });
-  it('adds selected assets as validated editor image blocks and preserves failed edits', async () => {
+  it('adds selected assets as validated editor image blocks and preserves failed edits', () => {
     vm.draft.set({
       ...draft,
       pages: [
@@ -158,8 +161,8 @@ describe('PublishingViewModel', () => {
       name: 'Illustration',
       storageUrl: 'https://assets.example/image.png',
     });
-    store.draft.and.resolveTo(undefined);
-    await vm.applyImage();
+    store.draft.and.returnValue(EMPTY);
+    vm.applyImage();
     const edited = JSON.parse(vm.json.value) as WorkshopDraft;
     expect(
       edited.pages[0].blocks.map((block) => block.sortIndex)
@@ -173,7 +176,7 @@ describe('PublishingViewModel', () => {
     );
     expect(vm.draft()).toBeNull();
   });
-  it('preserves draft and image selection on image generation failure', async () => {
+  it('preserves draft and image selection on image generation failure', () => {
     vm.draft.set(draft);
     const image = {
       name: 'Existing',
@@ -181,40 +184,97 @@ describe('PublishingViewModel', () => {
     };
     vm.selectImage(image);
     vm.imagePrompt.setValue('An illustration');
-    store.generateImage.and.resolveTo(undefined);
-    await vm.generateImage();
+    store.generateImage.and.returnValue(EMPTY);
+    vm.generateImage();
     expect(vm.image()).toEqual(image);
     expect(vm.draft()).toEqual(draft);
   });
-  it('requires a valid brief, validates changes, and clears the reviewed draft on edit', async () => {
-    await vm.generate();
+  it('requires a valid brief, validates changes, and clears the reviewed draft on edit', () => {
+    vm.generate();
     expect(store.draft).not.toHaveBeenCalled();
     vm.form.setValue({
       brief: 'Teach functions',
       sectionId: 'angular',
       level: 1,
     });
-    await vm.generate();
+    vm.generate();
     expect(vm.draft()).toEqual(draft);
     vm.edited();
     expect(vm.draft()).toBeNull();
-    await vm.validate();
+    vm.validate();
     expect(vm.draft()).toEqual(draft);
   });
-  it('keeps draft and request ID after a failed publish and blocks duplicate attempts', async () => {
+  it('keeps draft and request ID after a failed publish and blocks duplicate attempts', () => {
     vm.form.setValue({
       brief: 'Teach functions',
       sectionId: 'angular',
       level: 1,
     });
-    await vm.generate();
+    vm.generate();
     const id = vm.requestId();
-    await vm.publish();
-    await vm.publish();
+    vm.publish();
+    vm.publish();
     expect(store.publish).toHaveBeenCalledTimes(1);
     expect(vm.requestId()).toBe(id);
     expect(vm.draft()).toEqual(draft);
-    await vm.inspect();
+    vm.inspect();
     expect(store.receipt).toHaveBeenCalledWith(id);
+  });
+  it('invalidates review for programmatic JSON edits as well as DOM edits', () => {
+    vm.draft.set(draft);
+    vm.json.setValue('{"changed":true}');
+    expect(vm.draft()).toBeNull();
+  });
+  it('rejects overlapping commands and unsubscribes late results on teardown', () => {
+    const pending = new Subject<WorkshopDraft>();
+    store.draft.and.returnValue(pending);
+    vm.form.setValue({ brief: 'Functions', sectionId: 'angular', level: 1 });
+    vm.generate();
+    vm.generate();
+    vm.loadHistory();
+    expect(store.draft).toHaveBeenCalledTimes(1);
+    expect(store.loadHistory).not.toHaveBeenCalled();
+    TestBed.resetTestingModule();
+    expect(pending.observed).toBeFalse();
+    pending.next(draft);
+    expect(vm.draft()).toBeNull();
+  });
+  it('stops ordered initialization when destroyed', () => {
+    const pending = new Subject<undefined>();
+    store.loadSections.and.returnValue(pending);
+    vm.initialize();
+    expect(vm.initializing()).toBeTrue();
+    TestBed.resetTestingModule();
+    expect(vm.initializing()).toBeFalse();
+    expect(pending.observed).toBeFalse();
+    expect(store.loadModels).not.toHaveBeenCalled();
+    expect(store.loadHistory).not.toHaveBeenCalled();
+  });
+  it('reports invalid JSON and request IDs without issuing server commands', () => {
+    vm.json.setValue('{invalid');
+    vm.validate();
+    expect(vm.validation()).toBe('Draft must contain valid JSON.');
+    expect(store.draft).not.toHaveBeenCalled();
+    vm.receiptId.setValue('not-a-request-id');
+    vm.inspect();
+    expect(vm.validation()).toBe('Enter a valid publishing request ID.');
+    expect(store.receipt).not.toHaveBeenCalled();
+  });
+  it('starts a new draft without losing the brief or selected model', () => {
+    vm.form.controls.brief.setValue('Keep this brief');
+    vm.draft.set(draft);
+    vm.attempted.set(true);
+    vm.json.setValue('{}');
+    vm.validation.set('Previous error');
+    const id = vm.requestId();
+    vm.newDraft();
+    expect(vm.requestId()).not.toBe(id);
+    expect(vm.attempted()).toBeFalse();
+    expect(vm.draft()).toBeNull();
+    expect(vm.receipt()).toBeNull();
+    expect(vm.json.value).toBe('');
+    expect(vm.validation()).toBe('');
+    expect(vm.form.controls.brief.value).toBe('Keep this brief');
+    expect(vm.model.value).toBe('test-model');
   });
 });

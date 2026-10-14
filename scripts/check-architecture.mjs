@@ -6,6 +6,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const app = join(root, 'src/app');
 const errors = [];
 const warnings = [];
+const orchestrators = new Set([
+  'features/workshop-publishing/pages/publishing.component.ts',
+  'features/workshop-publishing/components/publishing-options.component.ts',
+]);
 const bem = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:__[a-z0-9]+(?:-[a-z0-9]+)*)?(?:--[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
 function files(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
@@ -30,6 +34,9 @@ for (const path of files(app)) {
       if (target.includes('/state/') && /@Component\s*\(/.test(text)) {
         errors.push(`${name}: components consume scoped view models, not singleton state directly.`);
       }
+      if (target.endsWith('.view-model') && /@Component\s*\(/.test(text) && !orchestrators.has(name)) {
+        errors.push(`${name}: presentation components use typed inputs/outputs, not view models.`);
+      }
       if (target.includes('/api/') && !name.includes('/state/') && !name.includes('/api/')) {
         errors.push(`${name}: only state/ may consume the feature HTTP client.`);
       }
@@ -38,8 +45,14 @@ for (const path of files(app)) {
   if (name.includes('/api/') && /\bsignal\s*\(|\b(?:BehaviorSubject|ReplaySubject)\b/.test(text)) {
     errors.push(`${name}: API clients must not own singleton state.`);
   }
+  if ((name.includes('/api/') || name.includes('/state/')) && /\bPromise\s*<|\bfirstValueFrom\s*\(/.test(text)) {
+    errors.push(`${name}: keep data access and state operations as cancellable Observable streams.`);
+  }
   if (name.includes('/state/') && /from ['"]@angular\/(?:router|forms|material)/.test(text)) {
     errors.push(`${name}: shared state must not depend on forms, routing or Material UI.`);
+  }
+  if (name.includes('/state/') && /from ['"][^'"]*(?:\/pages\/|\/components\/|\/forms\/)/.test(text)) {
+    errors.push(`${name}: shared state must not depend on view models, components or forms.`);
   }
   if (/@Component\s*\(/.test(text)) {
     if (!/changeDetection:\s*ChangeDetectionStrategy\.OnPush/.test(text)) {

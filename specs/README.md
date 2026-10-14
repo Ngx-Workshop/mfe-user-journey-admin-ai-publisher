@@ -25,3 +25,5 @@ the largest folder number is not automatically the active feature.
 | 005 MCP Gateway migration | Implemented; integration pending | [Spec](005-mcp-gateway-migration/spec.md) | [Plan](005-mcp-gateway-migration/plan.md) | [Tasks](005-mcp-gateway-migration/tasks.md) | [Handoff](005-mcp-gateway-migration/handoff.md) |
 
 | 006-publisher-options | Implemented; live integration pending | [Spec](006-publisher-options/spec.md) | [Plan](006-publisher-options/plan.md) | [Tasks](006-publisher-options/tasks.md) | [Handoff](006-publisher-options/handoff.md) |
+
+| 007 Publisher MVVM refactor | Complete | [Spec](007-publisher-mvvm-refactor/spec.md) | [Plan](007-publisher-mvvm-refactor/plan.md) | [Tasks](007-publisher-mvvm-refactor/tasks.md) | [Handoff](007-publisher-mvvm-refactor/handoff.md) |

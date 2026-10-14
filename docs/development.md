@@ -1,6 +1,6 @@
 # Development and verification
 
-Updated 2026-10-13. Use Node 22 and the committed lockfile.
+Updated 2026-10-14. Use Node 22 and the committed lockfile.
 
 | Purpose | Command |
 | --- | --- |
@@ -36,3 +36,24 @@ Generation failures now show fixed guidance for model configuration/access/quota
 
 ## Publisher options
 Requires gateway contracts 1.2.0 (committed vendor tarball) and the matching gateway deployment. Entry automatically loads sections, models and administrator history. Manual checks: switch model and confirm reference rates; reload sections after a read failure; inspect a previous ID without changing the current ID; search/select an image or explicitly generate one, add it to a reviewed draft, inspect its JSON, validate and publish. Image generation is separately billed and uploads to service-uploader; tests use doubles and perform no paid calls. Model choices/rates and the image model are gateway configuration (see its workshop-publishing guide). Receipt history is server-owned; unconfirmed requests remain in this running app session and are reconciled by receipt checks. Live provider/shell acceptance remains pending.
+
+## MVVM regression checks
+
+The publisher API and store return cold Observables: subscribe to execute them.
+The scoped VM owns lifetime-bound command subscriptions; do not call API clients
+from views or presenters. New presenters consume typed controls/data and emit
+intent. The architecture command checks API/state stream boundaries and blocks
+VM imports in presentation components (page/options are explicit orchestrators).
+
+Tests cover cancellation, ordered setup after failures, duplicate commands,
+publication recovery, JSON edits, typed presentation intents and App composition.
+Use the Angular Karma command if editor test discovery does not find these specs.
+When importing takeUntilDestroyed in a federated VM, pass its explicitly injected
+DestroyRef rather than relying on implicit injection inside the secondary entry
+point. Standalone tests alone do not verify shared-core injection in the shell.
+
+The refactor was smoke-tested in the supplied administrator shell with a local
+isolated bundle, including setup reads, form gating, JSON syntax guidance and
+375px responsive layout. This does not replace paid generation, image upload,
+publication or receipt recovery acceptance. See the
+[refactor handoff](../specs/007-publisher-mvvm-refactor/handoff.md) for evidence.
