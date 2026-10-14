@@ -33,6 +33,27 @@ describe('PublishingApiService', () => {
       /could not complete/
     );
   });
+  it('shows actionable generation errors without upstream text', async () => {
+    const result = api.call('generate_workshop_draft', {});
+    http.expectOne('/api/publisher/tools').flush({
+      isError: true,
+      content: [{ type: 'text', text: JSON.stringify({ error: {
+        code: 'MODEL_TIMEOUT', message: 'secret provider details',
+      } }) }],
+    });
+    await expectAsync(result).toBeRejectedWithError(
+      'The AI model timed out while generating the draft. Try a narrower workshop brief.'
+    );
+  });
+  for (const content of [[], [{ type: 'text', text: 'malformed' }],
+    [{ type: 'text', text: '{"error":{"code":"UNKNOWN","message":"secret"}}' }],
+    [{ type: 'text', text: '{"error":{"code":"toString"}}' }]]) {
+    it('falls back safely for unrecognized error content', async () => {
+      const result = api.call('generate_workshop_draft', {});
+      http.expectOne('/api/publisher/tools').flush({ isError: true, content });
+      await expectAsync(result).toBeRejectedWithError(/could not complete/);
+    });
+  }
   it('rejects malformed drafts and receipts', () => {
     expect(() =>
       api.draft({ name: 'missing resources' })

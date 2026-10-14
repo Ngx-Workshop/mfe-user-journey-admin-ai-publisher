@@ -9,11 +9,107 @@ import { PublishingStore } from '../state/publishing.store';
 import {
   PublishingReceipt,
   WorkshopDraft,
+  WorkshopImage,
+  GenerateWorkshopDraftInput,
 } from '../models/publishing.models';
 @Injectable()
 export class PublishingViewModel {
   private readonly store = inject(PublishingStore);
   private alive = true;
+  readonly catalog = this.store.catalog;
+  readonly history = this.store.history;
+  readonly unconfirmedRequests = this.store.unconfirmedRequests;
+  readonly images = this.store.images;
+  readonly setupErrors = signal<string[]>([]);
+  readonly initializing = signal(false);
+  readonly image = signal<WorkshopImage | null>(null);
+  readonly imageQuery = new FormControl('', { nonNullable: true });
+  readonly imagePrompt = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.maxLength(4000)],
+  });
+  readonly model = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required],
+  });
+  async initialize(): Promise<void> {
+    if (this.busy() || this.initializing()) return;
+    this.initializing.set(true);
+    this.setupErrors.set([]);
+    try {
+      for (const read of [
+        () => this.store.loadSections(),
+        () => this.store.loadModels(),
+        () => this.store.loadHistory(),
+      ]) {
+        if (!this.alive) return;
+        await read();
+        if (this.alive && this.error())
+          this.setupErrors.update((errors) => [
+            ...errors,
+            this.error(),
+          ]);
+      }
+      const catalog = this.catalog();
+      if (this.alive && !this.model.value && catalog?.defaultModel)
+        this.model.setValue(catalog.defaultModel);
+    } finally {
+      if (this.alive) this.initializing.set(false);
+    }
+  }
+  loadHistory(): Promise<void> {
+    return this.store.loadHistory();
+  }
+  browseImages(): Promise<void> {
+    return this.store.loadImages(
+      this.imageQuery.value.trim().slice(0, 120)
+    );
+  }
+  selectImage(image: WorkshopImage): void {
+    if (this.busy() || this.attempted()) return;
+    this.image.set(image);
+  }
+  async generateImage(): Promise<void> {
+    if (this.busy() || this.attempted() || this.imagePrompt.invalid)
+      return;
+    const image = await this.store.generateImage(
+      this.imagePrompt.value.trim(),
+      'workshop-image.png'
+    );
+    if (image && this.alive) this.image.set(image);
+  }
+  async applyImage(): Promise<void> {
+    const image = this.image();
+    const draft = this.draft();
+    if (
+      !image ||
+      !draft?.pages.length ||
+      this.busy() ||
+      this.attempted()
+    )
+      return;
+    const updated = structuredClone(draft);
+    const blocks = updated.pages[0].blocks;
+    blocks.unshift({
+      blockId: crypto.randomUUID(),
+      sortIndex: 0,
+      componentInstanceName: 'NgxEditorJs2ImageComponent',
+      savedAction: 'center',
+      dataClean: JSON.stringify({
+        url: image.storageUrl,
+        title: image.name,
+      }),
+    });
+    blocks.forEach((block, index) => (block.sortIndex = index));
+    // Preserve a failed image edit for correction; reviewed status requires server validation.
+    this.json.setValue(JSON.stringify(updated, null, 2));
+    this.edited();
+    await this.validate();
+  }
+  inspectHistory(id: string): Promise<void> {
+    this.receiptId.setValue(id);
+    return this.inspect();
+  }
   readonly sections = this.store.sections;
   loadSections(): Promise<void> {
     return this.store.loadSections();
@@ -51,14 +147,20 @@ export class PublishingViewModel {
     });
   }
   async generate(): Promise<void> {
-    if (this.form.invalid || this.busy() || this.attempted()) {
+    if (
+      this.form.invalid ||
+      this.model.invalid ||
+      this.initializing() ||
+      this.busy() ||
+      this.attempted()
+    ) {
       this.form.markAllAsTouched();
       return;
     }
-    const draft = await this.store.draft(
-      'generate_workshop_draft',
-      this.form.getRawValue()
-    );
+    const draft = await this.store.draft('generate_workshop_draft', {
+      ...this.form.getRawValue(),
+      model: this.model.value,
+    } satisfies GenerateWorkshopDraftInput);
     if (draft && this.alive) this.accept(draft);
   }
   async validate(): Promise<void> {
@@ -110,6 +212,9 @@ export class PublishingViewModel {
     this.receipt.set(null);
     this.draft.set(null);
     this.json.setValue('');
+    this.image.set(null);
+    this.receiptId.setValue('');
+    this.validation.set('');
   }
   resource(value: unknown): string {
     return JSON.stringify(value, null, 2);
