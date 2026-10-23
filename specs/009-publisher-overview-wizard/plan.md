@@ -12,3 +12,21 @@ Keep all HTTP in API and server state in store; forms and step state in VM. Inli
 
 ## Verification
 Architecture, source/test types, Karma tests for history filters/receipt commands/routed CTA and wizard gating, isolated production build; desktop/mobile browser previews. Paid generation and live shell service checks excluded.
+
+## Receipt/history refinement
+Move inline overview receipt to a dedicated ReceiptComponent/ReceiptViewModel.
+Route-param changes issue replaceable switchMap reads through PublishingStore;
+invalid UUIDs do not issue requests; lifetime cleanup cancels reads. Navigation is
+relative to the remote mount and preserves history filters in query parameters.
+Add a stateless status badge reused in history/detail and pure step display utils.
+Group indexed documentation and lab operations without double-counting substeps;
+show progress only from receipt step status. Keep raw identifiers searchable.
+Verify deep links, parameter replacement/cancellation, retry/invalid inputs,
+filter restoration, summary grouping and responsive visual status distinction.
+
+## Brief form polish
+Remove the unused model presenter reload output/input and page binding. Reorder
+typed form controls in PublishingBriefComponent; add a Material hint and example
+placeholder with dynamic subscript sizing. Update existing presentation assertions,
+run architecture/type/behavior/build checks and verify mobile hint spacing.
+No form mapping, API, state or route changes.

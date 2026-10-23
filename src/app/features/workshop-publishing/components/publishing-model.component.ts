@@ -1,13 +1,12 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { PublishingModelCatalog } from '../models/publishing.models';
 
 @Component({
   selector: 'ngx-publishing-model',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="model" aria-label="Workshop model options">
@@ -25,9 +24,6 @@ import { PublishingModelCatalog } from '../models/publishing.models';
       <p>Reference USD rates for standard short-context requests; total cost depends on token usage.
         <a href="https://developers.openai.com/api/docs/pricing" target="_blank" rel="noopener">Current pricing</a>
       </p>
-      <button mat-stroked-button type="button" [disabled]="reloadDisabled()" (click)="reload.emit()">
-        Reload sections, models and history
-      </button>
       @for (error of errors(); track $index) { <p class="model__error" role="alert">{{ error }}</p> }
     </section>
   `,
@@ -41,8 +37,6 @@ export class PublishingModelComponent {
   readonly catalog = input<PublishingModelCatalog | null>(null);
   readonly errors = input<readonly string[]>([]);
   readonly locked = input(false);
-  readonly reloadDisabled = input(false);
-  readonly reload = output<void>();
 
   price(value: number | null): string {
     return value === null ? 'Price unavailable' : '$' + value.toFixed(2);

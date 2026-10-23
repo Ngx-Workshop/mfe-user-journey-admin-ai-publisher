@@ -35,7 +35,7 @@ serializes production runs without cancelling an in-progress deployment.
 Generation failures now show fixed guidance for model configuration/access/quota/rate limits/timeouts, image lookup, incomplete/refused output and invalid generated drafts. Unknown or older gateway responses keep the generic fallback; upstream message text is never displayed. The gateway logs safe categories and bounded validation field/reason codes for operator diagnosis. A generation failure preserves the brief and does not create a publication receipt.
 
 ## Publisher options
-Requires gateway contracts 1.2.0 (committed vendor tarball) and the matching gateway deployment. Entry automatically loads sections, models and administrator history. Manual checks: switch model and confirm reference rates; reload sections after a read failure; inspect a previous ID without changing the current ID; search/select an image or explicitly generate one, add it to a reviewed draft, inspect its JSON, validate and publish. Image generation is separately billed and uploads to service-uploader; tests use doubles and perform no paid calls. Model choices/rates and the image model are gateway configuration (see its workshop-publishing guide). Receipt history is server-owned; unconfirmed requests remain in this running app session and are reconciled by receipt checks. Live provider/shell acceptance remains pending.
+Requires gateway contracts 1.2.0 (committed vendor tarball) and the matching gateway deployment. Entry automatically loads sections, models and administrator history. Manual checks: switch model and confirm reference rates; check setup failure guidance; inspect a previous ID without changing the current ID; search/select an image or explicitly generate one, add it to a reviewed draft, inspect its JSON, validate and publish. Image generation is separately billed and uploads to service-uploader; tests use doubles and perform no paid calls. Model choices/rates and the image model are gateway configuration (see its workshop-publishing guide). Receipt history is server-owned; unconfirmed requests remain in this running app session and are reconciled by receipt checks. Live provider/shell acceptance remains pending.
 
 ## MVVM regression checks
 
@@ -73,3 +73,10 @@ Unpublished draft navigation requires confirmation; active operations prevent
 leaving. The wizard retains request IDs and duplicate protection. Tests use HTTP/
 store doubles; browser previews use sample read-only history/model/section data.
 No paid provider, upload or live publication calls were made for this change.
+
+Receipt inspection opens `/requests/:requestId` (under `/ai-publisher` in the
+shell). Check a direct link and refresh, malformed ID guidance without HTTP,
+receipt failures/retry, and returning to history with filters retained. The route
+loads `get_publishing_run` independently of the latest-100 history. History badges
+have distinct status colors plus labels; summary counts represent reported indexed
+resources and completed publishing steps, not additional backend metadata.

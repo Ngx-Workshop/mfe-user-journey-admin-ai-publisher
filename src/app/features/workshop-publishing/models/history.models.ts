@@ -7,5 +7,6 @@ export interface HistoryRow {
   status: HistoryStatus;
   message: string;
   steps: readonly string[];
+  summary: string;
 }
 

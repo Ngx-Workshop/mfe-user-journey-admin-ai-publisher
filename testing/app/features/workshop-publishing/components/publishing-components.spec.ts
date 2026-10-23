@@ -29,6 +29,10 @@ describe('Publishing presentation components', () => {
     fixture.detectChanges();
     const element: HTMLElement = fixture.nativeElement;
     expect(element.textContent).toContain('Angular');
+    const fields = Array.from(element.querySelectorAll('select, input, textarea'));
+    expect(fields.map(field => field.getAttribute('formControlName'))).toEqual(['sectionId', 'level', 'brief']);
+    expect(element.querySelector('mat-hint')?.textContent).toContain('Describe the topic, audience, prerequisites and learning objectives.');
+    expect(element.querySelector('textarea')?.getAttribute('placeholder')).toContain('Example: Teach Angular signals');
     element.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     expect(generate).toHaveBeenCalledTimes(1);
     fixture.componentRef.setInput('locked', true);
@@ -141,7 +145,7 @@ describe('Publishing presentation components', () => {
     expect(element.querySelector('pre')?.textContent).toContain('"id": 1');
   });
 
-  it('renders unknown model prices and persistent setup errors and emits reload', () => {
+  it('renders unknown model prices and persistent setup errors without a reload action', () => {
     const fixture = TestBed.createComponent(PublishingModelComponent);
     fixture.componentRef.setInput('model', new FormControl('test', { nonNullable: true }));
     fixture.componentRef.setInput('catalog', {
@@ -149,15 +153,12 @@ describe('Publishing presentation components', () => {
       defaultModel: 'test', imageModel: 'image',
     });
     fixture.componentRef.setInput('errors', ['Section access failed']);
-    const reload = jasmine.createSpy();
-    fixture.componentInstance.reload.subscribe(reload);
     fixture.detectChanges();
     const element: HTMLElement = fixture.nativeElement;
     expect(element.textContent).toContain('Price unavailable input');
     expect(element.textContent).toContain('$2.00 output');
     expect(element.querySelector('[role="alert"]')?.textContent).toContain('Section access failed');
-    element.querySelector('button')?.click();
-    expect(reload).toHaveBeenCalledTimes(1);
+    expect(element.querySelector('button')).toBeNull();
   });
 
   it('renders empty assets and selected preview and emits all image intents', () => {

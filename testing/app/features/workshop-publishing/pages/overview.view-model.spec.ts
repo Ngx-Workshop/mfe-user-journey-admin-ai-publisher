@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { EMPTY, of, Subject } from 'rxjs';
+import { EMPTY, Subject } from 'rxjs';
 import { OverviewViewModel } from '../../../../../src/app/features/workshop-publishing/pages/overview.view-model';
 import { PublishingStore } from '../../../../../src/app/features/workshop-publishing/state/publishing.store';
 import { PublishingReceipt } from '../../../../../src/app/features/workshop-publishing/models/publishing.models';
@@ -11,11 +11,10 @@ describe('OverviewViewModel', () => {
   let vm: OverviewViewModel;
   let store: { history: ReturnType<typeof signal<PublishingReceipt[]>>;
     unconfirmedRequests: ReturnType<typeof signal<string[]>>; busy: ReturnType<typeof signal<boolean>>;
-    error: ReturnType<typeof signal<string>>; loadHistory: jasmine.Spy; receipt: jasmine.Spy };
+    error: ReturnType<typeof signal<string>>; loadHistory: jasmine.Spy };
   beforeEach(() => {
     store = { history: signal([run]), unconfirmedRequests: signal([run.requestId, 'unconfirmed-id']),
-      busy: signal(false), error: signal(''), loadHistory: jasmine.createSpy().and.returnValue(EMPTY),
-      receipt: jasmine.createSpy().and.returnValue(of(run)) };
+      busy: signal(false), error: signal(''), loadHistory: jasmine.createSpy().and.returnValue(EMPTY) };
     TestBed.configureTestingModule({ providers: [OverviewViewModel, { provide: PublishingStore, useValue: store }] });
     vm = TestBed.inject(OverviewViewModel);
   });
@@ -28,15 +27,12 @@ describe('OverviewViewModel', () => {
     expect(vm.filtered().map(r => r.requestId)).toEqual(['unconfirmed-id']);
     vm.search.set('unconfirmed-id'); expect(vm.filtered().length).toBe(1);
   });
-  it('inspects receipts without accepting overlapping commands and tears down reads', () => {
+  it('rejects overlapping refreshes and tears down reads', () => {
     const pending = new Subject<PublishingReceipt[]>();
     store.loadHistory.and.returnValue(pending);
-    vm.refresh(); vm.refresh(); vm.inspect(run.requestId);
+    vm.refresh(); vm.refresh();
     expect(store.loadHistory).toHaveBeenCalledTimes(1);
-    expect(store.receipt).not.toHaveBeenCalled();
-    pending.complete(); vm.inspect(run.requestId);
-    expect(vm.receipt()).toEqual(run);
-    vm.refresh(); TestBed.resetTestingModule();
+    TestBed.resetTestingModule();
     expect(pending.observed).toBeFalse();
   });
 });

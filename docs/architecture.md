@@ -35,7 +35,7 @@ on subscription. Model credentials stay server-side.
   review. Editing invalidates publication readiness. Publication retains duplicate
   protection and receipt recovery. The route guard blocks leaving while busy and
   confirms discarding an unpublished draft.
-- `pages/overview.view-model.ts`: scoped search/status/receipt state with computed
+- `pages/overview.view-model.ts`: scoped search/status state with computed
   history rows and lifetime-bound exhaustMap read commands. No new HTTP contracts.
 - `pages/overview.component.ts`: history page composition and relative navigation.
   `components/publishing-history.component.ts`: stateless history/filter presenter;
@@ -73,6 +73,22 @@ The overview searches request IDs, messages and publishing step names, combined
 with published statuses or session unconfirmed IDs. The gateway returns the latest
 100 modified receipts; filtering is local to loaded history. Workshop titles and
 timestamps are not exposed by this contract and are not fabricated in the UI.
-History inspection reconciles the existing shared store. The former options
+Receipt inspection now navigates to `requests/:requestId` and reconciles the existing shared store. The former options
 orchestrator was removed because the wizard composes its presenters per step.
 See [overview/wizard handoff](../specs/009-publisher-overview-wizard/handoff.md).
+
+## Receipt detail and history presentation — 2026-10-14
+ReceiptComponent owns the separate `requests/:requestId` route and composes the
+shared header/actions/status badge. ReceiptViewModel validates IDs and uses
+switchMap with explicit DestroyRef teardown for replacement/retry reads through
+PublishingStore. Direct links need no prior overview load. Returning to overview
+preserves search/status query parameters; raw identifiers remain searchable.
+
+History rows show completed/total step progress plus deduplicated indexed page/lab
+counts. The pure publishing-step-display helpers map known operation names into
+readable actions and one-based numbers; unknown names get a readable fallback.
+Results remain optional JSON disclosures in receipt detail. No workshop titles or
+resource completion claims are inferred from step names. Shared status badges use
+green success, blue running, shell error attention and neutral unconfirmed accents;
+text/surface contrast follows shell tokens. Green/blue are semantic status accents
+so status colors remain distinct when the shell primary color changes.

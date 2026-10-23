@@ -9,6 +9,7 @@ const warnings = [];
 const orchestrators = new Set([
   'features/workshop-publishing/pages/publishing.component.ts',
   'features/workshop-publishing/pages/overview.component.ts',
+  'features/workshop-publishing/pages/receipt.component.ts',
 ]);
 const bem = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:__[a-z0-9]+(?:-[a-z0-9]+)*)?(?:--[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
 function files(directory) {

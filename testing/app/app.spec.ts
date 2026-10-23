@@ -58,11 +58,50 @@ describe('AI Publisher routed journey', () => {
     harness.detectChanges();
     expect(element.querySelectorAll('.history__row').length).toBe(1);
     element.querySelector<HTMLButtonElement>('[aria-label="Inspect receipt ' + run.requestId + '"]')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toContain('/ai-publisher/requests/' + run.requestId);
     const request = http.expectOne('/api/publisher/tools');
     expect(request.request.body).toEqual({ name: 'get_publishing_run', input: { requestId: run.requestId } });
     request.flush({ structuredContent: { data: run } });
     harness.detectChanges();
-    expect(element.querySelector('.overview__receipt')?.textContent).toContain('Angular workshop published');
+    expect(harness.routeNativeElement!.querySelector('.receipt__panel')?.textContent).toContain('Angular workshop published');
+    expect(harness.routeNativeElement!.querySelector('.overview__receipt')).toBeNull();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('ngx-publishing-actions button')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toContain('/ai-publisher/overview');
+    history([run]); harness.detectChanges();
+    expect(harness.routeNativeElement!.querySelector<HTMLInputElement>('input')!.value).toBe(' angular ');
+    expect(harness.routeNativeElement!.querySelector<HTMLSelectElement>('select')!.value).toBe('complete');
+  });
+  it('loads a directly linked receipt and retries failures without loading history', async () => {
+    const harness = await RouterTestingHarness.create('/ai-publisher/requests/' + run.requestId);
+    const first = http.expectOne('/api/publisher/tools');
+    expect(first.request.body.name).toBe('get_publishing_run');
+    first.flush({}, { status: 500, statusText: 'Error' });
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.querySelector('[role="alert"]')).not.toBeNull();
+    Array.from(harness.routeNativeElement!.querySelectorAll('button')).find(b => b.textContent?.includes('Retry'))!.click();
+    http.expectOne('/api/publisher/tools').flush({ structuredContent: { data: run } });
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.textContent).toContain('Angular workshop published');
+    http.expectNone('/api/publisher/tools');
+  });
+  it('rejects malformed receipt links without sending HTTP', async () => {
+    const harness = await RouterTestingHarness.create('/ai-publisher/requests/invalid');
+    expect(harness.routeNativeElement!.textContent).toContain('Enter a valid publishing request ID.');
+    http.expectNone('/api/publisher/tools');
+  });
+  it('replaces receipt reads on parameter changes without displaying a previous receipt', async () => {
+    const harness = await RouterTestingHarness.create('/ai-publisher/requests/' + run.requestId);
+    const first = http.expectOne('/api/publisher/tools');
+    const secondId = '22222222-2222-4222-8222-222222222222';
+    await harness.navigateByUrl('/ai-publisher/requests/' + secondId);
+    expect(first.cancelled).toBeTrue();
+    const second = http.expectOne('/api/publisher/tools');
+    expect(second.request.body.input.requestId).toBe(secondId);
+    second.flush({ structuredContent: { data: { ...run, requestId: secondId } } });
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.querySelector('.receipt__id')!.textContent).toContain(secondId);
   });
   it('navigates the CTA to a separate wizard within the mount path', async () => {
     const harness = await RouterTestingHarness.create('/ai-publisher/overview');

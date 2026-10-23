@@ -39,8 +39,7 @@ import { PublishingViewModel } from './publishing.view-model';
             <h2 class="publisher__title">Set the brief</h2>
             <p class="publisher__intro">Choose an AI model and describe the subject, audience and learning objectives.</p>
             <ngx-publishing-model [model]="vm.model" [catalog]="vm.catalog()" [errors]="vm.setupErrors()"
-              [locked]="vm.busy() || vm.initializing() || vm.attempted()"
-              [reloadDisabled]="vm.busy() || vm.initializing()" (reload)="vm.initialize()" />
+              [locked]="vm.busy() || vm.initializing() || vm.attempted()" />
             <ngx-publishing-brief [form]="vm.form" [sections]="vm.sections()"
               [locked]="vm.busy() || vm.attempted()" [initializing]="vm.initializing()"
               [modelValid]="vm.model.valid" (generate)="vm.generate()" />

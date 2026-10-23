@@ -47,3 +47,35 @@ provider/workshop acceptance is outside this local UI verification.
 ## Context
 Updated architecture/development docs, feature index and architecture orchestrator
 allowlist; removed the now-unused options composer. All local tasks completed.
+
+## Receipt/history refinement — 2026-10-14
+Removed overview's inline receipt. Inspect receipt navigates to
+`requests/:requestId`, which fetches its own receipt, supports direct navigation,
+refresh, errors/retry and malformed ID guidance. Return restores the overview's
+search and status filter through query parameters. Replacing a route ID cancels
+the prior request before starting the next one.
+
+Status badges now distinguish green completed, blue running, red needs attention
+and neutral unconfirmed while retaining text labels. Raw operation chains are
+replaced with completed/total progress and deduplicated documentation-page/coding-
+lab counts. Detail labels humanize known operations with one-based numbering;
+unknown operations get a readable fallback. Raw result JSON remains opt-in.
+
+Verification after refinement: architecture and both TypeScript checks PASS;
+52 Karma tests PASS; isolated production build to dist/receipt-verification PASS.
+Chrome desktop/375px previews used local sample data, verified badges, summaries,
+detail navigation/direct refresh and both pages without horizontal overflow.
+The temporary preview server/tab and viewport override were cleaned up. Live
+shell routing/theme and real provider/publication checks remain pending.
+
+## Brief form polish — 2026-10-14
+Removed the model reload CTA and its unused presenter inputs/output. Automatic
+setup remains. Workshop section and level now precede the brief in visual and
+keyboard order. The brief includes an accessible Material hint describing topic,
+audience, prerequisites, objectives, example and constraints, plus an example
+prompt placeholder. Dynamic hint sizing and a 1rem bottom margin avoid overlap.
+Empty-section hint no longer directs users to a removed action.
+
+Verification: 52 tests PASS; architecture/source/test types and isolated build
+PASS. Desktop and 375px local sample-data preview PASS: no overflow and 16px
+separation between wrapped hint and Generate button. Preview cleaned up.

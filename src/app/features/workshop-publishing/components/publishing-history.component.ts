@@ -3,11 +3,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import type { HistoryFilter, HistoryRow, HistoryStatus } from '../models/history.models';
+import { PublishingStatusComponent } from './publishing-status.component';
+import type { HistoryFilter, HistoryRow } from '../models/history.models';
 
 @Component({
   selector: 'ngx-publishing-history',
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, MatProgressBarModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, MatProgressBarModule, PublishingStatusComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="history" aria-labelledby="history-title" [attr.aria-busy]="busy()">
@@ -44,10 +45,10 @@ import type { HistoryFilter, HistoryRow, HistoryStatus } from '../models/history
       @for (row of rows(); track row.requestId) {
         <article class="history__row">
           <div class="history__details">
-            <span class="history__status">{{ labels[row.status] }}</span>
+            <ngx-publishing-status [status]="row.status" />
             <h3 class="history__id">{{ row.requestId }}</h3>
             @if (row.message) { <p>{{ row.message }}</p> }
-            @if (row.steps.length) { <p class="history__steps">{{ row.steps.join(' · ') }}</p> }
+            <p class="history__steps">{{ row.summary }}</p>
           </div>
           <button mat-stroked-button type="button" [disabled]="busy()"
             [attr.aria-label]="'Inspect receipt ' + row.requestId" (click)="inspect.emit(row.requestId)">Inspect receipt</button>
@@ -72,8 +73,6 @@ import type { HistoryFilter, HistoryRow, HistoryStatus } from '../models/history
     .history__row { border-top: 1px solid var(--mat-sys-outline-variant); padding: 1rem 0; }
     .history__details { min-width: 0; }
     .history__id { overflow-wrap: anywhere; font-size: 0.95rem; font-weight: 500; }
-    .history__status { display: inline-block; padding: 0.35rem 0.75rem; border-radius: 2rem;
-      background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); font-size: 0.8rem; }
     .history__error { color: var(--mat-sys-error); }
     .history__empty { padding: 2rem 0; text-align: center; }
     @media (max-width: 700px) {
@@ -95,9 +94,6 @@ export class PublishingHistoryComponent {
   readonly clear = output<void>();
   readonly refresh = output<void>();
   readonly inspect = output<string>();
-  readonly labels: Record<HistoryStatus, string> = {
-    complete: 'Completed', running: 'Running', needs_recovery: 'Needs attention', unconfirmed: 'Unconfirmed',
-  };
   searchValue(event: Event): string { return (event.target as HTMLInputElement).value; }
   changeStatus(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
