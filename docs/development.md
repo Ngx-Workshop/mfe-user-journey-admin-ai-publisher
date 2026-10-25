@@ -11,6 +11,8 @@ identifiers cause `license-webpack-plugin@4.0.2` to fail with
 because the newer builder imports webpack internals that moved.
 Keep license extraction enabled; remove the pin only after validating an upstream
 compatibility fix with a normal production build and `3rdpartylicenses.txt` output.
+Regenerate the lockfile with CI's Node 22/npm 10, then verify with `npm ci`.
+Npm 11 can omit optional peer entries that npm 10 requires for a clean install.
 
 | Purpose | Command |
 | --- | --- |
