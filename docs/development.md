@@ -2,6 +2,16 @@
 
 Updated 2026-10-14. Use Node 22 and the committed lockfile.
 
+The webpack-based Angular builder is pinned to `@angular-devkit/build-angular`
+`21.2.26` as a direct dev dependency. An npm `overrides` entry pins webpack to
+`5.105.2` across the builder and federation plugins to prevent duplicate runtimes.
+Builder `21.2.28` uses webpack `5.112.0`, whose changed federation shared-module
+identifiers cause `license-webpack-plugin@4.0.2` to fail with
+`Cannot read properties of undefined (reading 'trim')`. Both pins are required
+because the newer builder imports webpack internals that moved.
+Keep license extraction enabled; remove the pin only after validating an upstream
+compatibility fix with a normal production build and `3rdpartylicenses.txt` output.
+
 | Purpose | Command |
 | --- | --- |
 | Install | npm ci |
