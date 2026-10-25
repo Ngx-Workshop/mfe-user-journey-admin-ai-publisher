@@ -4,15 +4,23 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "prebuild": "npm run test:build",
     "build": "ng build",
     "watch": "ng build --watch --configuration production",
     "test": "ng test",
+    "test:build": "node --test testing/webpack-licenses.spec.cjs",
     "run:all": "node node_modules/@angular-architects/module-federation/src/server/mf-dev-server.js",
     "serve:bundle": "http-server ./dist/mfe-user-journey-admin-ai-publisher -p 4201 -a 0.0.0.0 --cors -c-1",
     "dev:bundle": "node scripts/dev-bundle.mjs",
     "check:architecture": "node scripts/check-architecture.mjs"
   },
   "private": true,
+  "overrides": {
+    "webpack": "5.106.2",
+    "@angular-devkit/build-angular": {
+      "@angular/build": "21.2.28"
+    }
+  },
   "dependencies": {
     "@angular-architects/module-federation": "20.0.0",
     "@angular/animations": "21.1.0",
@@ -30,6 +38,7 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "21.2.27",
     "@angular/build": "^21.1.0",
     "@angular/cli": "21.1.0",
     "@angular/compiler-cli": "21.1.0",
