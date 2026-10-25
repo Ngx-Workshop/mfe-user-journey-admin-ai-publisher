@@ -6,6 +6,7 @@ Updated 2026-10-14. Use Node 22 and the committed lockfile.
 | --- | --- |
 | Install | npm ci |
 | Architecture | npm run check:architecture |
+| Build dependency compatibility | npm run test:build |
 | Local dev | npm start |
 | Isolated production build | npm run build -- --output-path dist/migration-verification |
 | Behavior tests | npm test -- --watch=false --browsers=ChromeHeadless |
@@ -31,6 +32,17 @@ Configure repository secrets `MFE_DROPLET_IP`, `MFE_SSH_PRIVATE_KEY` and
 `MFE_SSH_HOST_FINGERPRINT` for the frontend host. Deployment preserves the
 production target `/opt/mfe-remotes/mfe-user-journey-admin-ai-publisher/` and
 serializes production runs without cancelling an in-progress deployment.
+
+The webpack builder `@angular-devkit/build-angular` is pinned to 21.2.27
+with webpack overridden to 5.106.2 for all consumers. Builder 21.2.28 requires
+newer webpack internals, but `license-webpack-plugin` 4.0.2 cannot parse the
+federation provider identifiers introduced in webpack 5.107, causing production
+license extraction to fail with an undefined `trim` error. The builder reuses
+the root `@angular/build` dependency to retain its patched tooling.
+Keep license extraction enabled. Run `npm run test:build` and a production
+build when updating these pins. The regression tests use Node's built-in runner
+to verify license parsing and a single webpack instance across federation/build.
+They also run automatically before `npm run build`, including in CI.
 
 Generation failures now show fixed guidance for model configuration/access/quota/rate limits/timeouts, image lookup, incomplete/refused output and invalid generated drafts. Unknown or older gateway responses keep the generic fallback; upstream message text is never displayed. The gateway logs safe categories and bounded validation field/reason codes for operator diagnosis. A generation failure preserves the brief and does not create a publication receipt.
 
