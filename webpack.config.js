@@ -68,6 +68,13 @@ module.exports = withModuleFederationPlugin({
       requiredVersion: '2.8.1',
     },
 
+    // Theming
+    '@tmdjr/ngx-workshop-design-system': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '^21.0.10',
+    },
+
     '@tmdjr/ngx-shared-headers': {
       singleton: true,
       strictVersion: true,
