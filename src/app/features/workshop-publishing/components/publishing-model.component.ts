@@ -29,7 +29,7 @@ import { PublishingModelCatalog } from '../models/publishing.models';
   `,
   styles: [`
     .model__field { width: 100%; }
-    .model__error { color: var(--mat-sys-error); }
+    .model__error { color: var(--ngx-color-error); }
   `],
 })
 export class PublishingModelComponent {

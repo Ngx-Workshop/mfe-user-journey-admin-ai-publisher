@@ -31,3 +31,5 @@ the largest folder number is not automatically the active feature.
 | 008 Unified Admin Publisher layout | Implemented; shell integration pending | [Spec](008-admin-publisher-layout/spec.md) | [Plan](008-admin-publisher-layout/plan.md) | [Tasks](008-admin-publisher-layout/tasks.md) | [Handoff](008-admin-publisher-layout/handoff.md) |
 
 | 009 Publisher overview and AI wizard | Implemented; live shell integration pending | [Spec](009-publisher-overview-wizard/spec.md) | [Plan](009-publisher-overview-wizard/plan.md) | [Tasks](009-publisher-overview-wizard/tasks.md) | [Handoff](009-publisher-overview-wizard/handoff.md) |
+
+| 010 Publisher design system migration | Complete | [Spec](010-design-system-migration/spec.md) | [Plan](010-design-system-migration/plan.md) | [Tasks](010-design-system-migration/tasks.md) | [Handoff](010-design-system-migration/handoff.md) |

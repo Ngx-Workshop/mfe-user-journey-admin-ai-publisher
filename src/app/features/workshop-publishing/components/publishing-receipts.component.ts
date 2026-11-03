@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import { JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -8,26 +9,26 @@ import { PublishingReceipt } from '../models/publishing.models';
 
 @Component({
   selector: 'ngx-publishing-receipts',
-  imports: [JsonPipe, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [NgxButton, JsonPipe, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="receipts" aria-label="Publishing requests and receipts">
       @if (showHistory()) {
       <details class="receipts__panel">
         <summary class="receipts__summary">Publishing request history</summary>
-        <button class="receipts__button" mat-stroked-button type="button"
+        <button class="receipts__button" mat-flat-button ngxButton surface="outline" type="button"
           [disabled]="busy() || initializing()" (click)="refresh.emit()">Refresh history</button>
         @for (run of history(); track run.requestId) {
           <p class="receipts__request">
             <code>{{ run.requestId }}</code> — {{ run.status }}
-            <button class="receipts__button" mat-button type="button" [disabled]="busy()"
+            <button class="receipts__button" mat-flat-button ngxButton surface="glass" type="button" [disabled]="busy()"
               (click)="inspectHistory.emit(run.requestId)">Inspect receipt</button>
           </p>
         }
         @for (id of unconfirmed(); track id) {
           <p class="receipts__request">
             <code>{{ id }}</code> — Receipt unconfirmed
-            <button class="receipts__button" mat-button type="button" [disabled]="busy()"
+            <button class="receipts__button" mat-flat-button ngxButton surface="glass" type="button" [disabled]="busy()"
               (click)="inspectHistory.emit(id)">Inspect receipt</button>
           </p>
         }
@@ -42,7 +43,7 @@ import { PublishingReceipt } from '../models/publishing.models';
         <mat-label>Receipt request ID (optional)</mat-label>
         <input matInput [formControl]="receiptId()" placeholder="Leave blank to check this workshop" />
       </mat-form-field>
-      <button class="receipts__button" mat-stroked-button type="button"
+      <button class="receipts__button" mat-flat-button ngxButton surface="outline" type="button"
         [disabled]="busy()" (click)="inspect.emit()">Check publishing receipt</button>
       @if (receipt(); as current) {
         <div class="receipts__panel" role="status">
@@ -64,8 +65,8 @@ import { PublishingReceipt } from '../models/publishing.models';
     .receipts__panel {
       margin-top: 1.5rem;
       padding: 1rem;
-      border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 0.5rem;
+      border: 1px solid var(--ngx-color-border);
+      border-radius: var(--ngx-radius);
     }
     .receipts__summary { cursor: pointer; padding: 0.5rem; font-weight: 600; }
     .receipts__request { overflow-wrap: anywhere; }
@@ -76,7 +77,7 @@ import { PublishingReceipt } from '../models/publishing.models';
       overflow-wrap: anywhere;
       max-height: 32rem;
       overflow: auto;
-      background: var(--mat-sys-surface-container);
+      background: var(--ngx-color-surface-high);
       padding: 1rem;
     }
   `],

@@ -92,3 +92,95 @@ resource completion claims are inferred from step names. Shared status badges us
 green success, blue running, shell error attention and neutral unconfirmed accents;
 text/surface contrast follows shell tokens. Green/blue are semantic status accents
 so status colors remain distinct when the shell primary color changes.
+
+## Design system migration — 2026-11-01
+Overview, wizard and receipt page roots opt into ngx-design-system. The shared
+PublishingActionsComponent composes NgxActionBar, NgxButton and NgxInlineStatus,
+replacing the particle hero and custom action strip. NgxPanel owns each primary
+workspace surface; supporting presenters use public semantic ngx color/radius
+tokens and NgxButton on Material controls. PublishingStatusComponent maps domain
+statuses to shared semantic tones. The obsolete header presenter is removed.
+Standalone src/styles.scss includes the design-system theme; federated routes
+inherit shell styles. Toolbar offset defaults match the other admin remotes
+(96px desktop / 76px narrow); standalone .publisher-app sets it to zero.
+API/store/VM, route, guard and federation contracts are unchanged. See
+[design-system handoff](../specs/010-design-system-migration/handoff.md).
+
+### Publisher workspace layout
+The overview uses the same two-column workspace as the admin catalog/navigation:
+16px gutters, a 280–320px solid chamfered filter rail and a stepped request panel.
+PublishingFiltersComponent owns stateless search/status/reset intents and derives
+summary counts from unfiltered rows. PublishingHistoryComponent composes the rail
+and results, keeping its existing intents and receiving allRows for summaries.
+The result header owns count/refresh; its focusable body scrolls independently.
+The local panel-body-viewport utility measures available space and panel chrome,
+with ResizeObserver/listener cleanup tied to component destruction. At <=900px,
+panels stack and bodies return to natural page height. The action presenter emits
+its measured height to the overview root so sidebar positioning follows wrapping.
+Wizard and receipt workspaces also use full width and explicit stepped/solid
+panel variants. No domain state or public routing changes accompany the layout.
+
+### Compact receipts and issues — 2026-11-01
+The history compositor now partitions filtered rows: complete/running receipts
+appear in Request history; needs_recovery/unconfirmed receipts appear only in a
+separate beveled secondary Issues panel, following navigation's repair workspace.
+PublishingRequestRowComponent renders stateless 52px rows with ellipsized ID and
+progress/message, status, and an accessible inspect icon. Full IDs and summaries
+remain available in title text and receipt detail. PublishingRequestPanelComponent
+owns panel feedback, keyboard-scrollable rows, empty states and typed inspect/retry
+outputs. Both panels show loading/error recovery independently.
+
+The workspace height is measured from its actual position to the viewport bottom.
+Each panel subtracts its own measured chrome from that allocated height. These
+lifetimes clean up observers/listeners. This supersedes the earlier natural-height
+mobile behavior: mobile filters use a collapsed disclosure with a bounded overlay;
+Requests/Issues switching shows one full-height panel. Resize, wrapped toolbar and
+filter expansion retain visible panel bounds and internal scrolling at all tested
+breakpoints. Service/store/VM/routing contracts remain unchanged.
+
+### Compact receipt detail — 2026-11-01
+ReceiptComponent uses the same measured workspace/container-body utilities as
+history. Metadata and the compact 48px progress summaries share a focusable internal
+scroll region with a sticky progress heading. Expanding a native step disclosure
+adds content inside that region without expanding the panel/document. Panel header
+owns status/refresh; on narrow screens status moves into scrollable metadata to
+preserve progress space. Loading/error/retry, malformed-ID guidance, direct links,
+replacement reads and history query parameters retain the existing VM behavior.
+
+Step results use NgxCodeBlock with JSON serialization, wrapping, highlighting and
+the shared copy control. Result wrappers/scroll region establish positioning contexts
+so code-block live announcements remain contained. Steps with undefined results
+remain plain rows; null and other JSON values retain their serialized values.
+The viewport utility observes the containing page toolbar for both receipt and
+history. API/store/VM/federation contracts and step-name display helpers are unchanged.
+
+### Three-column receipt workspace — 2026-11-01
+Receipt detail now composes ReceiptWorkspacePanelComponent three times: receipt
+metadata, compact selectable progress, and selected-step details. The presenter
+owns measured container-height scrolling and public panel projections. Desktop
+columns are 300px / 1fr / 1.4fr with 16px gaps; below 1100px, Receipt/Progress/Step
+details controls show one bounded panel. Selecting a progress row reveals step
+details on narrow layouts while all columns remain visible on desktop.
+
+ReceiptViewModel owns selectedIndex and computed selectedStep, defaulting/resetting
+to the first step whenever a receipt read starts. Previous results clear while
+reads are pending; undefined results show explicit no-result guidance. Only the
+selected result instantiates NgxCodeBlock, retaining JSON null/false/zero and
+text-safe rendering. The result panel resets its own scroll on selected-step
+changes; scrolling it does not move the progress list. Route/API/federation
+contracts, recovery/error/retry and history navigation remain compatible.
+
+### Receipt row navigation and workshop identity — 2026-11-02
+Overview rows now project workshopName/workshopUrl using the pure workshopSummary
+helper. Only a completed first create_workshop result supplies identity; string
+route fields are validated and encoded as individual segments. This refines earlier
+notes that history has no workshop title: titles can be derived from first-step
+result data without adding receipt metadata fields or changing the API. Name is
+included in local search; missing identity remains explicitly unavailable.
+
+PublishingRequestRowComponent uses a stretched native receipt-details button with
+sibling copy-ID button and new-tab workshop anchor. Controls are not nested. CDK
+Clipboard copies the raw ID and announces success; neither copy nor workshop launch
+emits receipt inspection. The row adds a workshop-name line and retains compact
+progress/status. Valid links use /document-editor/{sectionId}/{workshopDocumentGroupId}
+with target=_blank and noopener/noreferrer. Missing route data disables launch.

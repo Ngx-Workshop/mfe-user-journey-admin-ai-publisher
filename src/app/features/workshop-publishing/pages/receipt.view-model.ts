@@ -11,6 +11,7 @@ export class ReceiptViewModel {
   private readonly requests = new Subject<string>();
   readonly requestId = signal('');
   readonly invalid = signal(false);
+  readonly selectedIndex = signal(0);
   readonly receipt = signal<PublishingReceipt | null>(null);
   readonly busy = this.store.busy;
   readonly error = computed(() => this.invalid() ? 'Enter a valid publishing request ID.' : this.store.error());
@@ -18,10 +19,15 @@ export class ReceiptViewModel {
   readonly steps = computed(() => (this.receipt()?.steps ?? []).map((step) => ({
     ...step, label: publishingStepLabel(step.name),
   })));
+  readonly selectedStep = computed(() => this.steps()[this.selectedIndex()] ?? null);
+  selectStep(index: number): void {
+    if (Number.isInteger(index) && index >= 0 && index < this.steps().length) this.selectedIndex.set(index);
+  }
   constructor() {
     this.requests.pipe(switchMap((id) => defer(() => {
       this.requestId.set(id);
       this.receipt.set(null);
+      this.selectedIndex.set(0);
       this.invalid.set(!/^[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i.test(id));
       return this.invalid() ? EMPTY : this.store.receipt(id).pipe(tap((receipt) => this.receipt.set(receipt)));
     })), takeUntilDestroyed(inject(DestroyRef))).subscribe();

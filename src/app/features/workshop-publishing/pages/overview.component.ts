@@ -1,33 +1,33 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PublishingHeaderComponent } from '../components/publishing-header.component';
 import { PublishingActionsComponent } from '../components/publishing-actions.component';
 import { PublishingHistoryComponent } from '../components/publishing-history.component';
 import { OverviewViewModel } from './overview.view-model';
 
 @Component({
+  host: { class: 'ngx-design-system', '[style.--publisher-action-bar-height.px]': 'actionBarHeight()' },
   selector: 'ngx-publishing-overview',
-  imports: [ PublishingHeaderComponent, PublishingActionsComponent, PublishingHistoryComponent],
+  imports: [ PublishingActionsComponent, PublishingHistoryComponent],
   providers: [OverviewViewModel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <ngx-publishing-header />
-    <ngx-publishing-actions [disabled]="vm.busy()" (createWorkshop)="createWorkshop()" />
-    <main class="overview" aria-labelledby="publisher-title">
-      <ngx-publishing-history [rows]="vm.filtered()" [total]="vm.rows().length"
+    <ngx-publishing-actions heading="AI Publisher" (heightChange)="actionBarHeight.set($event)" [disabled]="vm.busy()" (createWorkshop)="createWorkshop()" />
+    <main class="overview" aria-label="AI Publisher">
+      <ngx-publishing-history [rows]="vm.filtered()" [allRows]="vm.rows()" [total]="vm.rows().length"
         [search]="vm.search()" [status]="vm.status()" [busy]="vm.busy()" [error]="vm.error()"
         (searchChanged)="vm.search.set($event)" (statusChanged)="vm.status.set($event)"
         (clear)="vm.clearFilters()" (refresh)="vm.refresh()" (inspect)="inspect($event)" />
     </main>
   `,
   styles: [`
-    :host { display: block; min-height: 100vh; color: var(--mat-sys-on-surface);
-      background: radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--mat-sys-primary) 8%, transparent), transparent 28rem), var(--mat-sys-surface-container-lowest); }
-    .overview { width: min(100% - 3rem, 1440px); margin: 0 auto; padding: 1.5rem 0 3rem; }
-    @media (max-width: 700px) { .overview { width: min(100% - 2rem, 1440px); padding-top: 1rem; } }
+    :host { display: block; min-width: 0; min-height: calc(100dvh - var(--publisher-toolbar-top, 96px)); color: var(--ngx-color-text);
+      background: radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--ngx-color-primary) 8%, transparent), transparent 28rem), var(--ngx-color-canvas); }
+    .overview { width: calc(100% - 2rem); margin: 0 auto; padding: 1rem 0; }
+    @media (max-width: 700px) { .overview { width: calc(100% - 2rem); padding-top: 1rem; } }
   `],
 })
 export class OverviewComponent implements OnInit {
+  readonly actionBarHeight = signal(56);
   readonly vm = inject(OverviewViewModel);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

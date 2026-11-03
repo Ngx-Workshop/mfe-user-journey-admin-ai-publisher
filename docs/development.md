@@ -92,3 +92,11 @@ receipt failures/retry, and returning to history with filters retained. The rout
 loads `get_publishing_run` independently of the latest-100 history. History badges
 have distinct status colors plus labels; summary counts represent reported indexed
 resources and completed publishing steps, not additional backend metadata.
+
+## Design system presentation — 2026-11-01
+Installed design-system 21.0.10 supplies the public theme mixin and shared
+presentation components. Use npm run dev:bundle for shell overrides pointing to
+http://localhost:4201/remoteEntry.js; its static server enables cross-origin
+module loading and the watcher rebuilds production bundles. Isolated build
+verification continues to use dist/migration-verification. UI migration evidence
+is recorded in specs/010-design-system-migration/handoff.md.

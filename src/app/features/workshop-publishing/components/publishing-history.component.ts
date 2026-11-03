@@ -1,89 +1,70 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import {
+  afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef,
+  ElementRef, inject, input, output, signal, viewChild,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { PublishingStatusComponent } from './publishing-status.component';
+import { PublishingFiltersComponent } from './publishing-filters.component';
+import { PublishingRequestPanelComponent } from './publishing-request-panel.component';
 import type { HistoryFilter, HistoryRow } from '../models/history.models';
+import { observeWorkspaceHeight } from '../utils/panel-body-viewport';
 
 @Component({
   selector: 'ngx-publishing-history',
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, MatProgressBarModule, PublishingStatusComponent],
+  imports: [MatButtonModule, PublishingFiltersComponent, PublishingRequestPanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="history" aria-labelledby="history-title" [attr.aria-busy]="busy()">
-      <div class="history__heading">
-        <div><h2 id="history-title">Request history</h2>
-          <p>Search your latest 100 requests and check their publishing receipts.</p></div>
-        <button mat-stroked-button type="button" [disabled]="busy()" (click)="refresh.emit()">Refresh history</button>
-      </div>
-      <div class="history__filters">
-        <mat-form-field appearance="outline">
-          <mat-label>Search requests</mat-label>
-          <input matInput [value]="search()" (input)="searchChanged.emit(searchValue($event))"
-            placeholder="Request ID, message or publishing step" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Request status</mat-label>
-          <select matNativeControl [value]="status()" (change)="changeStatus($event)">
-            <option value="all">All statuses</option>
-            <option value="complete">Completed</option>
-            <option value="running">Running</option>
-            <option value="needs_recovery">Needs attention</option>
-            <option value="unconfirmed">Unconfirmed</option>
-          </select>
-        </mat-form-field>
-        <button mat-button type="button" (click)="clear.emit()" [disabled]="!search() && status() === 'all'">Clear filters</button>
-      </div>
-      @if (busy()) { <mat-progress-bar mode="indeterminate" aria-label="Loading publishing requests" /> }
-      @if (error()) {
-        <p class="history__error" role="alert">{{ error() }}
-          <button mat-button type="button" [disabled]="busy()" (click)="refresh.emit()">Retry</button>
-        </p>
-      }
-      <p class="history__count" role="status">{{ rows().length }} of {{ total() }} requests</p>
-      @for (row of rows(); track row.requestId) {
-        <article class="history__row">
-          <div class="history__details">
-            <ngx-publishing-status [status]="row.status" />
-            <h3 class="history__id">{{ row.requestId }}</h3>
-            @if (row.message) { <p>{{ row.message }}</p> }
-            <p class="history__steps">{{ row.summary }}</p>
-          </div>
-          <button mat-stroked-button type="button" [disabled]="busy()"
-            [attr.aria-label]="'Inspect receipt ' + row.requestId" (click)="inspect.emit(row.requestId)">Inspect receipt</button>
-        </article>
-      } @empty {
-        @if (!busy() && !error()) {
-          <div class="history__empty">
-            <h3>{{ total() ? 'No matching requests' : 'No publishing requests yet' }}</h3>
-            <p>{{ total() ? 'Try another search or clear your filters.' : 'Start a new workshop to create learning materials with AI.' }}</p>
+    <div #workspace class="history-layout" [style.height.px]="workspaceHeight()">
+      <ngx-publishing-filters [rows]="allRows()" [search]="search()" [status]="status()"
+        (searchChanged)="searchChanged.emit($event)" (statusChanged)="changeStatus($event)"
+        (clear)="selectedPane.set(null); clear.emit()" />
+      <div class="request-workspace" [class.request-workspace--issues]="hasIssues()">
+        @if (hasIssues()) {
+          <div class="request-workspace__switch" role="group" aria-label="Receipt panels">
+            <button mat-button type="button" [attr.aria-pressed]="activePane() === 'requests'"
+              (click)="selectedPane.set('requests')">Requests ({{ requests().length }})</button>
+            <button mat-button type="button" [attr.aria-pressed]="activePane() === 'issues'"
+              (click)="selectedPane.set('issues')">Issues ({{ issues().length }})</button>
           </div>
         }
-      }
-    </section>
+        <ngx-publishing-request-panel class="request-workspace__main"
+          [class.request-workspace__panel--hidden]="hasIssues() && activePane() !== 'requests'"
+          [rows]="requests()" [busy]="busy()" [error]="error()"
+          [emptyTitle]="emptyTitle()" [emptyDescription]="emptyDescription()"
+          (refresh)="refresh.emit()" (inspect)="inspect.emit($event)" />
+        @if (hasIssues()) {
+          <ngx-publishing-request-panel class="request-workspace__issues" [issues]="true"
+            [class.request-workspace__panel--hidden]="activePane() !== 'issues'"
+            [rows]="issues()" [busy]="busy()" [error]="error()"
+            emptyTitle="No matching issues" emptyDescription="No issues match your current filters."
+            (refresh)="refresh.emit()" (inspect)="inspect.emit($event)" />
+        }
+      </div>
+    </div>
   `,
   styles: [`
-    :host { display: block; }
-    .history { padding: 1.5rem; border: 1px solid var(--mat-sys-outline-variant); border-radius: 1rem; }
-    .history__heading, .history__row { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
-    .history__heading h2 { margin: 0; font-size: 1.5rem; font-weight: 500; }
-    .history__heading p, .history__steps, .history__count { color: var(--mat-sys-on-surface-variant); }
-    .history__filters { display: grid; grid-template-columns: minmax(0, 1fr) 220px auto; gap: 1rem; align-items: start; margin-top: 1rem; }
-    .history__row { border-top: 1px solid var(--mat-sys-outline-variant); padding: 1rem 0; }
-    .history__details { min-width: 0; }
-    .history__id { overflow-wrap: anywhere; font-size: 0.95rem; font-weight: 500; }
-    .history__error { color: var(--mat-sys-error); }
-    .history__empty { padding: 2rem 0; text-align: center; }
-    @media (max-width: 700px) {
-      .history { padding: 1rem; }
-      .history__heading, .history__row { align-items: flex-start; flex-direction: column; }
-      .history__filters { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    :host { display: block; min-width: 0; min-height: 0; }
+    .history-layout { display: grid; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); gap: 1rem; min-height: 0; }
+    ngx-publishing-filters { min-height: 0; max-height: 100%; }
+    .request-workspace { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-width: 0; min-height: 0; }
+    .request-workspace--issues { grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 1rem; }
+    .request-workspace__switch { display: none; }
+    @media (max-width: 1100px) and (min-width: 901px) {
+      .history-layout { grid-template-columns: 260px minmax(0, 1fr); }
+      .request-workspace--issues { grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr); gap: 0.75rem; }
+    }
+    @media (max-width: 900px) {
+      .history-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 0.5rem; }
+      .request-workspace--issues { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 0.25rem; }
+      .request-workspace__switch { display: flex; gap: 0.5rem; }
+      .request-workspace__switch button[aria-pressed='true'] { background: var(--ngx-color-surface-high); }
+      .request-workspace--issues > ngx-publishing-request-panel { grid-column: 1; grid-row: 2; }
+      .request-workspace__panel--hidden { display: none; }
     }
   `],
 })
 export class PublishingHistoryComponent {
   readonly rows = input.required<readonly HistoryRow[]>();
+  readonly allRows = input.required<readonly HistoryRow[]>();
   readonly total = input(0);
   readonly search = input('');
   readonly status = input<HistoryFilter>('all');
@@ -94,11 +75,28 @@ export class PublishingHistoryComponent {
   readonly clear = output<void>();
   readonly refresh = output<void>();
   readonly inspect = output<string>();
-  searchValue(event: Event): string { return (event.target as HTMLInputElement).value; }
-  changeStatus(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    if (value === 'all' || value === 'complete' || value === 'running' || value === 'needs_recovery' || value === 'unconfirmed') {
-      this.statusChanged.emit(value);
-    }
+  readonly requests = computed(() => this.rows().filter(row => !this.isIssue(row)));
+  readonly issues = computed(() => this.rows().filter(row => this.isIssue(row)));
+  readonly hasIssues = computed(() => this.allRows().some(row => this.isIssue(row)));
+  readonly selectedPane = signal<'requests' | 'issues' | null>(null);
+  readonly activePane = computed(() => this.selectedPane() ??
+    (this.status() === 'needs_recovery' || this.status() === 'unconfirmed' ? 'issues' : 'requests'));
+  readonly emptyTitle = computed(() => !this.total() ? 'No publishing requests yet' :
+    this.issues().length ? 'No completed or running requests' : 'No matching requests');
+  readonly emptyDescription = computed(() => !this.total()
+    ? 'Start a new workshop to create learning materials with AI.'
+    : this.issues().length ? 'Requests needing attention are in the Issues panel.' : 'Try another search or clear your filters.');
+  readonly workspaceHeight = signal(0);
+  private readonly workspace = viewChild.required<ElementRef<HTMLElement>>('workspace');
+  private readonly destroyRef = inject(DestroyRef);
+  constructor() {
+    afterNextRender(() => this.destroyRef.onDestroy(observeWorkspaceHeight(
+      this.workspace().nativeElement, height => this.workspaceHeight.set(height),
+    )));
+  }
+  private isIssue(row: HistoryRow): boolean { return row.status === 'needs_recovery' || row.status === 'unconfirmed'; }
+  changeStatus(status: HistoryFilter): void {
+    this.selectedPane.set(null);
+    this.statusChanged.emit(status);
   }
 }

@@ -1,6 +1,7 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { defer, exhaustMap, Observable, Subject } from 'rxjs';
+import { workshopSummary } from '../utils/publishing-workshop-summary';
 import { PublishingStore } from '../state/publishing.store';
 import { publishingProgress, publishingStepLabel } from '../utils/publishing-step-display';
 
@@ -21,13 +22,13 @@ export class OverviewViewModel {
       message: 'Check the receipt to confirm the result.', steps: [], summary: 'Publishing result not confirmed.' })),
     ...this.store.history().map((run) => ({ requestId: run.requestId, status: run.status,
       message: run.message ?? '', steps: run.steps.flatMap((step) => [step.name, publishingStepLabel(step.name)]),
-      summary: publishingProgress(run.steps) })),
+      summary: publishingProgress(run.steps), ...workshopSummary(run.steps) })),
   ]);
   readonly filtered = computed(() => {
     const query = this.search().trim().toLowerCase();
     return this.rows().filter((row) =>
       (this.status() === 'all' || row.status === this.status()) &&
-      [row.requestId, row.message, row.summary, ...row.steps].join(' ').toLowerCase().includes(query)
+      [row.workshopName ?? '', row.requestId, row.message, row.summary, ...row.steps].join(' ').toLowerCase().includes(query)
     );
   });
   constructor() {

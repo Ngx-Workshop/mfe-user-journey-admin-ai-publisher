@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,7 +8,7 @@ import { PublishingForm } from '../forms/publishing-form';
 
 @Component({
   selector: 'ngx-publishing-brief',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [NgxButton, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form class="brief" [formGroup]="form()" (ngSubmit)="generate.emit()">
@@ -37,7 +38,7 @@ import { PublishingForm } from '../forms/publishing-form';
         <mat-hint>Describe the topic, audience, prerequisites and learning objectives. Include a practical example
           and any constraints, such as duration or technologies to use.</mat-hint>
       </mat-form-field>
-      <button mat-flat-button type="submit"
+      <button mat-flat-button ngxButton type="submit"
         [disabled]="locked() || initializing() || form().invalid || !modelValid()">
         Generate workshop draft
       </button>

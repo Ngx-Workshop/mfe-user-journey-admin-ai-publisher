@@ -8,5 +8,7 @@ export interface HistoryRow {
   message: string;
   steps: readonly string[];
   summary: string;
+  workshopName?: string | null;
+  workshopUrl?: string | null;
 }
 

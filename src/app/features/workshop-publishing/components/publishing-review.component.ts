@@ -1,3 +1,4 @@
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import { JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -5,7 +6,7 @@ import { WorkshopDraft } from '../models/publishing.models';
 
 @Component({
   selector: 'ngx-publishing-review',
-  imports: [JsonPipe, MatButtonModule],
+  imports: [NgxButton, JsonPipe, MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article class="review">
@@ -50,7 +51,7 @@ import { WorkshopDraft } from '../models/publishing.models';
       </details>
       @if (showPublish()) {
       <p>Publishing makes these resources available immediately. Coding labs must pass verification first.</p>
-      <button mat-flat-button type="button" [disabled]="locked()" (click)="publish.emit()">
+      <button mat-flat-button ngxButton type="button" [disabled]="locked()" (click)="publish.emit()">
         Publish reviewed workshop
       </button>
       }
@@ -60,8 +61,8 @@ import { WorkshopDraft } from '../models/publishing.models';
     .review {
       margin-top: 1.5rem;
       padding: 1rem;
-      border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 0.5rem;
+      border: 1px solid var(--ngx-color-border);
+      border-radius: var(--ngx-radius);
     }
     .review__details { margin: 0.75rem 0; }
     .review__summary { cursor: pointer; padding: 0.5rem; font-weight: 600; }
@@ -70,7 +71,7 @@ import { WorkshopDraft } from '../models/publishing.models';
       overflow-wrap: anywhere;
       max-height: 32rem;
       overflow: auto;
-      background: var(--mat-sys-surface-container);
+      background: var(--ngx-color-surface-high);
       padding: 1rem;
     }
     .review__block { margin: 0.75rem; }

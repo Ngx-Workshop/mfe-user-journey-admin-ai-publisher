@@ -35,4 +35,13 @@ describe('OverviewViewModel', () => {
     TestBed.resetTestingModule();
     expect(pending.observed).toBeFalse();
   });
+  it('includes completed first-step workshop names in local search', () => {
+    store.history.set([{ ...run, steps: [{ name: 'create_workshop', status: 'complete', result: {
+      name: 'Pure TypeScript Functions', sectionId: 'angular', workshopDocumentGroupId: 'pure-functions',
+    } }] }]);
+    vm.search.set('  PURE TYPESCRIPT  ');
+    expect(vm.filtered().map(row => row.requestId)).toEqual([run.requestId]);
+    expect(vm.filtered()[0].workshopUrl).toBe('/document-editor/angular/pure-functions');
+  });
+
 });
