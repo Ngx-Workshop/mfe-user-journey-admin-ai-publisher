@@ -1,3 +1,4 @@
+import { labVerification } from './publishing-verification';
 import type { PublishingReceipt } from '../models/publishing.models';
 
 /** Operation indices are zero-based; display item numbers from one. */
@@ -50,6 +51,9 @@ export function publishingProgress(
     if (page) pages.add(page[1]);
     if (lab) labs.add(lab[1]);
   }
+  const failed = steps.filter(
+    (step) => labVerification(step)?.passed === false
+  ).length;
   return [
     `${completed} of ${steps.length} publishing steps complete`,
     ...(pages.size
@@ -59,6 +63,11 @@ export function publishingProgress(
       : []),
     ...(labs.size
       ? [`${labs.size} coding ${labs.size === 1 ? 'lab' : 'labs'}`]
+      : []),
+    ...(failed
+      ? [
+          `${failed} coding ${failed === 1 ? 'lab failed' : 'labs failed'} verification`,
+        ]
       : []),
   ].join(' · ');
 }

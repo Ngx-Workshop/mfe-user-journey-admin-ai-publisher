@@ -72,7 +72,7 @@ publication or receipt recovery acceptance. See the
 
 ## Overview and AI wizard
 Standalone bootstrap now registers the remote's exported routes. The default URL
-redirects to `/overview`; `/new` opens the three-step AI wizard; `/console` redirects
+redirects to `/overview`; `/new` opens the workshop creation workspace; `/console` redirects
 to `/new` and `/hello-world` redirects to `/overview`. In the administrator shell,
 these routes remain relative to the existing `/ai-publisher` mount. Serve the index
 fallback for direct navigation/refresh of these routes.
@@ -100,3 +100,63 @@ http://localhost:4201/remoteEntry.js; its static server enables cross-origin
 module loading and the watcher rebuilds production bundles. Isolated build
 verification continues to use dist/migration-verification. UI migration evidence
 is recorded in specs/010-design-system-migration/handoff.md.
+
+## Publishing journey verification — 2026-11-04
+
+The creation route now uses brief/review/publication workspaces, named operations,
+elapsed generation time and resource previews. Run the standard checks above after
+changes. Local acceptance covers delayed generation/clock cleanup, ordered setup,
+phase approval, JSON invalidation, publication recovery, outline switching, safe
+rich HTML/images and Markdown, empty resources, lab disclosures and answer reveal.
+
+Browser checks used both the authenticated shell's localhost remote override and
+an isolated localhost:4220 development preview with sample responses. Shell setup
+reads and the new layout work. The live gateway rejected the sample import/validation
+with generic publishing-agent guidance; the UI retained its input. This is an
+unresolved integration observation, not a successful live validation/generation.
+The isolated sample service exercised generation waiting/automatic review, page/lab/
+assessment navigation and the publication checkpoint without any paid AI requests,
+image uploads or live publication. Read-only preview/sanitization tests complement
+these UI checks; they do not prove provider or owner-service integration.
+
+Detailed evidence and component-size exceptions are in
+[011 handoff](../specs/011-publishing-journey/handoff.md). Exact generation substages
+need a future gateway progress contract; the UI currently reports only observable
+request phases and elapsed time.
+
+## Receipt verification and reading layout — 2026-11-04
+
+78 ChromeHeadless tests, architecture checks, strict app/test types, production
+isolated federation build/license and diff checks pass on Node 22.23.3. The actual
+receipt b31ed86e-26f5-43c9-bb9a-de7bbd1b5325 was inspected through the authenticated
+shell/local override. Its 10th completed operation now also shows failed verification,
+0/6 tests, recovery guidance and the correct lab editor URL. Desktop Result grew to
+4,542px while the 710px Receipt/Steps panels stayed at top 181px after document
+scrolling. At 390px, switching to the result and back works and the final document
+width remains 390px. No lab edits, live verification or publication were performed.
+See [012 handoff](../specs/012-receipt-verification/handoff.md).
+
+Pending-step follow-up: 80 ChromeHeadless tests and production build pass; helper and
+routed regressions cover completed lab creation with pending verification and hidden
+editor CTA. Architecture/strict types/diff checks pass. Owner-service retry behavior
+was inspected read-only; no replay endpoint or live verification was exercised.
+
+Editor-link follow-up (2026-11-05): 85 ChromeHeadless tests pass, along with
+architecture, strict application/test types, production build/license and diff
+checks. Tests cover page-specific direct/snapshot receipt results, safe route
+encoding and pending/malformed/mismatched identities. Native editor links replace
+the outlined button treatment. The verified isolated production output was copied
+to the local bundle-serving directory for browser review; no remote deployment.
+
+First-stage panel layout (2026-11-05): 86 ChromeHeadless tests pass, including
+expanded JSON binding, validation intent, read-only locking and preserved content
+when returning to disclosure mode. Production build/license, architecture, strict
+app/test types and diff checks pass. Verified output was served through the local
+remote override for desktop/intermediate/mobile layout checks. No generation,
+validation or publication requests are needed to inspect this layout.
+
+Panel layout browser evidence: standalone production preview verified at 1880, 1024
+and 390px; document width matches each viewport. Inner panels stack at the
+intermediate breakpoint and guidance stacks on mobile. The admin session expired
+during visual checks, so authenticated-shell success is not claimed for this layout
+follow-up; standalone error/retry presentation was used without backend mutations.

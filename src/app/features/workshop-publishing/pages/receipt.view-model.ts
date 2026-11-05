@@ -7,8 +7,13 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { defer, EMPTY, Subject, switchMap, tap } from 'rxjs';
+import { documentEditorUrl } from '../utils/publishing-document-link';
 import { PublishingStore } from '../state/publishing.store';
 import { PublishingReceipt } from '../models/publishing.models';
+import {
+  codingLabEditorUrl,
+  labVerification,
+} from '../utils/publishing-verification';
 import {
   publishingProgress,
   publishingStepLabel,
@@ -35,7 +40,19 @@ export class ReceiptViewModel {
     (this.receipt()?.steps ?? []).map((step) => ({
       ...step,
       label: publishingStepLabel(step.name),
+      verification: labVerification(step),
+      documentEditorUrl: documentEditorUrl(
+        step,
+        this.receipt()?.steps ?? []
+      ),
+      labEditorUrl: codingLabEditorUrl(
+        step,
+        this.receipt()?.steps ?? []
+      ),
     }))
+  );
+  readonly failedVerifications = computed(() =>
+    this.steps().filter((step) => step.verification?.passed === false)
   );
   readonly selectedStep = computed(
     () => this.steps()[this.selectedIndex()] ?? null

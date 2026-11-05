@@ -1,9 +1,7 @@
 import {
-  afterNextRender,
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   ElementRef,
   inject,
   input,
@@ -19,6 +17,7 @@ import { observePanelBody } from '../utils/panel-body-viewport';
 
 @Component({
   selector: 'ngx-receipt-workspace-panel',
+  host: { '[class.receipt-panel--natural]': '!bounded()' },
   imports: [NgxPanel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -34,7 +33,7 @@ import { observePanelBody } from '../utils/panel-body-viewport';
       <div
         #body
         class="receipt-panel__body"
-        [style.height.px]="bodyHeight()"
+        [style.height.px]="bounded() ? bodyHeight() : null"
         tabindex="0"
         role="region"
         [attr.aria-label]="scrollLabel()"
@@ -53,6 +52,12 @@ import { observePanelBody } from '../utils/panel-body-viewport';
         height: 100%;
         min-height: 0;
         min-width: 0;
+      }
+      :host(.receipt-panel--natural) {
+        height: auto;
+      }
+      :host(.receipt-panel--natural) .receipt-panel__body {
+        overflow: visible;
       }
       ngx-panel {
         height: auto;
@@ -87,26 +92,27 @@ export class ReceiptWorkspacePanelComponent {
   readonly scrollLabel = input.required<string>();
   readonly shape = input<NgxPanelShape>('stepped');
   readonly background = input<NgxPanelBackground>('solid');
+  readonly bounded = input(true);
   readonly resetKey = input<unknown>(null);
   readonly bodyHeight = signal(0);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly body =
     viewChild.required<ElementRef<HTMLElement>>('body');
-  private readonly destroyRef = inject(DestroyRef);
   constructor() {
     afterRenderEffect(() => {
       this.resetKey();
       this.body().nativeElement.scrollTop = 0;
     });
-    afterNextRender(() =>
-      this.destroyRef.onDestroy(
+    afterRenderEffect((onCleanup) => {
+      if (!this.bounded()) return;
+      onCleanup(
         observePanelBody(
           this.host.nativeElement,
           this.body().nativeElement,
           (height) => this.bodyHeight.set(height ?? 0),
           'container'
         )
-      )
-    );
+      );
+    });
   }
 }

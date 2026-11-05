@@ -1,229 +1,220 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   NgxButton,
   NgxPanel,
 } from '@tmdjr/ngx-workshop-design-system';
 import {
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
+  computed,
+  ElementRef,
   inject,
   OnInit,
+  signal,
+  viewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { PublishingModelComponent } from '../components/publishing-model.component';
+import { PublishingSetupComponent } from '../components/publishing-setup.component';
 import { PublishingImagesComponent } from '../components/publishing-images.component';
-import { PublishingBriefComponent } from '../components/publishing-brief.component';
 import { PublishingSourceComponent } from '../components/publishing-source.component';
 import { PublishingReviewComponent } from '../components/publishing-review.component';
 import { PublishingReceiptsComponent } from '../components/publishing-receipts.component';
 import { PublishingActionsComponent } from '../components/publishing-actions.component';
+import { PublishingJourneyComponent } from '../components/publishing-journey.component';
+import { PublishingProgressComponent } from '../components/publishing-progress.component';
+import { PublishingConfirmationComponent } from '../components/publishing-confirmation.component';
 import { PublishingViewModel } from './publishing.view-model';
 
 @Component({
-  host: { class: 'ngx-design-system' },
+  host: {
+    class: 'ngx-design-system',
+    '[style.--publisher-action-height.px]': 'actionBarHeight()',
+  },
   selector: 'ngx-workshop-publishing',
   imports: [
     NgxPanel,
+    NgTemplateOutlet,
     NgxButton,
-    MatStepperModule,
     MatButtonModule,
-    MatProgressBarModule,
-    PublishingModelComponent,
+    PublishingSetupComponent,
     PublishingImagesComponent,
-    PublishingBriefComponent,
     PublishingSourceComponent,
     PublishingReviewComponent,
     PublishingReceiptsComponent,
     PublishingActionsComponent,
+    PublishingJourneyComponent,
+    PublishingProgressComponent,
+    PublishingConfirmationComponent,
   ],
   providers: [PublishingViewModel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ngx-publishing-actions
       heading="New workshop"
-      [disabled]="vm.busy() || vm.initializing()"
+      [status]="vm.status()"
+      (heightChange)="actionBarHeight.set($event)"
+      [disabled]="vm.working() || vm.initializing()"
       [showBack]="true"
       (back)="back()"
       (createWorkshop)="restart()"
     />
-    <main class="publisher" aria-label="New workshop">
-      <ngx-panel
-        heading="Workshop creation"
-        eyebrow="PUBLISHER / CREATE"
-        shape="stepped"
-        background="solid"
-        class="publisher__workspace"
-        aria-label="AI workshop creation wizard"
-      >
-        @if (vm.busy()) {
-          <mat-progress-bar
-            mode="indeterminate"
-            aria-label="Publishing Agent is working"
+    <main #workspace class="publisher" aria-label="New workshop">
+      <ngx-publishing-journey
+        [step]="vm.step()"
+        [hasSource]="!!vm.json.value"
+        [reviewed]="vm.reviewed() && !!vm.draft()"
+        [locked]="vm.working() || vm.initializing() || vm.attempted()"
+        (navigate)="vm.navigate($event)"
+      />
+      @if (vm.step() === 0 && vm.operation() !== 'generate') {
+        <ng-container [ngTemplateOutlet]="workspaceContent" />
+      } @else {
+        <ngx-panel
+          [heading]="
+            vm.operation() === 'generate'
+              ? 'Creating your workshop draft'
+              : vm.step() === 0
+                ? 'Shape your workshop'
+                : vm.step() === 1
+                  ? 'Review your workshop'
+                  : 'Publish and confirm'
+          "
+          eyebrow="PUBLISHER / CREATE"
+          shape="stepped"
+          background="solid"
+          class="publisher__workspace"
+        >
+          <ng-container [ngTemplateOutlet]="workspaceContent" />
+        </ngx-panel>
+      }
+      <ng-template #workspaceContent>
+        <h2 #phaseHeading class="publisher__title" tabindex="-1">
+          {{
+            vm.operation() === 'generate'
+              ? 'Creating your workshop'
+              : vm.step() === 0
+                ? 'Start with a clear brief'
+                : vm.step() === 1
+                  ? 'Explore the draft before you publish'
+                  : 'Your publication checkpoint'
+          }}
+        </h2>
+        @if (vm.error() || vm.validation()) {
+          <div class="publisher__error" role="alert">
+            <p>{{ vm.error() || vm.validation() }}</p>
+            @if (!vm.attempted()) {
+              <p>
+                Your inputs are preserved.
+                {{
+                  vm.step() === 0
+                    ? 'Review the inputs below, then try again.'
+                    : 'Check your draft and validate changes to continue.'
+                }}
+              </p>
+            }
+          </div>
+        }
+        @if (vm.operation() !== 'idle') {
+          <ngx-publishing-progress
+            [operation]="vm.operation()"
+            [elapsed]="vm.elapsed()"
           />
         }
-        @if (vm.error() || vm.validation()) {
-          <p class="publisher__error" role="alert">
-            {{ vm.error() || vm.validation() }}
-          </p>
-        }
-        <mat-stepper
-          linear
-          orientation="vertical"
-          [selectedIndex]="vm.step()"
-          (selectionChange)="vm.step.set($event.selectedIndex)"
-        >
-          <mat-step
-            label="Describe your workshop"
-            [completed]="!!vm.draft()"
-            [editable]="!vm.busy() && !vm.attempted()"
-          >
-            <h2 class="publisher__title">Set the brief</h2>
-            <p class="publisher__intro">
-              Choose an AI model and describe the subject, audience
-              and learning objectives.
-            </p>
-            <ngx-publishing-model
+        @if (vm.operation() !== 'generate') {
+          @if (vm.step() === 0) {
+            <ngx-publishing-setup
               [model]="vm.model"
               [catalog]="vm.catalog()"
               [errors]="vm.setupErrors()"
-              [locked]="
-                vm.busy() || vm.initializing() || vm.attempted()
-              "
-            />
-            <ngx-publishing-brief
               [form]="vm.form"
               [sections]="vm.sections()"
-              [locked]="vm.busy() || vm.attempted()"
-              [initializing]="vm.initializing()"
-              [modelValid]="vm.model.valid"
-              (generate)="vm.generate()"
-            />
-            <ngx-publishing-source
               [json]="vm.json"
-              [locked]="vm.busy() || vm.attempted()"
-              (validate)="vm.validate()"
-            />
-            @if (vm.draft()) {
-              <button
-                mat-flat-button
-                ngxButton
-                type="button"
-                [disabled]="vm.busy()"
-                (click)="vm.step.set(1)"
-              >
-                Continue to review
-              </button>
-            }
-          </mat-step>
-          <mat-step
-            label="Review and refine"
-            [completed]="vm.reviewed() && !!vm.draft()"
-            [editable]="!vm.busy() && !vm.attempted()"
-          >
-            <h2 class="publisher__title">
-              Review the learning materials
-            </h2>
-            <p class="publisher__intro">
-              Check the documentation, coding labs and assessment.
-              Optionally add an image or edit the draft.
-            </p>
-            <ngx-publishing-images
-              [query]="vm.imageQuery"
-              [prompt]="vm.imagePrompt"
-              [images]="vm.images()"
-              [selected]="vm.image()"
-              [imageModel]="vm.catalog()?.imageModel ?? null"
-              [locked]="vm.busy() || vm.attempted()"
+              [locked]="vm.working() || vm.attempted()"
               [initializing]="vm.initializing()"
               [hasDraft]="!!vm.draft()"
-              (browse)="vm.browseImages()"
-              (select)="vm.selectImage($event)"
-              (generate)="vm.generateImage()"
-              (apply)="vm.applyImage()"
-            />
-            <ngx-publishing-source
-              [json]="vm.json"
-              [locked]="vm.busy() || vm.attempted()"
+              (generate)="vm.generate()"
               (validate)="vm.validate()"
+              (retry)="vm.initialize()"
+              (resume)="vm.navigate(1)"
             />
+          } @else if (vm.step() === 1) {
             @if (vm.draft(); as draft) {
               <ngx-publishing-review
                 [draft]="draft"
-                [locked]="vm.busy() || vm.attempted()"
+                [locked]="vm.working() || vm.attempted()"
                 [showPublish]="false"
               />
             } @else {
-              <p role="status">
-                Validate your changes to continue to publication.
+              <p class="publisher__intro" role="status">
+                Your draft has unvalidated edits. Validate the source
+                below to restore the preview and continue to
+                publication.
               </p>
             }
+            <details class="publisher__refine">
+              <summary>Refine the draft · images and source</summary>
+              <p class="publisher__intro">
+                Optional refinements. Changes must be validated before
+                publication.
+              </p>
+              <ngx-publishing-images
+                [query]="vm.imageQuery"
+                [prompt]="vm.imagePrompt"
+                [images]="vm.images()"
+                [selected]="vm.image()"
+                [imageModel]="vm.catalog()?.imageModel ?? null"
+                [locked]="vm.working() || vm.attempted()"
+                [initializing]="vm.initializing()"
+                [hasDraft]="!!vm.draft()"
+                (browse)="vm.browseImages()"
+                (select)="vm.selectImage($event)"
+                (generate)="vm.generateImage()"
+                (apply)="vm.applyImage()"
+              />
+              <ngx-publishing-source
+                [json]="vm.json"
+                [locked]="vm.working() || vm.attempted()"
+                (validate)="vm.validate()"
+              />
+            </details>
             <div class="publisher__navigation">
               <button
-                mat-flat-button
+                mat-button
                 ngxButton
-                surface="glass"
+                surface="outline"
                 type="button"
-                [disabled]="vm.busy() || vm.attempted()"
-                (click)="vm.step.set(0)"
+                [disabled]="vm.working() || vm.attempted()"
+                (click)="vm.navigate(0)"
               >
                 Back to brief
               </button>
               <button
                 mat-flat-button
                 ngxButton
+                shape="chevron"
                 type="button"
                 [disabled]="
-                  !vm.draft() || vm.busy() || vm.attempted()
+                  !vm.draft() || vm.working() || vm.attempted()
                 "
                 (click)="vm.continueToPublish()"
               >
                 Continue to publish
               </button>
             </div>
-          </mat-step>
-          <mat-step label="Publish and confirm">
-            <h2 class="publisher__title">Publish your workshop</h2>
+          } @else {
             @if (vm.draft(); as draft) {
-              <p>
-                {{ draft.name }} ·
-                {{ draft.pages.length }} documentation pages ·
-                {{ draft.labs.length }} coding labs ·
-                {{ draft.assessment.testQuestions.length }} assessment
-                questions
-              </p>
-            }
-            <p>
-              Publishing makes these resources available immediately.
-              Coding labs must pass verification first.
-            </p>
-            <div class="publisher__navigation">
-              <button
-                mat-flat-button
-                ngxButton
-                surface="glass"
-                type="button"
-                [disabled]="vm.busy() || vm.attempted()"
-                (click)="vm.step.set(1)"
-              >
-                Back to review
-              </button>
-              <button
-                mat-flat-button
-                ngxButton
-                type="button"
-                [disabled]="
-                  !vm.draft() ||
-                  vm.busy() ||
-                  vm.initializing() ||
-                  vm.attempted()
+              <ngx-publishing-confirmation
+                [draft]="draft"
+                [locked]="
+                  vm.working() || vm.initializing() || vm.attempted()
                 "
-                (click)="vm.publish()"
-              >
-                Publish reviewed workshop
-              </button>
-            </div>
+                [reviewed]="vm.reviewed()"
+                (back)="vm.navigate(1)"
+                (publish)="vm.publish()"
+              />
+            }
             <ngx-publishing-receipts
               [showHistory]="false"
               [history]="vm.history()"
@@ -231,83 +222,118 @@ import { PublishingViewModel } from './publishing.view-model';
               [requestId]="vm.requestId()"
               [receiptId]="vm.receiptId"
               [receipt]="vm.receipt()"
-              [busy]="vm.busy()"
+              [busy]="vm.working()"
               [initializing]="vm.initializing()"
               [attempted]="vm.attempted()"
               (inspect)="vm.inspect()"
             />
-          </mat-step>
-        </mat-stepper>
-      </ngx-panel>
+          }
+        }
+      </ng-template>
     </main>
   `,
-  styles: [
-    `
-      :host {
-        display: block;
-        min-width: 0;
-        min-height: calc(100dvh - var(--publisher-toolbar-top, 96px));
-        color: var(--ngx-color-text);
-        background:
-          radial-gradient(
-            circle at 85% 15%,
-            color-mix(
-              in srgb,
-              var(--ngx-color-primary) 8%,
-              transparent
-            ),
-            transparent 28rem
-          ),
-          var(--ngx-color-canvas);
-      }
-      .publisher {
-        width: calc(100% - 2rem);
-        margin: 0 auto;
-        padding: 1rem 0;
-      }
-      .publisher__workspace {
-        display: block;
-        min-width: 0;
-      }
-      .publisher__title {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 500;
-      }
-      .publisher__intro {
-        margin: 0.75rem 0 1.5rem;
-        color: var(--ngx-color-muted);
-        line-height: 1.5;
-      }
-      .publisher__navigation {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin: 1.5rem 0;
-      }
-      mat-stepper {
-        background: transparent;
-      }
-      .publisher__error {
-        color: var(--ngx-color-error);
-        padding: 1rem;
-      }
-      @media (max-width: 700px) {
-        .publisher {
-          width: calc(100% - 2rem);
-          padding-top: 1rem;
-        }
-      }
-    `,
-  ],
+  styles: `
+    :host {
+      display: block;
+      min-width: 0;
+      min-height: calc(100dvh - var(--publisher-toolbar-top, 96px));
+      color: var(--ngx-color-text);
+      background: var(--ngx-color-canvas);
+    }
+    .publisher {
+      width: calc(100% - 2rem);
+      margin: 0 auto;
+      padding: 1rem 0 2rem;
+      scroll-margin-top: calc(
+        var(--publisher-toolbar-top, 96px) +
+          var(--publisher-action-height, 70px) + 16px
+      );
+    }
+    .publisher__workspace {
+      display: block;
+      min-width: 0;
+    }
+    .publisher__title {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .publisher__title:focus {
+      outline: none;
+    }
+    .publisher__intro {
+      color: var(--ngx-color-muted);
+      line-height: 1.7;
+      margin: 0 0 1.5rem;
+    }
+    .publisher__navigation {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .publisher__error {
+      color: var(--ngx-color-error);
+      padding: 1rem;
+      border-left: 3px solid var(--ngx-color-error);
+      margin-bottom: 1rem;
+      background: var(--ngx-color-surface);
+      overflow-wrap: anywhere;
+    }
+    .publisher__error p {
+      margin: 0.5rem 0;
+    }
+    .publisher__refine {
+      border: 1px solid var(--ngx-color-border);
+      padding: 1rem;
+      margin-top: 1.5rem;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      padding: 0.5rem 0;
+    }
+    .publisher__resume,
+    ngx-publishing-progress {
+      display: block;
+      margin: 1.25rem 0;
+    }
+  `,
 })
 export class PublishingComponent implements OnInit {
+  readonly actionBarHeight = signal(70);
   readonly vm = inject(PublishingViewModel);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly generating = computed(
+    () => this.vm.operation() === 'generate'
+  );
+  private readonly workspace =
+    viewChild<ElementRef<HTMLElement>>('workspace');
+  private readonly heading =
+    viewChild<ElementRef<HTMLElement>>('phaseHeading');
 
+  constructor() {
+    afterRenderEffect(() => {
+      this.vm.step();
+      this.actionBarHeight();
+      const generating = this.generating();
+      if (!this.vm.initializing() || generating) {
+        this.heading()?.nativeElement.focus({ preventScroll: true });
+        this.workspace()?.nativeElement.scrollIntoView({
+          block: 'start',
+        });
+      }
+    });
+  }
   canLeave(): boolean {
-    if (this.vm.busy() || this.vm.initializing()) return false;
+    if (this.vm.working() || this.vm.initializing()) return false;
     if (
       this.vm.attempted() ||
       (!this.vm.json.value && !this.vm.form.dirty)
@@ -325,7 +351,6 @@ export class PublishingComponent implements OnInit {
   restart(): void {
     if (this.canLeave()) this.vm.newDraft();
   }
-
   ngOnInit(): void {
     this.vm.initialize();
   }

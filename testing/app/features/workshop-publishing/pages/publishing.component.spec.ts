@@ -9,7 +9,7 @@ import { PublishingComponent } from '../../../../../src/app/features/workshop-pu
 import { PublishingStore } from '../../../../../src/app/features/workshop-publishing/state/publishing.store';
 import { WorkshopDraft } from '../../../../../src/app/features/workshop-publishing/models/publishing.models';
 
-describe('AI creation wizard', () => {
+describe('Workshop creation workspace', () => {
   it('requires generation and explicit review before publishing, and keeps recovery available', async () => {
     const draft: WorkshopDraft = {
       sectionId: 'angular',
@@ -68,9 +68,8 @@ describe('AI creation wizard', () => {
       Array.from(element.querySelectorAll('button')).find((b) =>
         b.textContent?.includes(text)
       )!;
-    const headers =
-      element.querySelectorAll<HTMLElement>('mat-step-header');
-    headers[2].click();
+    expect(element.querySelector('mat-stepper')).toBeNull();
+    button('Publication').click();
     fixture.detectChanges();
     expect(fixture.componentInstance.vm.step()).toBe(0);
     fixture.componentInstance.vm.form.setValue({
@@ -84,7 +83,7 @@ describe('AI creation wizard', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(fixture.componentInstance.vm.step()).toBe(1);
-    headers[2].click();
+    button('Publication').click();
     fixture.detectChanges();
     expect(fixture.componentInstance.vm.step()).toBe(1);
     button('Continue to publish').click();

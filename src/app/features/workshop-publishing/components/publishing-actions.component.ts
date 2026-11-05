@@ -29,7 +29,10 @@ import {
     >
       <ngx-inline-status
         ngxActionBarIndicators
-        [label]="disabled() ? 'Working…' : 'Workshop publishing'"
+        [label]="
+          status() ||
+          (disabled() ? 'Loading publisher…' : 'Workshop publishing')
+        "
         [tone]="disabled() ? 'info' : 'neutral'"
         [announce]="true"
       />
@@ -77,6 +80,7 @@ export class PublishingActionsComponent {
   readonly heightChange = output<number>();
   readonly heading = input('AI Publisher');
   readonly disabled = input(false);
+  readonly status = input('');
   readonly showBack = input(false);
   readonly createWorkshop = output<void>();
   readonly back = output<void>();

@@ -215,6 +215,9 @@ describe('PublishingViewModel', () => {
     vm.generate();
     const id = vm.requestId();
     vm.publish();
+    expect(store.publish).not.toHaveBeenCalled();
+    vm.continueToPublish();
+    vm.publish();
     vm.publish();
     expect(store.publish).toHaveBeenCalledTimes(1);
     expect(vm.requestId()).toBe(id);
@@ -291,6 +294,96 @@ describe('PublishingViewModel', () => {
     expect(vm.step()).toBe(1);
     vm.newDraft();
     expect(vm.step()).toBe(0);
+  });
+  it('names ordered setup operations without an earlier finalizer clearing the next stage', () => {
+    const sections = new Subject<undefined>();
+    const models = new Subject<undefined>();
+    store.loadSections.and.returnValue(sections);
+    store.loadModels.and.returnValue(models);
+    vm.initialize();
+    expect(vm.operation()).toBe('sections');
+    sections.complete();
+    expect(vm.operation()).toBe('models');
+    expect(vm.status()).toBe('Loading AI models');
+    expect(vm.working()).toBeTrue();
+    models.complete();
+    expect(vm.operation()).toBe('idle');
+    expect(vm.initializing()).toBeFalse();
+  });
+  it('tracks the actual pending generation and elapsed time, then stops timing on completion', () => {
+    jasmine.clock().install();
+    jasmine.clock().mockDate(new Date('2026-11-04T12:00:00Z'));
+    try {
+      const pending = new Subject<WorkshopDraft>();
+      store.draft.and.returnValue(pending);
+      vm.form.setValue({
+        brief: 'Functions',
+        sectionId: 'angular',
+        level: 1,
+      });
+      vm.generate();
+      expect(vm.operation()).toBe('generate');
+      expect(vm.status()).toBe('Generating workshop draft');
+      expect(vm.working()).toBeTrue();
+      jasmine.clock().tick(65000);
+      expect(vm.elapsed()).toBe(65);
+      expect(vm.step()).toBe(0);
+      vm.navigate(1);
+      expect(vm.step()).toBe(0);
+      pending.next(draft);
+      pending.complete();
+      expect(vm.operation()).toBe('idle');
+      expect(vm.step()).toBe(1);
+      expect(vm.status()).toBe('Draft ready for review');
+      jasmine.clock().tick(5000);
+      expect(vm.elapsed()).toBe(65);
+    } finally {
+      jasmine.clock().uninstall();
+    }
+  });
+  it('keeps the brief recoverable on generation failure and cleans the progress clock on teardown', () => {
+    store.draft.and.callFake(() => {
+      store.error.set('Model unavailable. Try again.');
+      return EMPTY;
+    });
+    vm.form.setValue({
+      brief: 'Keep this topic',
+      sectionId: 'angular',
+      level: 1,
+    });
+    vm.generate();
+    expect(vm.operation()).toBe('idle');
+    expect(vm.status()).toBe('Needs attention');
+    expect(vm.form.controls.brief.value).toBe('Keep this topic');
+    expect(vm.step()).toBe(0);
+    const pending = new Subject<WorkshopDraft>();
+    store.draft.and.returnValue(pending);
+    vm.generate();
+    expect(vm.operation()).toBe('generate');
+    TestBed.resetTestingModule();
+    expect(pending.observed).toBeFalse();
+    expect(vm.operation()).toBe('idle');
+  });
+  it('guards phase navigation and publication at the view-model boundary', () => {
+    vm.navigate(2);
+    expect(vm.step()).toBe(0);
+    vm.draft.set(draft);
+    vm.publish();
+    vm.continueToPublish();
+    expect(vm.step()).toBe(0);
+    expect(store.publish).not.toHaveBeenCalled();
+    vm.json.setValue(JSON.stringify(draft), { emitEvent: false });
+    vm.navigate(1);
+    vm.publish();
+    expect(store.publish).not.toHaveBeenCalled();
+    vm.continueToPublish();
+    expect(vm.step()).toBe(2);
+    vm.json.setValue('{}');
+    expect(vm.reviewed()).toBeFalse();
+    vm.navigate(2);
+    vm.publish();
+    expect(vm.step()).toBe(1);
+    expect(store.publish).not.toHaveBeenCalled();
   });
   it('starts a new draft without losing the brief or selected model', () => {
     vm.form.controls.brief.setValue('Keep this brief');

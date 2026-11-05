@@ -1,4 +1,3 @@
-import { JsonPipe } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -6,6 +5,7 @@ import {
   DestroyRef,
   ElementRef,
   inject,
+  Injector,
   OnInit,
   signal,
   viewChild,
@@ -15,35 +15,35 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import {
-  NgxCodeBlock,
-  NgxInlineStatus,
-} from '@tmdjr/ngx-workshop-design-system';
+import { NgxInlineStatus } from '@tmdjr/ngx-workshop-design-system';
 import { PublishingActionsComponent } from '../components/publishing-actions.component';
 import { PublishingStatusComponent } from '../components/publishing-status.component';
 import { ReceiptWorkspacePanelComponent } from '../components/receipt-workspace-panel.component';
-import { observeWorkspaceHeight } from '../utils/panel-body-viewport';
+import { ReceiptStepResultComponent } from '../components/receipt-step-result.component';
 import { ReceiptViewModel } from './receipt.view-model';
 
 @Component({
-  host: { class: 'ngx-design-system' },
+  host: {
+    class: 'ngx-design-system',
+    '[style.--receipt-action-height.px]': 'actionBarHeight()',
+  },
   selector: 'ngx-publishing-receipt',
   imports: [
-    NgxCodeBlock,
     NgxInlineStatus,
-    JsonPipe,
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
     PublishingActionsComponent,
     PublishingStatusComponent,
     ReceiptWorkspacePanelComponent,
+    ReceiptStepResultComponent,
   ],
   providers: [ReceiptViewModel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ngx-publishing-actions
       heading="Publishing receipt"
+      (heightChange)="actionBarHeight.set($event)"
       [showBack]="true"
       [disabled]="vm.busy()"
       (back)="back()"
@@ -54,11 +54,7 @@ import { ReceiptViewModel } from './receipt.view-model';
       aria-label="Publishing receipt"
       [attr.aria-busy]="vm.busy()"
     >
-      <div
-        #workspace
-        class="receipt__workspace"
-        [style.height.px]="workspaceHeight()"
-      >
+      <div #workspace class="receipt__workspace">
         <div
           class="receipt__switch"
           role="group"
@@ -139,6 +135,33 @@ import { ReceiptViewModel } from './receipt.view-model';
             @if (vm.receipt(); as receipt) {
               <h2>Progress</h2>
               <p>{{ vm.progress() }}</p>
+              @if (vm.failedVerifications().length) {
+                <div
+                  class="receipt__verification-warning"
+                  role="status"
+                >
+                  <h2>Coding lab verification failed</h2>
+                  <p>
+                    Completed steps count finished operations, not
+                    passing tests. Review the failed verification
+                    results and fix the coding lab before continuing.
+                  </p>
+                  @for (
+                    failed of vm.failedVerifications();
+                    track failed.name
+                  ) {
+                    @if (failed.labEditorUrl; as url) {
+                      <a
+                        [href]="url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >Open {{ failed.label }} in coding lab editor
+                        ↗</a
+                      >
+                    }
+                  }
+                </div>
+              }
               @if (receipt.message) {
                 <h2>Message</h2>
                 <p>{{ receipt.message }}</p>
@@ -179,9 +202,22 @@ import { ReceiptViewModel } from './receipt.view-model';
                   <span class="receipt__step-number">{{
                     $index + 1
                   }}</span>
-                  <span class="receipt__step-label">{{
-                    step.label
-                  }}</span>
+                  <span class="receipt__step-label"
+                    >{{ step.label }}
+                    @if (step.verification; as verification) {
+                      <small
+                        class="receipt__verification-label"
+                        [class.receipt__verification-label--failed]="
+                          !verification.passed
+                        "
+                        >{{
+                          verification.passed
+                            ? 'Verification passed'
+                            : 'Verification failed'
+                        }}</small
+                      >
+                    }
+                  </span>
                   <ngx-inline-status
                     [label]="
                       step.status === 'complete'
@@ -214,7 +250,9 @@ import { ReceiptViewModel } from './receipt.view-model';
           >
         </ngx-receipt-workspace-panel>
         <ngx-receipt-workspace-panel
+          #resultPanel
           class="receipt__step-panel"
+          [bounded]="false"
           [class.receipt__panel--hidden]="pane() !== 'step'"
           [resetKey]="vm.selectedStep()"
           heading="Step details"
@@ -223,31 +261,7 @@ import { ReceiptViewModel } from './receipt.view-model';
           scrollLabel="Scrollable selected step details"
         >
           @if (vm.selectedStep(); as step) {
-            <div class="receipt__selected-heading">
-              <h2>{{ step.label }}</h2>
-              <ngx-inline-status
-                [label]="
-                  step.status === 'complete' ? 'Completed' : 'Pending'
-                "
-                [tone]="
-                  step.status === 'complete' ? 'success' : 'neutral'
-                "
-              />
-            </div>
-            @if (step.result !== undefined) {
-              <div class="receipt__result-code">
-                <ngx-code-block
-                  [code]="(step.result | json) ?? ''"
-                  language="json"
-                  [label]="step.label + ' result'"
-                  [wrap]="true"
-                />
-              </div>
-            } @else {
-              <p class="receipt__empty">
-                No result reported for this step.
-              </p>
-            }
+            <ngx-receipt-step-result [step]="step" />
           } @else {
             <p class="receipt__empty">
               {{
@@ -272,6 +286,15 @@ import { ReceiptViewModel } from './receipt.view-model';
         min-width: 0;
         color: var(--ngx-color-text);
         background: var(--ngx-color-canvas);
+        --receipt-toolbar-top: var(--publisher-toolbar-top, 96px);
+        --receipt-sticky-top: calc(
+          var(--receipt-toolbar-top) +
+            var(--receipt-action-height, 70px) + 16px
+        );
+        --receipt-available-height: max(
+          180px,
+          calc(100dvh - var(--receipt-sticky-top) - 16px)
+        );
         @include mat.icon-button-density(-3);
       }
       .receipt {
@@ -281,17 +304,43 @@ import { ReceiptViewModel } from './receipt.view-model';
       }
       .receipt__workspace {
         display: grid;
-        grid-template-columns: minmax(240px, 300px) minmax(
-            300px,
-            1fr
-          ) minmax(0, 1.4fr);
-        grid-template-rows: minmax(0, 1fr);
+        grid-template-columns:
+          minmax(240px, 300px) minmax(300px, 1fr)
+          minmax(0, 1.4fr);
+        align-items: start;
         gap: 1rem;
         min-height: 0;
         min-width: 0;
       }
+      .receipt__panel,
+      .receipt__progress-panel {
+        position: sticky;
+        top: var(--receipt-sticky-top);
+        height: var(--receipt-available-height);
+      }
+      .receipt__step-panel {
+        height: auto;
+        scroll-margin-top: var(--receipt-sticky-top);
+      }
       .receipt__switch {
         display: none;
+      }
+      .receipt__verification-warning {
+        border-left: 2px solid var(--ngx-color-error);
+        padding-left: 0.75rem;
+      }
+      .receipt__verification-warning a {
+        display: block;
+        color: var(--ngx-color-primary);
+        margin-block: 0.75rem;
+      }
+      .receipt__verification-label {
+        display: block;
+        font-size: 0.65rem;
+        color: var(--ngx-color-success);
+      }
+      .receipt__verification-label--failed {
+        color: var(--ngx-color-error);
       }
       .receipt__summary {
         font-size: 0.75rem;
@@ -369,23 +418,6 @@ import { ReceiptViewModel } from './receipt.view-model';
         font-size: 16px;
         color: var(--ngx-color-primary);
       }
-      .receipt__selected-heading {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        align-items: center;
-        margin-bottom: 0.75rem;
-      }
-      .receipt__selected-heading h2 {
-        margin: 0;
-        font: 600 0.8rem/1.5 var(--ngx-font-mono);
-        color: var(--ngx-color-text);
-        overflow-wrap: anywhere;
-      }
-      .receipt__result-code {
-        position: relative;
-        min-width: 0;
-      }
       .receipt__empty {
         padding: 8px;
         font-size: 0.75rem;
@@ -397,10 +429,19 @@ import { ReceiptViewModel } from './receipt.view-model';
         }
         .receipt__workspace {
           grid-template-columns: minmax(0, 1fr);
-          grid-template-rows: auto minmax(0, 1fr);
+          grid-template-rows: auto auto;
           gap: 0.5rem;
         }
+        .receipt__panel,
+        .receipt__progress-panel {
+          position: relative;
+          top: auto;
+        }
         .receipt__switch {
+          position: sticky;
+          top: var(--receipt-sticky-top);
+          z-index: 2;
+          background: var(--ngx-color-canvas);
           display: flex;
           flex-wrap: wrap;
           gap: 0.25rem;
@@ -412,8 +453,16 @@ import { ReceiptViewModel } from './receipt.view-model';
           grid-column: 1;
           grid-row: 2;
         }
+        .receipt__step-panel {
+          scroll-margin-top: calc(var(--receipt-sticky-top) + 48px);
+        }
         .receipt__panel--hidden {
           display: none;
+        }
+      }
+      @media (max-width: 720px) {
+        :host {
+          --receipt-toolbar-top: var(--publisher-toolbar-top, 76px);
         }
       }
     `,
@@ -421,23 +470,13 @@ import { ReceiptViewModel } from './receipt.view-model';
 })
 export class ReceiptComponent implements OnInit {
   readonly vm = inject(ReceiptViewModel);
-  readonly workspaceHeight = signal(0);
+  readonly actionBarHeight = signal(70);
   readonly pane = signal<'receipt' | 'progress' | 'step'>('receipt');
-  private readonly workspace =
-    viewChild.required<ElementRef<HTMLElement>>('workspace');
+  private readonly resultPanel = viewChild.required<ReceiptWorkspacePanelComponent, ElementRef<HTMLElement>>('resultPanel', { read: ElementRef });
+  private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  constructor() {
-    afterNextRender(() =>
-      this.destroyRef.onDestroy(
-        observeWorkspaceHeight(
-          this.workspace().nativeElement,
-          (height) => this.workspaceHeight.set(height)
-        )
-      )
-    );
-  }
   ngOnInit(): void {
     this.route.paramMap
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -449,6 +488,13 @@ export class ReceiptComponent implements OnInit {
   selectStep(index: number): void {
     this.vm.selectStep(index);
     this.pane.set('step');
+    afterNextRender(
+      () =>
+        this.resultPanel().nativeElement.scrollIntoView({
+          block: 'start',
+        }),
+      { injector: this.injector }
+    );
   }
   back(): void {
     void this.router.navigate(['../../overview'], {

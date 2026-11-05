@@ -1,4 +1,5 @@
 import {
+  computed,
   DestroyRef,
   inject,
   Injectable,
@@ -13,10 +14,15 @@ import {
   exhaustMap,
   finalize,
   from,
+  interval,
   Observable,
   Subject,
   tap,
 } from 'rxjs';
+import {
+  PublishingOperation,
+  publishingOperationLabels,
+} from '../models/publishing-operation';
 import { PublishingStore } from '../state/publishing.store';
 import {
   PublishingReceipt,
@@ -38,6 +44,29 @@ export class PublishingViewModel {
   readonly sections = this.store.sections;
   readonly busy = this.store.busy;
   readonly error = this.store.error;
+  private activeOperation: symbol | undefined;
+  readonly operation = signal<PublishingOperation>('idle');
+  readonly elapsed = signal(0);
+  readonly working = computed(
+    () => this.busy() || this.operation() !== 'idle'
+  );
+  readonly status = computed(() =>
+    this.operation() !== 'idle'
+      ? publishingOperationLabels[this.operation()]
+      : this.error()
+        ? 'Needs attention'
+        : this.attempted()
+          ? this.receipt()?.status === 'complete'
+            ? 'Workshop published'
+            : 'Check publishing receipt'
+          : this.step() === 2
+            ? 'Ready for publication'
+            : this.step() === 1
+              ? this.draft()
+                ? 'Draft ready for review'
+                : 'Validate draft changes'
+              : 'Start with your workshop brief'
+  );
   readonly setupErrors = signal<string[]>([]);
   readonly initializing = signal(false);
   readonly image = signal<WorkshopImage | null>(null);
@@ -97,9 +126,9 @@ export class PublishingViewModel {
       this.initializing.set(true);
       this.setupErrors.set([]);
       const reads: (() => Observable<unknown>)[] = [
-        () => this.store.loadSections(),
-        () => this.store.loadModels(),
-        () => this.store.loadHistory(),
+        () => this.track('sections', () => this.store.loadSections()),
+        () => this.track('models', () => this.store.loadModels()),
+        () => this.track('history', () => this.store.loadHistory()),
       ];
       return from(reads).pipe(
         concatMap((read) =>
@@ -126,13 +155,17 @@ export class PublishingViewModel {
     });
   }
   loadHistory(): void {
-    this.commands.next(() => this.store.loadHistory());
+    this.commands.next(() =>
+      this.track('history', () => this.store.loadHistory())
+    );
   }
   browseImages(): void {
     if (this.attempted()) return;
     this.commands.next(() =>
-      this.store.loadImages(
-        this.imageQuery.value.trim().slice(0, 120)
+      this.track('images', () =>
+        this.store.loadImages(
+          this.imageQuery.value.trim().slice(0, 120)
+        )
       )
     );
   }
@@ -143,12 +176,12 @@ export class PublishingViewModel {
     if (this.busy() || this.attempted() || this.imagePrompt.invalid)
       return;
     this.commands.next(() =>
-      this.store
-        .generateImage(
+      this.track('image', () =>
+        this.store.generateImage(
           this.imagePrompt.value.trim(),
           'workshop-image.png'
         )
-        .pipe(tap((image) => this.image.set(image)))
+      ).pipe(tap((image) => this.image.set(image)))
     );
   }
   applyImage(): void {
@@ -195,12 +228,12 @@ export class PublishingViewModel {
       return;
     }
     this.commands.next(() =>
-      this.store
-        .draft('generate_workshop_draft', {
+      this.track('generate', () =>
+        this.store.draft('generate_workshop_draft', {
           ...this.form.getRawValue(),
           model: this.model.value,
         } satisfies GenerateWorkshopDraftInput)
-        .pipe(tap((draft) => this.accept(draft)))
+      ).pipe(tap((draft) => this.accept(draft)))
     );
   }
   validate(): void {
@@ -213,11 +246,11 @@ export class PublishingViewModel {
       return;
     }
     this.commands.next(() =>
-      this.store
-        .draft('validate_workshop_draft', {
+      this.track('validate', () =>
+        this.store.draft('validate_workshop_draft', {
           draft: value,
         })
-        .pipe(tap((draft) => this.accept(draft)))
+      ).pipe(tap((draft) => this.accept(draft)))
     );
   }
   edited(): void {
@@ -236,7 +269,13 @@ export class PublishingViewModel {
     if (this.step() === 0) this.step.set(1);
   }
   continueToPublish(): void {
-    if (!this.draft() || this.busy() || this.attempted()) return;
+    if (
+      !this.draft() ||
+      this.step() !== 1 ||
+      this.working() ||
+      this.attempted()
+    )
+      return;
     this.reviewed.set(true);
     this.step.set(2);
   }
@@ -244,6 +283,8 @@ export class PublishingViewModel {
     const draft = this.draft();
     if (
       !draft ||
+      !this.reviewed() ||
+      this.step() !== 2 ||
       this.busy() ||
       this.initializing() ||
       this.attempted()
@@ -251,9 +292,9 @@ export class PublishingViewModel {
       return;
     this.commands.next(() => {
       this.attempted.set(true);
-      return this.store
-        .publish({ requestId: this.requestId(), draft })
-        .pipe(tap((receipt) => this.receipt.set(receipt)));
+      return this.track('publish', () =>
+        this.store.publish({ requestId: this.requestId(), draft })
+      ).pipe(tap((receipt) => this.receipt.set(receipt)));
     });
   }
   inspect(): void {
@@ -264,11 +305,49 @@ export class PublishingViewModel {
       return;
     }
     this.commands.next(() =>
-      this.store
-        .receipt(id)
-        .pipe(tap((receipt) => this.receipt.set(receipt)))
+      this.track('receipt', () => this.store.receipt(id)).pipe(
+        tap((receipt) => this.receipt.set(receipt))
+      )
     );
   }
+  navigate(step: number): void {
+    if (this.working() || this.initializing() || this.attempted())
+      return;
+    if (
+      step === 0 ||
+      (step === 1 && !!this.json.value) ||
+      (step === 2 && this.reviewed() && !!this.draft())
+    )
+      this.step.set(step);
+  }
+
+  private track<T>(
+    operation: PublishingOperation,
+    request: () => Observable<T>
+  ): Observable<T> {
+    return defer(() => {
+      const token = Symbol();
+      this.activeOperation = token;
+      this.operation.set(operation);
+      this.elapsed.set(0);
+      if (operation === 'generate' || operation === 'validate')
+        this.validation.set('');
+      const started = Date.now();
+      const clock = interval(1000).subscribe(() =>
+        this.elapsed.set(Math.floor((Date.now() - started) / 1000))
+      );
+      return defer(request).pipe(
+        finalize(() => {
+          clock.unsubscribe();
+          if (this.activeOperation === token) {
+            this.operation.set('idle');
+            this.activeOperation = undefined;
+          }
+        })
+      );
+    });
+  }
+
   newDraft(): void {
     if (this.busy()) return;
     this.step.set(0);

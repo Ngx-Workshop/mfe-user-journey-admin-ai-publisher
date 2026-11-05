@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
@@ -14,6 +15,7 @@ import { MatInputModule } from '@angular/material/input';
   selector: 'ngx-publishing-source',
   imports: [
     NgxButton,
+    NgTemplateOutlet,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -21,10 +23,22 @@ import { MatInputModule } from '@angular/material/input';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <details class="source">
-      <summary class="source__summary">
-        Import or edit workshop draft JSON
-      </summary>
+    @if (expanded()) {
+      <section
+        class="source source--expanded"
+        aria-label="Workshop draft JSON editor"
+      >
+        <ng-container [ngTemplateOutlet]="editor" />
+      </section>
+    } @else {
+      <details class="source">
+        <summary class="source__summary">
+          Import or edit workshop draft JSON
+        </summary>
+        <ng-container [ngTemplateOutlet]="editor" />
+      </details>
+    }
+    <ng-template #editor>
       <mat-form-field class="source__field" appearance="outline">
         <mat-label>Workshop draft</mat-label>
         <textarea
@@ -44,7 +58,7 @@ import { MatInputModule } from '@angular/material/input';
       >
         Validate changes
       </button>
-    </details>
+    </ng-template>
   `,
   styles: [
     `
@@ -53,6 +67,14 @@ import { MatInputModule } from '@angular/material/input';
         padding: 1rem;
         border: 1px solid var(--ngx-color-border);
         border-radius: var(--ngx-radius);
+      }
+      .source--expanded {
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+      .source--expanded textarea {
+        font-family: var(--ngx-font-mono);
       }
       .source__summary {
         cursor: pointer;
@@ -68,5 +90,6 @@ import { MatInputModule } from '@angular/material/input';
 export class PublishingSourceComponent {
   readonly json = input.required<FormControl<string>>();
   readonly locked = input(false);
+  readonly expanded = input(false);
   readonly validate = output<void>();
 }

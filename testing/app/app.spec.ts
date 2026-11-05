@@ -214,9 +214,9 @@ describe('AI Publisher routed journey', () => {
     expect(element.querySelector('h1')?.textContent).toContain(
       'New workshop'
     );
-    expect(element.textContent).toContain('Describe your workshop');
-    expect(element.textContent).toContain('Review and refine');
-    expect(element.textContent).toContain('Publish and confirm');
+    expect(element.textContent).toContain('Start with a clear brief');
+    expect(element.textContent).toContain('Draft review');
+    expect(element.textContent).toContain('Publication');
     expect(
       element.querySelector('ngx-publishing-history')
     ).toBeNull();
@@ -228,7 +228,7 @@ describe('AI Publisher routed journey', () => {
     ).find((b) =>
       b.textContent?.includes('Publish reviewed workshop')
     )!;
-    expect(publish.disabled).toBeTrue();
+    expect(publish).toBeUndefined();
   });
   it('shows history failure and can retry without changing the filters', async () => {
     const harness = await RouterTestingHarness.create(
@@ -267,17 +267,15 @@ describe('AI Publisher routed journey', () => {
     http
       .expectOne('/api/publisher/tools')
       .flush({}, { status: 403, statusText: 'Forbidden' });
-    http
-      .expectOne('/api/publisher/tools')
-      .flush({
-        structuredContent: {
-          data: {
-            models: [],
-            defaultModel: null,
-            imageModel: 'image-model',
-          },
+    http.expectOne('/api/publisher/tools').flush({
+      structuredContent: {
+        data: {
+          models: [],
+          defaultModel: null,
+          imageModel: 'image-model',
         },
-      });
+      },
+    });
     history();
     harness.detectChanges();
     expect(harness.routeNativeElement!.textContent).toContain(

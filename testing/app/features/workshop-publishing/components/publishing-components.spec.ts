@@ -78,6 +78,39 @@ describe('Publishing presentation components', () => {
     expect(validate).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps expanded JSON authoring visible with the same control, validation and locked state', () => {
+    const fixture = TestBed.createComponent(
+      PublishingSourceComponent
+    );
+    const json = new FormControl('{"name":"Existing"}', {
+      nonNullable: true,
+    });
+    fixture.componentRef.setInput('json', json);
+    fixture.componentRef.setInput('expanded', true);
+    const validate = jasmine.createSpy();
+    fixture.componentInstance.validate.subscribe(validate);
+    fixture.detectChanges();
+    const element: HTMLElement = fixture.nativeElement;
+    expect(element.querySelector('details')).toBeNull();
+    const textarea = element.querySelector('textarea')!;
+    expect(textarea.value).toContain('Existing');
+    textarea.value = '{"name":"Updated"}';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    element.querySelector('button')!.click();
+    expect(json.value).toContain('Updated');
+    expect(validate).toHaveBeenCalledTimes(1);
+    fixture.componentRef.setInput('locked', true);
+    fixture.detectChanges();
+    expect(textarea.readOnly).toBeTrue();
+    expect(element.querySelector('button')!.disabled).toBeTrue();
+    fixture.componentRef.setInput('expanded', false);
+    fixture.detectChanges();
+    expect(element.querySelector('details')).not.toBeNull();
+    expect(element.querySelector('textarea')!.value).toContain(
+      'Updated'
+    );
+  });
+
   it('renders documentation, lab resources and assessment and emits publish intent', () => {
     const fixture = TestBed.createComponent(
       PublishingReviewComponent
@@ -155,23 +188,40 @@ describe('Publishing presentation components', () => {
     const element: HTMLElement = fixture.nativeElement;
     expect(element.textContent).toContain('Functions');
     expect(
-      element.querySelector('.review__block p')?.textContent
+      element.querySelector('.document__block p')?.textContent
     ).toBe('Documentation text');
     expect(element.querySelector('pre')?.textContent).toContain(
       'const answer = 42;'
     );
-    expect(element.textContent).toContain('Assessment: Quiz');
-    expect(element.textContent).toContain('Coding lab: Function lab');
+    const button = (text: string) =>
+      [...element.querySelectorAll('button')].find((button) =>
+        button.textContent?.includes(text)
+      )!;
+    button('Coding labs (1)').click();
+    fixture.detectChanges();
+    expect(element.textContent).toContain('Function lab');
     expect(element.textContent).toContain('function answer() {}');
-    expect(element.textContent).toContain('"referenceSolution"');
+    expect(element.textContent).toContain(
+      'function answer() { return 42; }'
+    );
     expect(element.textContent).toContain('"returns 42"');
+    button('Assessment (1)').click();
+    fixture.detectChanges();
     expect(element.textContent).toContain('What is returned?');
+    expect(element.textContent).not.toContain('Correct feedback:');
+    element
+      .querySelector<HTMLInputElement>('input[type=checkbox]')!
+      .click();
+    fixture.detectChanges();
     expect(element.textContent).toContain('Answer: 42');
-    element.querySelector('button')?.click();
+    expect(element.textContent).toContain(
+      'Correct feedback: Correct answer'
+    );
+    button('Publish reviewed workshop').click();
     expect(publish).toHaveBeenCalledTimes(1);
     fixture.componentRef.setInput('locked', true);
     fixture.detectChanges();
-    element.querySelector('button')?.click();
+    button('Publish reviewed workshop').click();
     expect(publish).toHaveBeenCalledTimes(1);
   });
 

@@ -33,3 +33,7 @@ the largest folder number is not automatically the active feature.
 | 009 Publisher overview and AI wizard | Implemented; live shell integration pending | [Spec](009-publisher-overview-wizard/spec.md) | [Plan](009-publisher-overview-wizard/plan.md) | [Tasks](009-publisher-overview-wizard/tasks.md) | [Handoff](009-publisher-overview-wizard/handoff.md) |
 
 | 010 Publisher design system migration | Complete | [Spec](010-design-system-migration/spec.md) | [Plan](010-design-system-migration/plan.md) | [Tasks](010-design-system-migration/tasks.md) | [Handoff](010-design-system-migration/handoff.md) |
+
+| 011 Publishing journey | Implemented; live integration pending | [Spec](011-publishing-journey/spec.md) | [Plan](011-publishing-journey/plan.md) | [Tasks](011-publishing-journey/tasks.md) | [Handoff](011-publishing-journey/handoff.md) |
+
+| 012 Receipt verification and reading layout | Complete | [Spec](012-receipt-verification/spec.md) | [Plan](012-receipt-verification/plan.md) | [Tasks](012-receipt-verification/tasks.md) | [Handoff](012-receipt-verification/handoff.md) |
