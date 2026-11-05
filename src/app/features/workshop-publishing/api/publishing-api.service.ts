@@ -24,12 +24,15 @@ export class PublishingApiService {
   private readonly http = inject(HttpClient);
   call(name: PublisherTool, input: unknown): Observable<unknown> {
     return this.http
-        .post<unknown>(
-          '/api/publisher/tools',
-          { name, input },
-          { withCredentials: true }
-        )
-        .pipe(timeout(180000), map((response) => this.unwrap(response)));
+      .post<unknown>(
+        '/api/publisher/tools',
+        { name, input },
+        { withCredentials: true }
+      )
+      .pipe(
+        timeout(180000),
+        map((response) => this.unwrap(response))
+      );
   }
   private unwrap(response: unknown): unknown {
     if (!response || typeof response !== 'object')
@@ -50,7 +53,9 @@ export class PublishingApiService {
       operation: 'sections',
     }).pipe(map((value) => this.sectionList(value)));
   }
-  private sectionList(value: unknown): { id: string; name: string }[] {
+  private sectionList(
+    value: unknown
+  ): { id: string; name: string }[] {
     if (
       !value ||
       typeof value !== 'object' ||
@@ -111,11 +116,13 @@ export class PublishingApiService {
     return value as PublishingModelCatalog;
   }
   history(): Observable<PublishingReceipt[]> {
-    return this.call('list_publishing_runs', {}).pipe(map((value) => {
-      if (!Array.isArray(value))
-        throw new Error('Invalid publishing history.');
-      return value.map((receipt) => this.receipt(receipt));
-    }));
+    return this.call('list_publishing_runs', {}).pipe(
+      map((value) => {
+        if (!Array.isArray(value))
+          throw new Error('Invalid publishing history.');
+        return value.map((receipt) => this.receipt(receipt));
+      })
+    );
   }
   image(value: unknown): WorkshopImage {
     if (
@@ -138,11 +145,13 @@ export class PublishingApiService {
     return this.call('workshop_image', {
       operation: 'find',
       query,
-    }).pipe(map((value) => {
-      if (!Array.isArray(value))
-        throw new Error('Invalid image asset response.');
-      return value.map((image) => this.image(image));
-    }));
+    }).pipe(
+      map((value) => {
+        if (!Array.isArray(value))
+          throw new Error('Invalid image asset response.');
+        return value.map((image) => this.image(image));
+      })
+    );
   }
   draft(value: unknown): WorkshopDraft {
     const envelope = { draft: value };

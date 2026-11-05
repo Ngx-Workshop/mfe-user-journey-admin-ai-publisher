@@ -110,40 +110,46 @@ import { ReceiptViewModel } from './receipt.view-model';
           </button>
           <div class="receipt__summary">
             @if (vm.receipt(); as receipt) {
-            <ngx-publishing-status [status]="receipt.status" /> }
+              <ngx-publishing-status [status]="receipt.status" />
+            }
             <h2>Request ID</h2>
             <p class="receipt__id">{{ vm.requestId() }}</p>
             @if (vm.busy()) {
-            <mat-progress-bar
-              mode="indeterminate"
-              aria-label="Loading publishing receipt"
-            />
-            <p role="status">Loading receipt…</p>
-            } @if (vm.error()) {
-            <div class="receipt__error" role="alert">
-              {{ vm.error() }} @if (!vm.invalid()) {
-              <button
-                mat-button
-                type="button"
-                [disabled]="vm.busy()"
-                (click)="vm.refresh()"
-              >
-                Retry
-              </button>
+              <mat-progress-bar
+                mode="indeterminate"
+                aria-label="Loading publishing receipt"
+              />
+              <p role="status">Loading receipt…</p>
+            }
+            @if (vm.error()) {
+              <div class="receipt__error" role="alert">
+                {{ vm.error() }}
+                @if (!vm.invalid()) {
+                  <button
+                    mat-button
+                    type="button"
+                    [disabled]="vm.busy()"
+                    (click)="vm.refresh()"
+                  >
+                    Retry
+                  </button>
+                }
+              </div>
+            }
+            @if (vm.receipt(); as receipt) {
+              <h2>Progress</h2>
+              <p>{{ vm.progress() }}</p>
+              @if (receipt.message) {
+                <h2>Message</h2>
+                <p>{{ receipt.message }}</p>
               }
-            </div>
-            } @if (vm.receipt(); as receipt) {
-            <h2>Progress</h2>
-            <p>{{ vm.progress() }}</p>
-            @if (receipt.message) {
-            <h2>Message</h2>
-            <p>{{ receipt.message }}</p>
-            } @if (receipt.status === 'needs_recovery') {
-            <p class="receipt__recovery">
-              Keep this request ID and check its receipt before
-              starting another publish attempt.
-            </p>
-            } }
+              @if (receipt.status === 'needs_recovery') {
+                <p class="receipt__recovery">
+                  Keep this request ID and check its receipt before
+                  starting another publish attempt.
+                </p>
+              }
+            }
           </div>
           <span receiptPanelFooter
             >Keep the request ID for receipt recovery.</span
@@ -162,41 +168,45 @@ import { ReceiptViewModel } from './receipt.view-model';
           >
           <ol class="receipt__steps" role="list">
             @for (step of vm.steps(); track $index) {
-            <li class="receipt__step">
-              <button
-                class="receipt__step-button"
-                type="button"
-                [title]="step.label"
-                [attr.aria-pressed]="vm.selectedIndex() === $index"
-                (click)="selectStep($index)"
-              >
-                <span class="receipt__step-number">{{
-                  $index + 1
-                }}</span>
-                <span class="receipt__step-label">{{
-                  step.label
-                }}</span>
-                <ngx-inline-status
-                  [label]="
-                    step.status === 'complete'
-                      ? 'Completed'
-                      : 'Pending'
-                  "
-                  [tone]="
-                    step.status === 'complete' ? 'success' : 'neutral'
-                  "
-                />
-                <mat-icon aria-hidden="true">chevron_right</mat-icon>
-              </button>
-            </li>
+              <li class="receipt__step">
+                <button
+                  class="receipt__step-button"
+                  type="button"
+                  [title]="step.label"
+                  [attr.aria-pressed]="vm.selectedIndex() === $index"
+                  (click)="selectStep($index)"
+                >
+                  <span class="receipt__step-number">{{
+                    $index + 1
+                  }}</span>
+                  <span class="receipt__step-label">{{
+                    step.label
+                  }}</span>
+                  <ngx-inline-status
+                    [label]="
+                      step.status === 'complete'
+                        ? 'Completed'
+                        : 'Pending'
+                    "
+                    [tone]="
+                      step.status === 'complete'
+                        ? 'success'
+                        : 'neutral'
+                    "
+                  />
+                  <mat-icon aria-hidden="true"
+                    >chevron_right</mat-icon
+                  >
+                </button>
+              </li>
             } @empty {
-            <li class="receipt__empty">
-              {{
-                vm.busy()
-                  ? 'Loading publishing steps…'
-                  : 'No publishing steps reported yet.'
-              }}
-            </li>
+              <li class="receipt__empty">
+                {{
+                  vm.busy()
+                    ? 'Loading publishing steps…'
+                    : 'No publishing steps reported yet.'
+                }}
+              </li>
             }
           </ol>
           <span receiptPanelFooter
@@ -213,38 +223,39 @@ import { ReceiptViewModel } from './receipt.view-model';
           scrollLabel="Scrollable selected step details"
         >
           @if (vm.selectedStep(); as step) {
-          <div class="receipt__selected-heading">
-            <h2>{{ step.label }}</h2>
-            <ngx-inline-status
-              [label]="
-                step.status === 'complete' ? 'Completed' : 'Pending'
-              "
-              [tone]="
-                step.status === 'complete' ? 'success' : 'neutral'
-              "
-            />
-          </div>
-          @if (step.result !== undefined) {
-          <div class="receipt__result-code">
-            <ngx-code-block
-              [code]="(step.result | json) ?? ''"
-              language="json"
-              [label]="step.label + ' result'"
-              [wrap]="true"
-            />
-          </div>
+            <div class="receipt__selected-heading">
+              <h2>{{ step.label }}</h2>
+              <ngx-inline-status
+                [label]="
+                  step.status === 'complete' ? 'Completed' : 'Pending'
+                "
+                [tone]="
+                  step.status === 'complete' ? 'success' : 'neutral'
+                "
+              />
+            </div>
+            @if (step.result !== undefined) {
+              <div class="receipt__result-code">
+                <ngx-code-block
+                  [code]="(step.result | json) ?? ''"
+                  language="json"
+                  [label]="step.label + ' result'"
+                  [wrap]="true"
+                />
+              </div>
+            } @else {
+              <p class="receipt__empty">
+                No result reported for this step.
+              </p>
+            }
           } @else {
-          <p class="receipt__empty">
-            No result reported for this step.
-          </p>
-          } } @else {
-          <p class="receipt__empty">
-            {{
-              vm.busy()
-                ? 'Loading step details…'
-                : 'Select a publishing step to view its details.'
-            }}
-          </p>
+            <p class="receipt__empty">
+              {{
+                vm.busy()
+                  ? 'Loading step details…'
+                  : 'Select a publishing step to view its details.'
+              }}
+            </p>
           }
           <span receiptPanelFooter
             >Result JSON can be copied from the code block.</span
@@ -270,10 +281,10 @@ import { ReceiptViewModel } from './receipt.view-model';
       }
       .receipt__workspace {
         display: grid;
-        grid-template-columns: minmax(240px, 300px) minmax(300px, 1fr) minmax(
-            0,
-            1.4fr
-          );
+        grid-template-columns: minmax(240px, 300px) minmax(
+            300px,
+            1fr
+          ) minmax(0, 1.4fr);
         grid-template-rows: minmax(0, 1fr);
         gap: 1rem;
         min-height: 0;

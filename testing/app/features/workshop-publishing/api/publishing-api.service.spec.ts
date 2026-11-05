@@ -18,11 +18,13 @@ describe('PublishingApiService', () => {
   });
   afterEach(() => http.verify());
   it('uses the authenticated admin facade and does not accept MCP errors as success', async () => {
-    const result = firstValueFrom(api.call('generate_workshop_draft', {
-      brief: 'Functions',
-      sectionId: 'angular',
-      level: 1,
-    }));
+    const result = firstValueFrom(
+      api.call('generate_workshop_draft', {
+        brief: 'Functions',
+        sectionId: 'angular',
+        level: 1,
+      })
+    );
     const request = http.expectOne('/api/publisher/tools');
     expect(request.request.withCredentials).toBeTrue();
     expect(request.request.body.name).toBe('generate_workshop_draft');
@@ -35,24 +37,48 @@ describe('PublishingApiService', () => {
     );
   });
   it('shows actionable generation errors without upstream text', async () => {
-    const result = firstValueFrom(api.call('generate_workshop_draft', {}));
+    const result = firstValueFrom(
+      api.call('generate_workshop_draft', {})
+    );
     http.expectOne('/api/publisher/tools').flush({
       isError: true,
-      content: [{ type: 'text', text: JSON.stringify({ error: {
-        code: 'MODEL_TIMEOUT', message: 'secret provider details',
-      } }) }],
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: {
+              code: 'MODEL_TIMEOUT',
+              message: 'secret provider details',
+            },
+          }),
+        },
+      ],
     });
     await expectAsync(result).toBeRejectedWithError(
       'The AI model timed out while generating the draft. Try a narrower workshop brief.'
     );
   });
-  for (const content of [[], [{ type: 'text', text: 'malformed' }],
-    [{ type: 'text', text: '{"error":{"code":"UNKNOWN","message":"secret"}}' }],
-    [{ type: 'text', text: '{"error":{"code":"toString"}}' }]]) {
+  for (const content of [
+    [],
+    [{ type: 'text', text: 'malformed' }],
+    [
+      {
+        type: 'text',
+        text: '{"error":{"code":"UNKNOWN","message":"secret"}}',
+      },
+    ],
+    [{ type: 'text', text: '{"error":{"code":"toString"}}' }],
+  ]) {
     it('falls back safely for unrecognized error content', async () => {
-      const result = firstValueFrom(api.call('generate_workshop_draft', {}));
-      http.expectOne('/api/publisher/tools').flush({ isError: true, content });
-      await expectAsync(result).toBeRejectedWithError(/could not complete/);
+      const result = firstValueFrom(
+        api.call('generate_workshop_draft', {})
+      );
+      http
+        .expectOne('/api/publisher/tools')
+        .flush({ isError: true, content });
+      await expectAsync(result).toBeRejectedWithError(
+        /could not complete/
+      );
     });
   }
   it('rejects malformed drafts and receipts', () => {
@@ -68,14 +94,14 @@ describe('PublishingApiService', () => {
     ).toThrowError(/receipt/);
   });
   it('returns structured data from successful responses', async () => {
-    const result = firstValueFrom(api.call('get_publishing_run', {
-      requestId: 'id',
-    }));
-    http
-      .expectOne('/api/publisher/tools')
-      .flush({
-        structuredContent: { data: { status: 'needs_recovery' } },
-      });
+    const result = firstValueFrom(
+      api.call('get_publishing_run', {
+        requestId: 'id',
+      })
+    );
+    http.expectOne('/api/publisher/tools').flush({
+      structuredContent: { data: { status: 'needs_recovery' } },
+    });
     expect(await result).toEqual({ status: 'needs_recovery' });
   });
   it('is cold and cancels HTTP when the subscriber leaves', () => {

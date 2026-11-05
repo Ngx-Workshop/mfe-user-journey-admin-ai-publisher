@@ -1,20 +1,42 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { NgxInlineStatus, NgxInlineStatusTone } from '@tmdjr/ngx-workshop-design-system';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+} from '@angular/core';
+import {
+  NgxInlineStatus,
+  NgxInlineStatusTone,
+} from '@tmdjr/ngx-workshop-design-system';
 import type { HistoryStatus } from '../models/history.models';
 
 @Component({
   selector: 'ngx-publishing-status',
   imports: [NgxInlineStatus],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<ngx-inline-status [label]="labels[status()]" [tone]="tones[status()]" />`,
-  styles: [`:host { display: inline-block; }`],
+  template: `<ngx-inline-status
+    [label]="labels[status()]"
+    [tone]="tones[status()]"
+  />`,
+  styles: [
+    `
+      :host {
+        display: inline-block;
+      }
+    `,
+  ],
 })
 export class PublishingStatusComponent {
   readonly status = input.required<HistoryStatus>();
   readonly labels: Record<HistoryStatus, string> = {
-    complete: 'Completed', running: 'Running', needs_recovery: 'Needs attention', unconfirmed: 'Unconfirmed',
+    complete: 'Completed',
+    running: 'Running',
+    needs_recovery: 'Needs attention',
+    unconfirmed: 'Unconfirmed',
   };
   readonly tones: Record<HistoryStatus, NgxInlineStatusTone> = {
-    complete: 'success', running: 'info', needs_recovery: 'error', unconfirmed: 'neutral',
+    complete: 'success',
+    running: 'info',
+    needs_recovery: 'error',
+    unconfirmed: 'neutral',
   };
 }

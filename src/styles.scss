@@ -3,14 +3,21 @@
 // Standalone fallback; federated views inherit the administrator shell theme.
 @include ngx.theme();
 
-html { min-width: 320px; background: var(--ngx-color-canvas); }
+html {
+  min-width: 320px;
+  background: var(--ngx-color-canvas);
+}
 body {
   margin: 0;
   font-family: var(--ngx-font-body);
   color: var(--ngx-color-text);
   background: var(--ngx-color-canvas);
 }
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 // The standalone app does not mount the shell navigation.
-.publisher-app { --publisher-toolbar-top: 0px; }
+.publisher-app {
+  --publisher-toolbar-top: 0px;
+}

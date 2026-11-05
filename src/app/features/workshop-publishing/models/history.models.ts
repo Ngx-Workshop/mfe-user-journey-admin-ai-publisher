@@ -1,6 +1,7 @@
 import type { PublishingReceipt } from './publishing.models';
 
-export type HistoryStatus = PublishingReceipt['status'] | 'unconfirmed';
+export type HistoryStatus =
+  PublishingReceipt['status'] | 'unconfirmed';
 export type HistoryFilter = HistoryStatus | 'all';
 export interface HistoryRow {
   requestId: string;
@@ -11,4 +12,3 @@ export interface HistoryRow {
   workshopName?: string | null;
   workshopUrl?: string | null;
 }
-

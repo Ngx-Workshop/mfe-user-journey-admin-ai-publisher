@@ -74,13 +74,15 @@ describe('PublishingViewModel', () => {
       loadModels: jasmine.createSpy().and.returnValue(of(undefined)),
       loadHistory: jasmine.createSpy().and.returnValue(of(undefined)),
       loadImages: jasmine.createSpy().and.returnValue(of(undefined)),
-      generateImage: jasmine
-        .createSpy()
-        .and.returnValue(of({
+      generateImage: jasmine.createSpy().and.returnValue(
+        of({
           name: 'Illustration',
           storageUrl: 'https://assets.example/image.png',
-        })),
-      loadSections: jasmine.createSpy().and.returnValue(of(undefined)),
+        })
+      ),
+      loadSections: jasmine
+        .createSpy()
+        .and.returnValue(of(undefined)),
       draft: jasmine.createSpy().and.returnValue(of(draft)),
       publish: jasmine.createSpy().and.returnValue(EMPTY),
       receipt: jasmine.createSpy().and.returnValue(EMPTY),
@@ -228,7 +230,11 @@ describe('PublishingViewModel', () => {
   it('rejects overlapping commands and unsubscribes late results on teardown', () => {
     const pending = new Subject<WorkshopDraft>();
     store.draft.and.returnValue(pending);
-    vm.form.setValue({ brief: 'Functions', sectionId: 'angular', level: 1 });
+    vm.form.setValue({
+      brief: 'Functions',
+      sectionId: 'angular',
+      level: 1,
+    });
     vm.generate();
     vm.generate();
     vm.loadHistory();
@@ -257,11 +263,17 @@ describe('PublishingViewModel', () => {
     expect(store.draft).not.toHaveBeenCalled();
     vm.receiptId.setValue('not-a-request-id');
     vm.inspect();
-    expect(vm.validation()).toBe('Enter a valid publishing request ID.');
+    expect(vm.validation()).toBe(
+      'Enter a valid publishing request ID.'
+    );
     expect(store.receipt).not.toHaveBeenCalled();
   });
   it('advances only successful drafts and invalidates the publication step on edits', () => {
-    vm.form.setValue({ brief: 'Functions', sectionId: 'angular', level: 1 });
+    vm.form.setValue({
+      brief: 'Functions',
+      sectionId: 'angular',
+      level: 1,
+    });
     store.draft.and.returnValue(EMPTY);
     vm.generate();
     expect(vm.step()).toBe(0);

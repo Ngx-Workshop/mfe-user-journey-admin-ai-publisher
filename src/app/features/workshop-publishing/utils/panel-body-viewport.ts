@@ -3,7 +3,7 @@ export function observePanelBody(
   host: HTMLElement,
   body: HTMLElement,
   setHeight: (height: number | null) => void,
-  mode: 'viewport' | 'container' = 'viewport',
+  mode: 'viewport' | 'container' = 'viewport'
 ): () => void {
   const viewport = host.ownerDocument.defaultView!;
   const panel = body.closest('ngx-panel')!;
@@ -14,8 +14,13 @@ export function observePanelBody(
       return;
     }
     const bounds = host.getBoundingClientRect();
-    const chrome = panel.getBoundingClientRect().height - body.getBoundingClientRect().height;
-    const available = mode === 'container' ? bounds.height : viewport.innerHeight - bounds.top - 16;
+    const chrome =
+      panel.getBoundingClientRect().height -
+      body.getBoundingClientRect().height;
+    const available =
+      mode === 'container'
+        ? bounds.height
+        : viewport.innerHeight - bounds.top - 16;
     setHeight(Math.max(0, Math.floor(available - chrome)));
   };
   const schedule = () => {
@@ -27,7 +32,10 @@ export function observePanelBody(
   observer.observe(panel);
   observer.observe(body);
   viewport.addEventListener('resize', schedule);
-  viewport.addEventListener('scroll', schedule, { capture: true, passive: true });
+  viewport.addEventListener('scroll', schedule, {
+    capture: true,
+    passive: true,
+  });
   measure();
   return () => {
     observer.disconnect();
@@ -38,10 +46,21 @@ export function observePanelBody(
 }
 
 /** Reserve only the visible space below the toolbar; lists scroll inside it. */
-export function observeWorkspaceHeight(host: HTMLElement, setHeight: (height: number) => void): () => void {
+export function observeWorkspaceHeight(
+  host: HTMLElement,
+  setHeight: (height: number) => void
+): () => void {
   const viewport = host.ownerDocument.defaultView!;
   let frame = 0;
-  const measure = () => setHeight(Math.max(0, Math.floor(viewport.innerHeight - host.getBoundingClientRect().top - 16)));
+  const measure = () =>
+    setHeight(
+      Math.max(
+        0,
+        Math.floor(
+          viewport.innerHeight - host.getBoundingClientRect().top - 16
+        )
+      )
+    );
   const schedule = () => {
     viewport.cancelAnimationFrame(frame);
     frame = viewport.requestAnimationFrame(measure);
@@ -50,7 +69,9 @@ export function observeWorkspaceHeight(host: HTMLElement, setHeight: (height: nu
   observer.observe(host);
   observer.observe(host.parentElement!);
   // Toolbar height can change without changing the workspace's own width.
-  const toolbar = host.closest('main')?.parentElement?.querySelector('ngx-action-bar');
+  const toolbar = host
+    .closest('main')
+    ?.parentElement?.querySelector('ngx-action-bar');
   if (toolbar) observer.observe(toolbar);
   viewport.addEventListener('resize', schedule);
   measure();

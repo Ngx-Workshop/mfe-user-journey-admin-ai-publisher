@@ -1,8 +1,20 @@
 import {
-  afterNextRender, afterRenderEffect, ChangeDetectionStrategy, Component, DestroyRef, ElementRef,
-  inject, input, signal, viewChild,
+  afterNextRender,
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  inject,
+  input,
+  signal,
+  viewChild,
 } from '@angular/core';
-import { NgxPanel, NgxPanelBackground, NgxPanelShape } from '@tmdjr/ngx-workshop-design-system';
+import {
+  NgxPanel,
+  NgxPanelBackground,
+  NgxPanelShape,
+} from '@tmdjr/ngx-workshop-design-system';
 import { observePanelBody } from '../utils/panel-body-viewport';
 
 @Component({
@@ -10,21 +22,64 @@ import { observePanelBody } from '../utils/panel-body-viewport';
   imports: [NgxPanel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <ngx-panel [heading]="heading()" [eyebrow]="eyebrow()" [shape]="shape()" [background]="background()">
-      <div ngxPanelHeader class="receipt-panel__tools"><ng-content select="[receiptPanelHeader]" /></div>
-      <div #body class="receipt-panel__body" [style.height.px]="bodyHeight()"
-        tabindex="0" role="region" [attr.aria-label]="scrollLabel()"><ng-content /></div>
-      <div ngxPanelActions class="receipt-panel__footer"><ng-content select="[receiptPanelFooter]" /></div>
+    <ngx-panel
+      [heading]="heading()"
+      [eyebrow]="eyebrow()"
+      [shape]="shape()"
+      [background]="background()"
+    >
+      <div ngxPanelHeader class="receipt-panel__tools">
+        <ng-content select="[receiptPanelHeader]" />
+      </div>
+      <div
+        #body
+        class="receipt-panel__body"
+        [style.height.px]="bodyHeight()"
+        tabindex="0"
+        role="region"
+        [attr.aria-label]="scrollLabel()"
+      >
+        <ng-content />
+      </div>
+      <div ngxPanelActions class="receipt-panel__footer">
+        <ng-content select="[receiptPanelFooter]" />
+      </div>
     </ngx-panel>
   `,
-  styles: [`
-    :host { display: block; height: 100%; min-height: 0; min-width: 0; }
-    ngx-panel { height: auto; }
-    .receipt-panel__tools { display: flex; gap: 0.5rem; align-items: center; }
-    .receipt-panel__body { position: relative; min-height: 0; overflow: auto; scrollbar-width: thin; }
-    .receipt-panel__body:focus-visible { outline: 2px solid var(--ngx-color-primary); outline-offset: -2px; }
-    .receipt-panel__footer { min-width: 0; font: var(--ngx-font-label); font-size: 0.65rem; color: var(--ngx-color-muted); }
-  `],
+  styles: [
+    `
+      :host {
+        display: block;
+        height: 100%;
+        min-height: 0;
+        min-width: 0;
+      }
+      ngx-panel {
+        height: auto;
+      }
+      .receipt-panel__tools {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .receipt-panel__body {
+        position: relative;
+        min-height: 0;
+        overflow: auto;
+        scrollbar-width: thin;
+      }
+      .receipt-panel__body:focus-visible {
+        outline: 2px solid var(--ngx-color-primary);
+        outline-offset: -2px;
+      }
+      .receipt-panel__footer {
+        min-width: 0;
+        font: var(--ngx-font-label);
+        font-size: 0.65rem;
+        color: var(--ngx-color-muted);
+      }
+    `,
+  ],
 })
 export class ReceiptWorkspacePanelComponent {
   readonly heading = input.required<string>();
@@ -35,16 +90,23 @@ export class ReceiptWorkspacePanelComponent {
   readonly resetKey = input<unknown>(null);
   readonly bodyHeight = signal(0);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly body = viewChild.required<ElementRef<HTMLElement>>('body');
+  private readonly body =
+    viewChild.required<ElementRef<HTMLElement>>('body');
   private readonly destroyRef = inject(DestroyRef);
   constructor() {
     afterRenderEffect(() => {
       this.resetKey();
       this.body().nativeElement.scrollTop = 0;
     });
-    afterNextRender(() => this.destroyRef.onDestroy(observePanelBody(
-      this.host.nativeElement, this.body().nativeElement,
-      height => this.bodyHeight.set(height ?? 0), 'container',
-    )));
+    afterNextRender(() =>
+      this.destroyRef.onDestroy(
+        observePanelBody(
+          this.host.nativeElement,
+          this.body().nativeElement,
+          (height) => this.bodyHeight.set(height ?? 0),
+          'container'
+        )
+      )
+    );
   }
 }

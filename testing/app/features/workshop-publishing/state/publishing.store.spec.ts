@@ -2,34 +2,65 @@ import { TestBed } from '@angular/core/testing';
 import { concatMap, from, of, Subject, throwError } from 'rxjs';
 import { PublishingStore } from '../../../../../src/app/features/workshop-publishing/state/publishing.store';
 import { PublishingApiService } from '../../../../../src/app/features/workshop-publishing/api/publishing-api.service';
-import type { WorkshopDraft, PublishingReceipt } from '../../../../../src/app/features/workshop-publishing/models/publishing.models';
+import type {
+  WorkshopDraft,
+  PublishingReceipt,
+} from '../../../../../src/app/features/workshop-publishing/models/publishing.models';
 
 describe('PublishingStore streams', () => {
   const draft: WorkshopDraft = {
-    sectionId: 'angular', name: 'Functions', summary: 'Learn functions', level: 1,
-    pages: [], labs: [],
-    assessment: { name: 'Quiz', subject: 'angular', level: 1, testQuestions: [] },
+    sectionId: 'angular',
+    name: 'Functions',
+    summary: 'Learn functions',
+    level: 1,
+    pages: [],
+    labs: [],
+    assessment: {
+      name: 'Quiz',
+      subject: 'angular',
+      level: 1,
+      testQuestions: [],
+    },
   };
   let store: PublishingStore;
   let api: {
-    call: jasmine.Spy; receipt: jasmine.Spy; sections: jasmine.Spy;
-    models: jasmine.Spy; history: jasmine.Spy;
+    call: jasmine.Spy;
+    receipt: jasmine.Spy;
+    sections: jasmine.Spy;
+    models: jasmine.Spy;
+    history: jasmine.Spy;
   };
   beforeEach(() => {
     api = {
-      call: jasmine.createSpy().and.returnValue(throwError(() => new Error('Connection lost'))),
-      receipt: jasmine.createSpy().and.callFake((value: PublishingReceipt) => value),
+      call: jasmine
+        .createSpy()
+        .and.returnValue(
+          throwError(() => new Error('Connection lost'))
+        ),
+      receipt: jasmine
+        .createSpy()
+        .and.callFake((value: PublishingReceipt) => value),
       sections: jasmine.createSpy().and.returnValue(of([])),
-      models: jasmine.createSpy().and.returnValue(of({ models: [], defaultModel: null, imageModel: 'image' })),
+      models: jasmine
+        .createSpy()
+        .and.returnValue(
+          of({ models: [], defaultModel: null, imageModel: 'image' })
+        ),
       history: jasmine.createSpy().and.returnValue(of([])),
     };
-    TestBed.configureTestingModule({ providers: [{ provide: PublishingApiService, useValue: api }] });
+    TestBed.configureTestingModule({
+      providers: [{ provide: PublishingApiService, useValue: api }],
+    });
     store = TestBed.inject(PublishingStore);
   });
   it('retains an unconfirmed request after failure and reconciles receipt lookup', () => {
     const requestId = crypto.randomUUID();
     const receipt: PublishingReceipt = {
-      requestId, subject: 'admin', draftHash: 'hash', status: 'needs_recovery', steps: [],
+      requestId,
+      subject: 'admin',
+      draftHash: 'hash',
+      status: 'needs_recovery',
+      steps: [],
     };
     store.publish({ requestId, draft }).subscribe();
     expect(store.unconfirmedRequests()).toEqual([requestId]);
@@ -63,7 +94,9 @@ describe('PublishingStore streams', () => {
       () => store.loadSections(),
       () => store.loadModels(),
       () => store.loadHistory(),
-    ]).pipe(concatMap((read) => read())).subscribe();
+    ])
+      .pipe(concatMap((read) => read()))
+      .subscribe();
     expect(api.sections).toHaveBeenCalledTimes(1);
     expect(api.models).toHaveBeenCalledTimes(1);
     expect(api.history).toHaveBeenCalledTimes(1);
@@ -76,7 +109,9 @@ describe('PublishingStore streams', () => {
     const pending = new Subject<PublishingReceipt>();
     api.call.and.returnValue(pending);
     const requestId = crypto.randomUUID();
-    const subscription = store.publish({ requestId, draft }).subscribe();
+    const subscription = store
+      .publish({ requestId, draft })
+      .subscribe();
     subscription.unsubscribe();
     expect(store.unconfirmedRequests()).toEqual([requestId]);
     expect(store.busy()).toBeFalse();
@@ -84,8 +119,10 @@ describe('PublishingStore streams', () => {
     expect(store.history()).toEqual([]);
   });
   for (const [status, message] of [
-    [401, 'Sign in as an administrator'], [403, 'Sign in as an administrator'],
-    [404, 'not enabled'], [500, 'Keep the request ID'],
+    [401, 'Sign in as an administrator'],
+    [403, 'Sign in as an administrator'],
+    [404, 'not enabled'],
+    [500, 'Keep the request ID'],
   ] as const) {
     it(`surfaces HTTP ${status} with actionable guidance`, () => {
       api.sections.and.returnValue(throwError(() => ({ status })));
