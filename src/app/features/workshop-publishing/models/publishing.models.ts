@@ -1,3 +1,4 @@
+export type { PreparationReport, PreparationActivity, StartWorkshopPreparationInput } from '@tmdjr/service-mcp-gateway-contracts';
 export type {
   WorkshopDraft,
   EditorBlock,
@@ -14,6 +15,8 @@ export interface WorkshopImage {
   storageUrl: string;
 }
 export type PublisherTool =
+  | 'start_workshop_preparation'
+  | 'get_workshop_preparation'
   | 'list_publishing_models'
   | 'list_publishing_runs'
   | 'generate_workshop_draft'

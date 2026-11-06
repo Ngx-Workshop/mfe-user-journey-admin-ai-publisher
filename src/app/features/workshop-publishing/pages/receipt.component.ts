@@ -1,3 +1,4 @@
+import { PublishingPreparationComponent } from '../components/publishing-preparation.component';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -37,6 +38,7 @@ import { ReceiptViewModel } from './receipt.view-model';
     PublishingStatusComponent,
     ReceiptWorkspacePanelComponent,
     ReceiptStepResultComponent,
+    PublishingPreparationComponent,
   ],
   providers: [ReceiptViewModel],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +56,12 @@ import { ReceiptViewModel } from './receipt.view-model';
       aria-label="Publishing receipt"
       [attr.aria-busy]="vm.busy()"
     >
+      @if (vm.receipt()?.preparation; as preparation) {
+        <details>
+          <summary>Preparation skills and checks</summary>
+          <ngx-publishing-preparation [report]="preparation" [locked]="true" />
+        </details>
+      }
       <div #workspace class="receipt__workspace">
         <div
           class="receipt__switch"

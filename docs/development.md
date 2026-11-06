@@ -160,3 +160,34 @@ and 390px; document width matches each viewport. Inner panels stack at the
 intermediate breakpoint and guidance stacks on mobile. The admin session expired
 during visual checks, so authenticated-shell success is not claimed for this layout
 follow-up; standalone error/retry presentation was used without backend mutations.
+
+## Preparation acceptance — 2026-11-05
+
+Deploy coding-labs preflight, gateway preparation/skill assets, then this bundle.
+The API polls short get requests and includes terminal reports; unsubscribe cancels
+polling, not server generation. Jobs are private, process-local, expire one hour after
+completion and may be evicted; a server restart requires new checks. Use Resume check
+progress after an interrupted request. A fresh generation includes AI review and up
+to one revision/re-review, increasing selected-model usage; imports run no model.
+Human review remains necessary for facts, rendered content and diagram source.
+
+Automated cases cover polling cancellation/terminal results, report validation, failed
+checks blocking publication, edit invalidation, recovery from explicit preparation
+rejections, history snapshots and skill/check evidence. Browser acceptance uses an
+isolated local fixture server and production bundle, with no paid generation or live
+publication. Local fixture results must not be presented as live domain integration.
+See specs/013-workshop-preparation/handoff.md for exact evidence and limits.
+
+## Draft review layout (014)
+
+Review is a desktop grid with a sticky compact Checks sidebar and a naturally tall
+Workshop Preview. Below 960px the panels stack. Check the Documentation / Coding
+labs / Assessment tablist with keyboard arrows, Home and End; the image beside the
+workshop information comes from the first safe document image, with an empty state
+when absent. The preview header tune icon opens Refine the draft. Verify source
+changes survive closing/reopening, invalidate publication readiness, and restore
+the preview only after successful validation. Dialog errors and operation locks
+must remain visible. Opening the dialog never calls generation or publication.
+
+Local verification uses a fixture server and no paid model/image/publication calls.
+The deployment remains a separate action; see specs/014-draft-review-layout/handoff.md.

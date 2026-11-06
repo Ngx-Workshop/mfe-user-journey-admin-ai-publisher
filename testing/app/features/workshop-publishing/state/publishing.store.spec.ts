@@ -1,3 +1,4 @@
+import { PublishingToolError } from '../../../../../src/app/features/workshop-publishing/api/publishing-error';
 import { TestBed } from '@angular/core/testing';
 import { concatMap, from, of, Subject, throwError } from 'rxjs';
 import { PublishingStore } from '../../../../../src/app/features/workshop-publishing/state/publishing.store';
@@ -52,6 +53,28 @@ describe('PublishingStore streams', () => {
       providers: [{ provide: PublishingApiService, useValue: api }],
     });
     store = TestBed.inject(PublishingStore);
+  });
+  it('allows fresh checks after explicit stale preparation rejection without retaining an uncertain write', () => {
+    const id = crypto.randomUUID();
+    api.call.and.returnValue(
+      throwError(
+        () =>
+          new PublishingToolError(
+            'PREPARATION_STALE',
+            'Run checks again'
+          )
+      )
+    );
+    const rejected = jasmine.createSpy();
+    store
+      .publish(
+        { requestId: id, draft, preparationId: crypto.randomUUID() },
+        rejected
+      )
+      .subscribe();
+    expect(rejected).toHaveBeenCalledTimes(1);
+    expect(store.unconfirmedRequests()).not.toContain(id);
+    expect(store.error()).toBe('Run checks again');
   });
   it('retains an unconfirmed request after failure and reconciles receipt lookup', () => {
     const requestId = crypto.randomUUID();

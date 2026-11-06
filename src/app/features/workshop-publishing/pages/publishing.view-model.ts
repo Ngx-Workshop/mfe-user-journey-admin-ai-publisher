@@ -25,6 +25,8 @@ import {
 } from '../models/publishing-operation';
 import { PublishingStore } from '../state/publishing.store';
 import {
+  PreparationReport,
+  StartWorkshopPreparationInput,
   PublishingReceipt,
   WorkshopDraft,
   WorkshopImage,
@@ -70,6 +72,12 @@ export class PublishingViewModel {
   readonly setupErrors = signal<string[]>([]);
   readonly initializing = signal(false);
   readonly image = signal<WorkshopImage | null>(null);
+  readonly preparation = signal<PreparationReport | null>(null);
+  readonly checksReady = computed(
+    () =>
+      this.preparation()?.ready === true &&
+      this.preparation()?.status === 'complete'
+  );
   readonly validation = signal('');
   readonly step = signal(0);
   readonly reviewed = signal(false);
@@ -229,11 +237,14 @@ export class PublishingViewModel {
     }
     this.commands.next(() =>
       this.track('generate', () =>
-        this.store.draft('generate_workshop_draft', {
-          ...this.form.getRawValue(),
-          model: this.model.value,
-        } satisfies GenerateWorkshopDraftInput)
-      ).pipe(tap((draft) => this.accept(draft)))
+        this.startPreparation({
+          operation: 'generate',
+          input: {
+            ...this.form.getRawValue(),
+            model: this.model.value,
+          } satisfies GenerateWorkshopDraftInput,
+        })
+      ).pipe(tap((report) => this.acceptPreparation(report)))
     );
   }
   validate(): void {
@@ -247,16 +258,61 @@ export class PublishingViewModel {
     }
     this.commands.next(() =>
       this.track('validate', () =>
-        this.store.draft('validate_workshop_draft', {
-          draft: value,
-        })
-      ).pipe(tap((draft) => this.accept(draft)))
+        this.startPreparation({ operation: 'check', draft: value })
+      ).pipe(tap((report) => this.acceptPreparation(report)))
     );
   }
   edited(): void {
+    this.preparation.set(null);
     this.reviewed.set(false);
     this.draft.set(null);
     if (!this.attempted() && this.step() > 1) this.step.set(1);
+  }
+  private startPreparation(
+    input: StartWorkshopPreparationInput
+  ): Observable<PreparationReport> {
+    const preparationId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    this.preparation.set({
+      preparationId,
+      status: 'running',
+      ready: false,
+      createdAt: now,
+      updatedAt: now,
+      activities: [],
+      repairCount: 0,
+      message:
+        'Starting preparation. If the connection is interrupted, resume with this ID before starting again.',
+    });
+    return this.store.prepare({ ...input, preparationId });
+  }
+  resumeChecks(): void {
+    const report = this.preparation();
+    if (
+      !report ||
+      report.status !== 'running' ||
+      this.working() ||
+      this.attempted()
+    )
+      return;
+    this.commands.next(() =>
+      this.track(
+        'validate',
+        () => this.store.watchPreparation(report.preparationId),
+        true
+      ).pipe(tap((value) => this.acceptPreparation(value)))
+    );
+  }
+  private acceptPreparation(report: PreparationReport): void {
+    this.preparation.set(report);
+    if (report.status === 'running') return;
+    if (report.draft) this.accept(report.draft);
+    this.validation.set(
+      report.ready
+        ? ''
+        : report.message ||
+            'Preparation failed. Review the check results and run checks again.'
+    );
   }
   private accept(draft: WorkshopDraft): void {
     this.reviewed.set(false);
@@ -271,6 +327,7 @@ export class PublishingViewModel {
   continueToPublish(): void {
     if (
       !this.draft() ||
+      !this.checksReady() ||
       this.step() !== 1 ||
       this.working() ||
       this.attempted()
@@ -283,6 +340,7 @@ export class PublishingViewModel {
     const draft = this.draft();
     if (
       !draft ||
+      !this.checksReady() ||
       !this.reviewed() ||
       this.step() !== 2 ||
       this.busy() ||
@@ -293,7 +351,20 @@ export class PublishingViewModel {
     this.commands.next(() => {
       this.attempted.set(true);
       return this.track('publish', () =>
-        this.store.publish({ requestId: this.requestId(), draft })
+        this.store.publish(
+          {
+            requestId: this.requestId(),
+            draft,
+            preparationId: this.preparation()!.preparationId,
+          },
+          () => {
+            this.attempted.set(false);
+            this.reviewed.set(false);
+            this.preparation.set(null);
+            this.draft.set(null);
+            this.step.set(1);
+          }
+        )
       ).pipe(tap((receipt) => this.receipt.set(receipt)));
     });
   }
@@ -323,15 +394,20 @@ export class PublishingViewModel {
 
   private track<T>(
     operation: PublishingOperation,
-    request: () => Observable<T>
+    request: () => Observable<T>,
+    retainPreparation = false
   ): Observable<T> {
     return defer(() => {
       const token = Symbol();
       this.activeOperation = token;
       this.operation.set(operation);
       this.elapsed.set(0);
-      if (operation === 'generate' || operation === 'validate')
+      if (operation === 'generate' || operation === 'validate') {
         this.validation.set('');
+        if (!retainPreparation) this.preparation.set(null);
+        this.reviewed.set(false);
+        this.draft.set(null);
+      }
       const started = Date.now();
       const clock = interval(1000).subscribe(() =>
         this.elapsed.set(Math.floor((Date.now() - started) / 1000))
@@ -350,6 +426,7 @@ export class PublishingViewModel {
 
   newDraft(): void {
     if (this.busy()) return;
+    this.preparation.set(null);
     this.step.set(0);
     this.reviewed.set(false);
     this.requestId.set(crypto.randomUUID());

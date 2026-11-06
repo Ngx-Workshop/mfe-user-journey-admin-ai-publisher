@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
+import { previewBlock } from '../utils/publishing-preview';
 import { WorkshopDraft } from '../models/publishing.models';
 import { PublishingDocumentPreviewComponent } from './publishing-document-preview.component';
 import { PublishingLabPreviewComponent } from './publishing-lab-preview.component';
@@ -29,6 +30,14 @@ type PreviewSection = 'pages' | 'labs' | 'assessment';
   template: `
     <article class="review">
       <header class="review__header">
+        <div class="review__image">
+          @if (image(); as cover) {
+            <img [src]="cover.url" [alt]="cover.alt" />
+          } @else {
+            <span>No workshop image</span>
+          }
+        </div>
+        <div class="review__info">
         <p class="review__eyebrow">
           WORKSHOP PREVIEW / LEVEL {{ draft().level }}
         </p>
@@ -38,45 +47,22 @@ type PreviewSection = 'pages' | 'labs' | 'assessment';
           Explore the materials below before approving publication.
           This is an unpublished draft.
         </p>
+        </div>
       </header>
-      <div
-        class="review__tabs"
-        role="group"
-        aria-label="Preview material type"
-      >
-        <button
-          mat-button
-          ngxButton
-          surface="outline"
-          type="button"
-          [attr.aria-pressed]="section() === 'pages'"
-          (click)="select('pages')"
-        >
-          Documentation ({{ draft().pages.length }})
-        </button>
-        <button
-          mat-button
-          ngxButton
-          surface="outline"
-          type="button"
-          [attr.aria-pressed]="section() === 'labs'"
-          (click)="select('labs')"
-        >
-          Coding labs ({{ draft().labs.length }})
-        </button>
-        <button
-          mat-button
-          ngxButton
-          surface="outline"
-          type="button"
-          [attr.aria-pressed]="section() === 'assessment'"
-          (click)="select('assessment')"
-        >
-          Assessment ({{ draft().assessment.testQuestions.length }})
-        </button>
+      <div class="review__tabs" role="tablist" aria-label="Preview material type">
+        @for (tab of tabs; track tab.id) {
+          <button type="button" role="tab" [id]="tabId(tab.id)"
+            [attr.aria-selected]="section() === tab.id"
+            [attr.aria-controls]="panelId"
+            [tabIndex]="section() === tab.id ? 0 : -1"
+            (click)="select(tab.id)" (keydown)="navigateTab($event, tab.id)">
+            {{ tab.label }} ({{ count(tab.id) }})
+          </button>
+        }
       </div>
       <div
-        class="review__workspace"
+        class="review__workspace" role="tabpanel" [id]="panelId"
+        [attr.aria-labelledby]="tabId(section())"
         [class.review__workspace--assessment]="
           section() === 'assessment'
         "
@@ -174,7 +160,23 @@ type PreviewSection = 'pages' | 'labs' | 'assessment';
       min-width: 0;
     }
     .review__header {
-      max-width: 85ch;
+      display: grid;
+      grid-template-columns: minmax(150px, 28%) minmax(0, 1fr);
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .review__image {
+      aspect-ratio: 16 / 10;
+      display: grid;
+      place-items: center;
+      background: var(--ngx-color-canvas);
+      border: 1px solid var(--ngx-color-border);
+      color: var(--ngx-color-muted);
+      font-size: .8rem;
+      overflow: hidden;
+    }
+    .review__image img { width: 100%; height: 100%; object-fit: cover; }
+    .review__info { min-width: 0;
     }
     h2 {
       font-size: clamp(1.5rem, 3vw, 2.25rem);
@@ -197,17 +199,31 @@ type PreviewSection = 'pages' | 'labs' | 'assessment';
     }
     .review__tabs {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 1.5rem 0 1rem;
+      gap: .25rem;
+      margin: 1.5rem 0 0;
+      border-bottom: 1px solid var(--ngx-color-border);
+      overflow-x: auto;
     }
-    .review__tabs [aria-pressed='true'] {
-      outline: 2px solid var(--ngx-color-primary);
-      outline-offset: -2px;
+    .review__tabs button {
+      flex: 1;
+      padding: .85rem .6rem;
+      background: transparent;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      color: var(--ngx-color-muted);
+      font: inherit;
+      font-size: .85rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .review__tabs [aria-selected='true'] {
+      border-bottom-color: var(--ngx-color-primary);
+      color: var(--ngx-color-primary);
+      background: var(--ngx-color-surface-high);
     }
     .review__workspace {
       display: grid;
-      grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+      grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
       border: 1px solid var(--ngx-color-border);
     }
     .review__workspace--assessment {
@@ -262,14 +278,38 @@ type PreviewSection = 'pages' | 'labs' | 'assessment';
         max-height: 200px;
         overflow: auto;
       }
-      .review__tabs {
-        flex-direction: column;
-        align-items: stretch;
-      }
+      .review__header { grid-template-columns: minmax(0, 1fr); }
+      .review__image { max-width: 320px; width: 100%; }
     }
   `,
 })
 export class PublishingReviewComponent {
+  private static nextId = 0;
+  readonly panelId = `workshop-material-${PublishingReviewComponent.nextId++}`;
+  readonly tabs: { id: PreviewSection; label: string }[] = [
+    { id: 'pages', label: 'Documentation' },
+    { id: 'labs', label: 'Coding labs' },
+    { id: 'assessment', label: 'Assessment' },
+  ];
+  readonly image = computed(() => this.draft().pages.flatMap(page =>
+    [...page.blocks].sort((a, b) => a.sortIndex - b.sortIndex).map(previewBlock)
+  ).find(block => block.kind === 'image'));
+  tabId(section: PreviewSection): string { return `${this.panelId}-${section}`; }
+  count(section: PreviewSection): number {
+    return section === 'assessment' ? this.draft().assessment.testQuestions.length : this.draft()[section].length;
+  }
+  navigateTab(event: KeyboardEvent, section: PreviewSection): void {
+    const index = this.tabs.findIndex(tab => tab.id === section);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 :
+      event.key === 'ArrowRight' ? (index + 1) % 3 : event.key === 'ArrowLeft' ? (index + 2) % 3 : -1;
+    if (next < 0) return;
+    event.preventDefault();
+    this.select(this.tabs[next].id);
+    const button = event.currentTarget;
+    if (button instanceof HTMLElement) {
+      button.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
+    }
+  }
   readonly draft = input.required<WorkshopDraft>();
   readonly locked = input(false);
   readonly showPublish = input(true);

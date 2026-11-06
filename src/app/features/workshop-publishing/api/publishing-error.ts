@@ -1,4 +1,13 @@
 const messages: Record<string, string> = {
+  PREPARATION_CONFLICT:
+    'Preparation ID belongs to different inputs. Resume the original preparation or start fresh checks.',
+  PREPARATION_UNAVAILABLE:
+    'Preparation is unavailable or expired. Run checks again before publishing.',
+  PREPARATION_BUSY:
+    'Preparation is already running. Resume its progress or wait for the current checks.',
+  PREPARATION_STALE:
+    'The draft changed or has unresolved checks. Run checks again before publishing.',
+
   MODEL_NOT_CONFIGURED:
     'Draft generation is not configured. Ask the server administrator to configure the model and API key.',
   GENERATION_IMAGE_LOOKUP_FAILED:
@@ -24,9 +33,19 @@ const messages: Record<string, string> = {
 };
 const fallback =
   'The publishing agent could not complete this request. Check the draft, service access and server configuration.';
-export function publishingError(response: object): string {
+export class PublishingToolError extends Error {
+  constructor(
+    readonly code: string,
+    message: string
+  ) {
+    super(message);
+  }
+}
+export function publishingError(
+  response: object
+): PublishingToolError {
   if (!('content' in response) || !Array.isArray(response.content))
-    return fallback;
+    return new PublishingToolError('PUBLISHING_FAILED', fallback);
   for (const item of response.content) {
     if (
       !item ||
@@ -48,10 +67,13 @@ export function publishingError(response: object): string {
       )
         continue;
       if (Object.hasOwn(messages, value.error.code))
-        return messages[value.error.code];
+        return new PublishingToolError(
+          value.error.code,
+          messages[value.error.code]
+        );
     } catch {
       /* An unrecognized response retains the safe fallback. */
     }
   }
-  return fallback;
+  return new PublishingToolError('PUBLISHING_FAILED', fallback);
 }

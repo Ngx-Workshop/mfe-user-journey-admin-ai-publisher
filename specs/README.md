@@ -37,3 +37,7 @@ the largest folder number is not automatically the active feature.
 | 011 Publishing journey | Implemented; live integration pending | [Spec](011-publishing-journey/spec.md) | [Plan](011-publishing-journey/plan.md) | [Tasks](011-publishing-journey/tasks.md) | [Handoff](011-publishing-journey/handoff.md) |
 
 | 012 Receipt verification and reading layout | Complete | [Spec](012-receipt-verification/spec.md) | [Plan](012-receipt-verification/plan.md) | [Tasks](012-receipt-verification/tasks.md) | [Handoff](012-receipt-verification/handoff.md) |
+
+- [013 — Workshop preparation skills and checks](013-workshop-preparation/spec.md): Implemented; production acceptance pending.
+
+- [014 — Draft review layout](014-draft-review-layout/spec.md): Complete locally; not deployed.

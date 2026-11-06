@@ -1,6 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, timeout } from 'rxjs';
+import {
+  EMPTY,
+  expand,
+  map,
+  Observable,
+  switchMap,
+  timeout,
+  timer,
+  throwError,
+} from 'rxjs';
 import Ajv from 'ajv/dist/2020';
 import { publishingError } from './publishing-error';
 import {
@@ -8,6 +17,8 @@ import {
   type WorkshopDraft,
 } from '@tmdjr/service-mcp-gateway-contracts';
 import {
+  PreparationReport,
+  StartWorkshopPreparationInput,
   PublisherTool,
   PublishingReceipt,
   PublishingModelCatalog,
@@ -19,6 +30,12 @@ const draftTool = mcpCatalogContract.publishing.tools.find(
 const validateDraft = new Ajv({ strict: false }).compile<{
   draft: WorkshopDraft;
 }>(draftTool.inputSchema);
+const preparationTool = mcpCatalogContract.publishing.tools.find(
+  (tool) => tool.name === 'get_workshop_preparation'
+)!;
+const validatePreparation = new Ajv({ strict: false }).compile<{
+  data: PreparationReport;
+}>(preparationTool.outputSchema);
 @Injectable({ providedIn: 'root' })
 export class PublishingApiService {
   private readonly http = inject(HttpClient);
@@ -34,11 +51,68 @@ export class PublishingApiService {
         map((response) => this.unwrap(response))
       );
   }
+  prepare(
+    input: StartWorkshopPreparationInput
+  ): Observable<PreparationReport> {
+    return this.call('start_workshop_preparation', input).pipe(
+      map((value) => {
+        const report = this.preparation(value);
+        if (
+          input.preparationId &&
+          report.preparationId !== input.preparationId
+        )
+          throw new Error(
+            'Preparation response has a different ID. Resume the original preparation.'
+          );
+        return report;
+      }),
+      expand((report, index) => this.nextPreparation(report, index))
+    );
+  }
+  watchPreparation(
+    preparationId: string
+  ): Observable<PreparationReport> {
+    return this.call('get_workshop_preparation', {
+      preparationId,
+    }).pipe(
+      map((value) => this.preparation(value)),
+      expand((report, index) => this.nextPreparation(report, index))
+    );
+  }
+  private nextPreparation(
+    report: PreparationReport,
+    index: number
+  ): Observable<PreparationReport> {
+    if (report.status !== 'running') return EMPTY;
+    if (index >= 1200)
+      return throwError(
+        () =>
+          new Error(
+            'Checks are still running. Resume progress with the preparation ID.'
+          )
+      );
+    return timer(1500).pipe(
+      switchMap(() =>
+        this.call('get_workshop_preparation', {
+          preparationId: report.preparationId,
+        })
+      ),
+      map((value) => this.preparation(value))
+    );
+  }
+  private preparation(value: unknown): PreparationReport {
+    const envelope = { data: value };
+    if (!validatePreparation(envelope))
+      throw new Error(
+        'Invalid preparation progress response. Run checks again.'
+      );
+    return envelope.data;
+  }
   private unwrap(response: unknown): unknown {
     if (!response || typeof response !== 'object')
       throw new Error('Invalid publishing response.');
     if ('isError' in response && response.isError === true)
-      throw new Error(publishingError(response));
+      throw publishingError(response);
     if (
       !('structuredContent' in response) ||
       !response.structuredContent ||
@@ -189,6 +263,8 @@ export class PublishingApiService {
       )
     )
       throw new Error('Invalid publishing receipt.');
+    if ('preparation' in value && value.preparation !== undefined)
+      this.preparation(value.preparation);
     return value as PublishingReceipt;
   }
 }

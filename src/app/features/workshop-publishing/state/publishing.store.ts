@@ -1,3 +1,4 @@
+import { PublishingToolError } from '../api/publishing-error';
 import { inject, Injectable, signal } from '@angular/core';
 import {
   catchError,
@@ -10,6 +11,8 @@ import {
 } from 'rxjs';
 import { PublishingApiService } from '../api/publishing-api.service';
 import {
+  PreparationReport,
+  StartWorkshopPreparationInput,
   PublishingReceipt,
   WorkshopDraft,
   PublishingModelCatalog,
@@ -87,6 +90,14 @@ export class PublishingStore {
         .pipe(tap((sections) => this.sectionsState.set(sections)))
     );
   }
+  prepare(
+    input: StartWorkshopPreparationInput
+  ): Observable<PreparationReport> {
+    return this.execute(() => this.api.prepare(input));
+  }
+  watchPreparation(id: string): Observable<PreparationReport> {
+    return this.execute(() => this.api.watchPreparation(id));
+  }
   draft(
     name: 'generate_workshop_draft' | 'validate_workshop_draft',
     input: unknown
@@ -97,22 +108,44 @@ export class PublishingStore {
         .pipe(map((value) => this.api.draft(value)))
     );
   }
-  publish(input: {
-    requestId: string;
-    draft: WorkshopDraft;
-  }): Observable<PublishingReceipt> {
-    return this.execute(() => {
-      // A cancelled browser request may still publish on the server.
-      this.unconfirmedState.update((ids) =>
-        [
-          input.requestId,
-          ...ids.filter((id) => id !== input.requestId),
-        ].slice(0, 100)
-      );
-      return this.api
-        .call('publish_workshop', input)
-        .pipe(map((value) => this.remember(this.api.receipt(value))));
-    });
+  publish(
+    input: {
+      requestId: string;
+      draft: WorkshopDraft;
+      preparationId?: string;
+    },
+    onPreparationRejected?: () => void
+  ): Observable<PublishingReceipt> {
+    return this.execute(
+      () => {
+        // A cancelled browser request may still publish on the server.
+        this.unconfirmedState.update((ids) =>
+          [
+            input.requestId,
+            ...ids.filter((id) => id !== input.requestId),
+          ].slice(0, 100)
+        );
+        return this.api
+          .call('publish_workshop', input)
+          .pipe(
+            map((value) => this.remember(this.api.receipt(value)))
+          );
+      },
+      (error) => {
+        if (
+          error instanceof PublishingToolError &&
+          ['PREPARATION_UNAVAILABLE', 'PREPARATION_STALE'].includes(
+            error.code
+          )
+        ) {
+          // These are explicit gateway rejections before a new publishing run begins.
+          this.unconfirmedState.update((ids) =>
+            ids.filter((id) => id !== input.requestId)
+          );
+          onPreparationRejected?.();
+        }
+      }
+    );
   }
   receipt(requestId: string): Observable<PublishingReceipt> {
     return this.execute(() =>
@@ -133,7 +166,10 @@ export class PublishingStore {
     );
     return receipt;
   }
-  private execute<T>(operation: () => Observable<T>): Observable<T> {
+  private execute<T>(
+    operation: () => Observable<T>,
+    onError?: (error: unknown) => void
+  ): Observable<T> {
     return defer(() => {
       if (this.busy()) return EMPTY;
       const token = Symbol();
@@ -149,6 +185,7 @@ export class PublishingStore {
       return defer(operation).pipe(
         tap({ complete: release }),
         catchError((error: unknown) => {
+          onError?.(error);
           const status =
             error && typeof error === 'object' && 'status' in error
               ? error.status

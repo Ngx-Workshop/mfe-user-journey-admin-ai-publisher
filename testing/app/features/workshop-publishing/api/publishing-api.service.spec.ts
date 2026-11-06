@@ -17,6 +17,76 @@ describe('PublishingApiService', () => {
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
+  it('polls reported progress, stops at completion and cancels waiting on unsubscribe', () => {
+    jasmine.clock().install();
+    try {
+      const report = {
+        preparationId: '11111111-1111-4111-8111-111111111111',
+        status: 'running',
+        ready: false,
+        createdAt: '2026-11-05T12:00:00Z',
+        updatedAt: '2026-11-05T12:00:00Z',
+        activities: [],
+        repairCount: 0,
+      };
+      const seen: unknown[] = [];
+      let complete = false;
+      api
+        .prepare({ operation: 'check', draft: {} })
+        .subscribe({
+          next: (value) => seen.push(value),
+          complete: () => (complete = true),
+        });
+      const start = http.expectOne('/api/publisher/tools');
+      expect(start.request.body.name).toBe(
+        'start_workshop_preparation'
+      );
+      start.flush({ structuredContent: { data: report } });
+      expect(seen.length).toBe(1);
+      expect(complete).toBeFalse();
+      jasmine.clock().tick(1500);
+      const poll = http.expectOne('/api/publisher/tools');
+      expect(poll.request.body).toEqual({
+        name: 'get_workshop_preparation',
+        input: { preparationId: report.preparationId },
+      });
+      poll.flush({
+        structuredContent: {
+          data: { ...report, status: 'complete' },
+        },
+      });
+      expect(complete).toBeTrue();
+      expect(seen.length).toBe(2);
+      jasmine.clock().tick(5000);
+      http.expectNone('/api/publisher/tools');
+      const sub = api
+        .watchPreparation(report.preparationId)
+        .subscribe();
+      http
+        .expectOne('/api/publisher/tools')
+        .flush({ structuredContent: { data: report } });
+      sub.unsubscribe();
+      jasmine.clock().tick(5000);
+      http.expectNone('/api/publisher/tools');
+    } finally {
+      jasmine.clock().uninstall();
+    }
+  });
+  it('rejects malformed preparation activity rather than reporting a fake pass', async () => {
+    const promise = firstValueFrom(
+      api.watchPreparation('11111111-1111-4111-8111-111111111111')
+    );
+    http
+      .expectOne('/api/publisher/tools')
+      .flush({
+        structuredContent: {
+          data: { status: 'complete', ready: true },
+        },
+      });
+    await expectAsync(promise).toBeRejectedWithError(
+      'Invalid preparation progress response. Run checks again.'
+    );
+  });
   it('uses the authenticated admin facade and does not accept MCP errors as success', async () => {
     const result = firstValueFrom(
       api.call('generate_workshop_draft', {

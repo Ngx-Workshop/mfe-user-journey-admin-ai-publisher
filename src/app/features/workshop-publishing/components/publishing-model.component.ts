@@ -34,8 +34,9 @@ import { PublishingModelCatalog } from '../models/publishing.models';
         </select>
       </mat-form-field>
       <p>
-        Reference USD rates for standard short-context requests; total
-        cost depends on token usage.
+        Generation includes AI review and may revise the draft once,
+        which can add to the cost. Reference USD rates for standard
+        short-context requests; total cost depends on token usage.
         <a
           href="https://developers.openai.com/api/docs/pricing"
           target="_blank"

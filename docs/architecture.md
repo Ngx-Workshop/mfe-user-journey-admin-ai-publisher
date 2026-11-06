@@ -282,3 +282,39 @@ the inner authoring columns use minmax(0,1fr). At <=1200px, brief/JSON stack wit
 the left workspace; at <=900px, the outer workspace/guidance also stack. Controls,
 scoped form state, validation, pending locks, commands and public routes remain
 unchanged. The setup presenter remains below the approximate 230-line guideline.
+
+## Preparation skills and checks — 2026-11-05
+
+Creation now uses start/get_workshop_preparation through the published 1.3.0 contract
+(vendored reproducible tarball). Stateless API validates report output schemas and
+polls with cancellable Observables. Store owns request/error/busy orchestration;
+scoped VM owns report, progress resumption, draft and approval. New starts retain a
+client-chosen preparation ID so a lost response can be polled without restarting.
+Edits invalidate report and review. Both VM and gateway block unchecked publication.
+Explicit stale/unavailable preparation rejections permit rechecking while retaining
+JSON; uncertain publication still retains its request ID and duplicate protection.
+
+PublishingPreparationComponent presents current totals and an expandable timeline;
+PreparationActivityComponent presents one typed skill/check/review row with versions,
+fingerprints, duration and evidence. Native disclosures, text statuses, inline BEM
+styles and theme tokens support keyboard/responsive access. Completed successful
+reports collapse their log; failures and running reports stay open. Receipts expose
+saved preparation metadata in a separate disclosure. Existing page compositor size
+exceptions continue for the added composition bindings; the new presenters stay
+below the approximate component size target. No HTTP or service state in presenters.
+
+## Draft review layout (014)
+
+Review uses an unframed two-column workspace so no clipped panel ancestor prevents
+sticky positioning. The compact checks sidebar scrolls within the remaining viewport;
+the wider preview grows with its material content. At 960px and below, panels stack
+and checks become a bounded static region. Preparation compact density is opt-in;
+receipt evidence and generation retain their original presentation.
+
+The review presenter owns linked accessible tabs (Left/Right/Home/End and roving
+focus), outline selection and safe first-image projection from document blocks.
+There is no new workshop cover field. The page composes a Material refinement
+dialog with the same VM-owned image/source controls, validation and error state.
+Dismissal is locked while operations are pending and the dialog closes on page
+destruction. The page and review presenter retain cohesive size exceptions for
+wizard/dialog composition and material navigation; no data access moves into them.

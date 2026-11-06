@@ -3,7 +3,21 @@ import { signal } from '@angular/core';
 import { PublishingViewModel } from '../../../../../src/app/features/workshop-publishing/pages/publishing.view-model';
 import { PublishingStore } from '../../../../../src/app/features/workshop-publishing/state/publishing.store';
 import type { WorkshopDraft } from '../../../../../src/app/features/workshop-publishing/models/publishing.models';
-import { EMPTY, of, Subject } from 'rxjs';
+import { EMPTY, map, of, Subject } from 'rxjs';
+import type {
+  PreparationReport,
+  StartWorkshopPreparationInput,
+} from '../../../../../src/app/features/workshop-publishing/models/publishing.models';
+const checked = (draft: WorkshopDraft): PreparationReport => ({
+  preparationId: '11111111-1111-4111-8111-111111111111',
+  status: 'complete',
+  ready: true,
+  createdAt: '2026-11-05T12:00:00Z',
+  updatedAt: '2026-11-05T12:00:00Z',
+  activities: [],
+  repairCount: 0,
+  draft,
+});
 describe('PublishingViewModel', () => {
   let vm: PublishingViewModel;
   const draft: WorkshopDraft = {
@@ -49,6 +63,8 @@ describe('PublishingViewModel', () => {
     generateImage: jasmine.Spy;
     loadSections: jasmine.Spy;
     draft: jasmine.Spy;
+    prepare: jasmine.Spy;
+    watchPreparation: jasmine.Spy;
     publish: jasmine.Spy;
     receipt: jasmine.Spy;
   };
@@ -84,6 +100,21 @@ describe('PublishingViewModel', () => {
         .createSpy()
         .and.returnValue(of(undefined)),
       draft: jasmine.createSpy().and.returnValue(of(draft)),
+      prepare: jasmine
+        .createSpy()
+        .and.callFake((input: StartWorkshopPreparationInput) =>
+          store
+            .draft(
+              input.operation === 'generate'
+                ? 'generate_workshop_draft'
+                : 'validate_workshop_draft',
+              input.operation === 'generate'
+                ? input.input
+                : { draft: input.draft }
+            )
+            .pipe(map((value: WorkshopDraft) => checked(value)))
+        ),
+      watchPreparation: jasmine.createSpy().and.returnValue(EMPTY),
       publish: jasmine.createSpy().and.returnValue(EMPTY),
       receipt: jasmine.createSpy().and.returnValue(EMPTY),
     };
@@ -373,6 +404,7 @@ describe('PublishingViewModel', () => {
     expect(vm.step()).toBe(0);
     expect(store.publish).not.toHaveBeenCalled();
     vm.json.setValue(JSON.stringify(draft), { emitEvent: false });
+    vm.preparation.set(checked(draft));
     vm.navigate(1);
     vm.publish();
     expect(store.publish).not.toHaveBeenCalled();
@@ -384,6 +416,63 @@ describe('PublishingViewModel', () => {
     vm.publish();
     expect(vm.step()).toBe(1);
     expect(store.publish).not.toHaveBeenCalled();
+  });
+  it('shows failed preparation without granting publication and clears stale evidence on edits', () => {
+    const report = {
+      ...checked(draft),
+      ready: false,
+      message: 'Reference failed',
+    };
+    store.prepare.and.returnValue(of(report));
+    vm.json.setValue(JSON.stringify(draft));
+    vm.validate();
+    expect(vm.preparation()).toEqual(report);
+    expect(vm.validation()).toBe('Reference failed');
+    expect(vm.draft()).toEqual(draft);
+    vm.continueToPublish();
+    expect(vm.step()).toBe(1);
+    vm.json.setValue('{}');
+    expect(vm.preparation()).toBeNull();
+    expect(vm.checksReady()).toBeFalse();
+  });
+  it('retains running activity for resuming polling without restarting generation', () => {
+    const report = {
+      ...checked(draft),
+      status: 'running' as const,
+      ready: false,
+    };
+    store.prepare.and.returnValue(of(report));
+    vm.json.setValue(JSON.stringify(draft));
+    vm.validate();
+    expect(vm.preparation()).toEqual(report);
+    expect(vm.draft()).toBeNull();
+    store.watchPreparation.and.returnValue(of(checked(draft)));
+    vm.resumeChecks();
+    expect(store.watchPreparation).toHaveBeenCalledWith(
+      report.preparationId
+    );
+    expect(vm.checksReady()).toBeTrue();
+  });
+  it('keeps a preparation ID when the start response is lost so progress can be resumed', () => {
+    store.prepare.and.returnValue(EMPTY);
+    vm.form.setValue({
+      brief: 'Functions',
+      sectionId: 'angular',
+      level: 1,
+    });
+    vm.generate();
+    const report = vm.preparation()!;
+    expect(report.preparationId).toMatch(/^[a-f0-9-]{36}$/);
+    expect(store.prepare).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        preparationId: report.preparationId,
+      })
+    );
+    expect(vm.operation()).toBe('idle');
+    vm.resumeChecks();
+    expect(store.watchPreparation).toHaveBeenCalledWith(
+      report.preparationId
+    );
   });
   it('starts a new draft without losing the brief or selected model', () => {
     vm.form.controls.brief.setValue('Keep this brief');

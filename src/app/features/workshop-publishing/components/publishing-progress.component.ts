@@ -41,52 +41,14 @@ import {
         [attr.aria-label]="labels[operation()]"
       />
       @if (generating()) {
-        <ol
-          class="progress__stages"
-          aria-label="Draft generation stages"
-        >
-          <li>
-            <span class="progress__marker">✓</span>
-            <div>
-              <strong>Brief received</strong
-              ><small
-                >Your subject, audience and model are set.</small
-              >
-            </div>
-            <span>Complete</span>
-          </li>
-          <li class="progress__active" aria-current="step">
-            <span class="progress__marker">2</span>
-            <div>
-              <strong>Creating the learning materials</strong
-              ><small
-                >Documentation, coding labs and assessment are
-                generated together. Waiting for the complete
-                draft.</small
-              >
-            </div>
-            <span>In progress</span>
-          </li>
-          <li>
-            <span class="progress__marker">3</span>
-            <div>
-              <strong>Ready for your review</strong
-              ><small
-                >The preview will open automatically when the draft is
-                ready.</small
-              >
-            </div>
-            <span>Up next</span>
-          </li>
-        </ol>
         <p class="progress__note">
           You can review everything before publishing. Nothing has
           been published.
         </p>
         @if (elapsed() >= 60) {
           <p role="status">
-            Still waiting for the AI response. Larger workshops can
-            take longer; keep this page open.
+            Preparation is still running. Follow the reported skills and
+            checks below; keep this page open.
           </p>
         }
       }
@@ -178,9 +140,9 @@ export class PublishingProgressComponent {
   readonly description = computed(() => {
     switch (this.operation()) {
       case 'generate':
-        return 'The AI is building a complete workshop from your brief. This may take a few minutes.';
+        return 'Authoring, checks and any bounded revision run on the server. This may take a few minutes.';
       case 'validate':
-        return 'Checking the draft format and required learning materials before review.';
+        return 'Checking the draft, objective coverage and isolated lab execution before review.';
       case 'image':
         return 'Creating your illustration and saving it to image assets. Your workshop draft is preserved.';
       case 'publish':
