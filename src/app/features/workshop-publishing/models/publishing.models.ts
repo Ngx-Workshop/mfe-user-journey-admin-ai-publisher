@@ -1,15 +1,15 @@
-export type { PreparationReport, PreparationActivity, StartWorkshopPreparationInput } from '@tmdjr/service-mcp-gateway-contracts';
 export type {
+  PreparationReport,
+  PreparationActivity,
+  StartWorkshopPreparationInput,
   WorkshopDraft,
   EditorBlock,
-} from '@tmdjr/service-mcp-gateway-contracts';
-export type { PublishingReceipt } from '@tmdjr/service-mcp-gateway-contracts';
-export type {
+  PublishingReceipt,
   PublishingModelCatalog,
   PublishingModel,
   WorkshopImageInput,
   GenerateWorkshopDraftInput,
-} from '@tmdjr/service-mcp-gateway-contracts';
+} from '@tmdjr/service-ai-publisher-contracts';
 export interface WorkshopImage {
   name: string;
   storageUrl: string;

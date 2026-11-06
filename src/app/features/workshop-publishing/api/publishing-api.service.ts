@@ -13,9 +13,9 @@ import {
 import Ajv from 'ajv/dist/2020';
 import { publishingError } from './publishing-error';
 import {
-  mcpCatalogContract,
+  mcpPublisherContract,
   type WorkshopDraft,
-} from '@tmdjr/service-mcp-gateway-contracts';
+} from '@tmdjr/service-ai-publisher-contracts';
 import {
   PreparationReport,
   StartWorkshopPreparationInput,
@@ -24,13 +24,13 @@ import {
   PublishingModelCatalog,
   WorkshopImage,
 } from '../models/publishing.models';
-const draftTool = mcpCatalogContract.publishing.tools.find(
+const draftTool = mcpPublisherContract.publishing.tools.find(
   (t) => t.name === 'validate_workshop_draft'
 )!;
 const validateDraft = new Ajv({ strict: false }).compile<{
   draft: WorkshopDraft;
 }>(draftTool.inputSchema);
-const preparationTool = mcpCatalogContract.publishing.tools.find(
+const preparationTool = mcpPublisherContract.publishing.tools.find(
   (tool) => tool.name === 'get_workshop_preparation'
 )!;
 const validatePreparation = new Ajv({ strict: false }).compile<{
@@ -157,7 +157,7 @@ export class PublishingApiService {
     );
   }
   private modelCatalog(value: unknown): PublishingModelCatalog {
-    const schema = mcpCatalogContract.publishing.tools.find(
+    const schema = mcpPublisherContract.publishing.tools.find(
       (t) => t.name === 'list_publishing_models'
     );
     // The tool envelope is generic; validate consumed catalog fields explicitly.

@@ -26,7 +26,7 @@ Npm 11 can omit optional peer entries that npm 10 requires for a clean install.
 
 Tests mirror runtime folders under testing/app and use HTTP/store doubles for publishing and application composition. Manual acceptance covers section browsing, generation, JSON import/edit, draft validation/review, publication and receipt recovery. These actions require a real administrator shell session and configured server-side model/owner services. Synthetic tests do not prove live generation or publication.
 
-The local proxy routes /api/publisher to the gateway publishing facade. The API has a 180-second timeout; a timeout may leave a server run active. Keep the displayed request ID and inspect its receipt before another publish. The shell's localhost remote override can load the local bundle. Build in an isolated output directory to avoid competing with a running watcher.
+The local proxy routes /api/publisher to service-ai-publisher on port 3014, rewriting /api/publisher to /publisher. Runtime schemas/types come from @tmdjr/service-ai-publisher-contracts. The browser endpoint remains /api/publisher/tools with administrator credentials. The API has a 180-second timeout; a timeout may leave a server run active. Keep the displayed request ID and inspect its receipt before another publish. The shell's localhost remote override can load the local bundle. Build in an isolated output directory to avoid competing with a running watcher.
 
 MCP catalog/SDK/OAuth verification now belongs to mfe-user-journey-admin-mcp-gateway at /mcp-gateway/overview. See [migration handoff](../specs/005-mcp-gateway-migration/handoff.md).
 

@@ -41,3 +41,5 @@ the largest folder number is not automatically the active feature.
 - [013 — Workshop preparation skills and checks](013-workshop-preparation/spec.md): Implemented; production acceptance pending.
 
 - [014 — Draft review layout](014-draft-review-layout/spec.md): Complete locally; not deployed.
+
+| 015 Direct publisher | Implemented; deployment pending | [Spec](015-direct-publisher/spec.md) | [Plan](015-direct-publisher/plan.md) | [Tasks](015-direct-publisher/tasks.md) | [Handoff](015-direct-publisher/handoff.md) |

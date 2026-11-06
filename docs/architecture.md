@@ -63,7 +63,7 @@ theme foundations remain in src/styles.scss; federated views inherit shell token
 App/Routes/config remain entry points rather than feature state owners.
 
 ## External contracts and federation
-Published DTOs and Ajv schemas use installed @tmdjr/service-mcp-gateway-contracts 1.2.30. The browser facade is owned by service-mcp-gateway; this dependency remains necessary for publishing even though the MCP SDK and catalog feature have moved out.
+Published DTOs and Ajv schemas use installed @tmdjr/service-ai-publisher-contracts 1.0.5 (mcpPublisherContract). service-ai-publisher owns the browser facade and preparation state. The same-origin /api/publisher/tools path is routed through the verified Nginx TLS backhaul directly to publisher port 3014; the catalog gateway is outside this request path.
 
 Keep named/default App, named Routes, federation name, ./Component, ./Routes, remoteEntry.js and Angular shared singletons. Default path redirects to overview; console redirects to new for existing creation links and hello-world redirects to overview. The new route is protected by the draft-preservation guard. Host route consumers mount the exported Routes under their prefix; a component-only consumer must register those child routes for the RouterOutlet entry. Standalone appConfig owns HTTP/Material animations/zoneless setup; the consuming shell supplies its existing HttpClient/session interceptors and theme.
 
@@ -318,3 +318,13 @@ dialog with the same VM-owned image/source controls, validation and error state.
 Dismissal is locked while operations are pending and the dialog closes on page
 destruction. The page and review presenter retain cohesive size exceptions for
 wizard/dialog composition and material navigation; no data access moves into them.
+
+## Direct publisher contract and routing — 2026-11-06
+
+The API and model exports use @tmdjr/service-ai-publisher-contracts 1.0.5 and
+mcpPublisherContract. Browser requests remain POST /api/publisher/tools with the
+administrator session; local proxy strips /api and reaches publisher port 3014.
+Production edge keeps the protected administrator facade and verified TLS backhaul;
+the backhaul targets publisher directly. The catalog gateway is outside this path.
+Source changes are local until both Nginx hops and this frontend are deployed.
+The gateway compatibility implementation can be retired after that routing rollout.
