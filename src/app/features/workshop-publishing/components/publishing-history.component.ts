@@ -12,13 +12,13 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { PublishingFiltersComponent } from './publishing-filters.component';
-import { PublishingRequestPanelComponent } from './publishing-request-panel.component';
 import type {
   HistoryFilter,
   HistoryRow,
 } from '../models/history.models';
 import { observeWorkspaceHeight } from '../utils/panel-body-viewport';
+import { PublishingFiltersComponent } from './publishing-filters.component';
+import { PublishingRequestPanelComponent } from './publishing-request-panel.component';
 
 @Component({
   selector: 'ngx-publishing-history',
@@ -47,28 +47,28 @@ import { observeWorkspaceHeight } from '../utils/panel-body-viewport';
         [class.request-workspace--issues]="hasIssues()"
       >
         @if (hasIssues()) {
-          <div
-            class="request-workspace__switch"
-            role="group"
-            aria-label="Receipt panels"
+        <div
+          class="request-workspace__switch"
+          role="group"
+          aria-label="Receipt panels"
+        >
+          <button
+            mat-button
+            type="button"
+            [attr.aria-pressed]="activePane() === 'requests'"
+            (click)="selectedPane.set('requests')"
           >
-            <button
-              mat-button
-              type="button"
-              [attr.aria-pressed]="activePane() === 'requests'"
-              (click)="selectedPane.set('requests')"
-            >
-              Requests ({{ requests().length }})
-            </button>
-            <button
-              mat-button
-              type="button"
-              [attr.aria-pressed]="activePane() === 'issues'"
-              (click)="selectedPane.set('issues')"
-            >
-              Issues ({{ issues().length }})
-            </button>
-          </div>
+            Requests ({{ requests().length }})
+          </button>
+          <button
+            mat-button
+            type="button"
+            [attr.aria-pressed]="activePane() === 'issues'"
+            (click)="selectedPane.set('issues')"
+          >
+            Issues ({{ issues().length }})
+          </button>
+        </div>
         }
         <ngx-publishing-request-panel
           class="request-workspace__main"
@@ -84,20 +84,20 @@ import { observeWorkspaceHeight } from '../utils/panel-body-viewport';
           (inspect)="inspect.emit($event)"
         />
         @if (hasIssues()) {
-          <ngx-publishing-request-panel
-            class="request-workspace__issues"
-            [issues]="true"
-            [class.request-workspace__panel--hidden]="
-              activePane() !== 'issues'
-            "
-            [rows]="issues()"
-            [busy]="busy()"
-            [error]="error()"
-            emptyTitle="No matching issues"
-            emptyDescription="No issues match your current filters."
-            (refresh)="refresh.emit()"
-            (inspect)="inspect.emit($event)"
-          />
+        <ngx-publishing-request-panel
+          class="request-workspace__issues"
+          [issues]="true"
+          [class.request-workspace__panel--hidden]="
+            activePane() !== 'issues'
+          "
+          [rows]="issues()"
+          [busy]="busy()"
+          [error]="error()"
+          emptyTitle="No matching issues"
+          emptyDescription="No issues match your current filters."
+          (refresh)="refresh.emit()"
+          (inspect)="inspect.emit($event)"
+        />
         }
       </div>
     </div>
@@ -111,7 +111,7 @@ import { observeWorkspaceHeight } from '../utils/panel-body-viewport';
       }
       .history-layout {
         display: grid;
-        grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+        grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
         gap: 1rem;
         min-height: 0;
       }
@@ -206,15 +206,15 @@ export class PublishingHistoryComponent {
     !this.total()
       ? 'No publishing requests yet'
       : this.issues().length
-        ? 'No completed or running requests'
-        : 'No matching requests'
+      ? 'No completed or running requests'
+      : 'No matching requests'
   );
   readonly emptyDescription = computed(() =>
     !this.total()
       ? 'Start a new workshop to create learning materials with AI.'
       : this.issues().length
-        ? 'Requests needing attention are in the Issues panel.'
-        : 'Try another search or clear your filters.'
+      ? 'Requests needing attention are in the Issues panel.'
+      : 'Try another search or clear your filters.'
   );
   readonly workspaceHeight = signal(0);
   private readonly workspace =

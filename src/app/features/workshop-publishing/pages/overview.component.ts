@@ -50,8 +50,7 @@ import { OverviewViewModel } from './overview.view-model';
         min-width: 0;
         min-height: calc(100dvh - var(--publisher-toolbar-top, 96px));
         color: var(--ngx-color-text);
-        background:
-          radial-gradient(
+        background: radial-gradient(
             circle at 85% 15%,
             color-mix(
               in srgb,
@@ -65,7 +64,7 @@ import { OverviewViewModel } from './overview.view-model';
       .overview {
         width: calc(100% - 2rem);
         margin: 0 auto;
-        padding: 1rem 0;
+        padding-top: 12px;
       }
       @media (max-width: 700px) {
         .overview {

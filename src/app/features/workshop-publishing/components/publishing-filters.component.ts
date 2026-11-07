@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -11,7 +12,6 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -56,68 +56,80 @@ import { observePanelBody } from '../utils/panel-body-viewport';
     >
       <aside
         #filterBody
-        class="filters"
         aria-label="Filter publishing requests"
         [style.max-height.px]="bodyHeight()"
       >
         <ng-container [ngTemplateOutlet]="fields" />
       </aside>
+      <div ngxPanelActions class="filters__clear">
+        <button
+          mat-flat-button
+          ngxButton
+          surface="outline"
+          shape="chamfered"
+          type="button"
+          (click)="clear.emit()"
+          [disabled]="!activeCount()"
+        >
+          <mat-icon aria-hidden="true">filter_alt_off</mat-icon>Clear
+          filters
+        </button>
+      </div>
     </ngx-panel>
     <ng-template #fields>
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Search requests</mat-label>
-        <mat-icon matPrefix>search</mat-icon>
-        <input
-          matInput
-          type="search"
-          [value]="search()"
-          (input)="searchChanged.emit(searchValue($event))"
-          placeholder="Name, request ID, message or step"
-        />
-      </mat-form-field>
+      <div class="publishing-filters__search-row">
+        <mat-form-field
+          appearance="outline"
+          subscriptSizing="dynamic"
+        >
+          <mat-label>Search requests</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            type="search"
+            [value]="search()"
+            (input)="searchChanged.emit(searchValue($event))"
+            placeholder="Name, request ID, message or step"
+          />
+        </mat-form-field>
+      </div>
       <div
         class="filters__summary"
         aria-label="Publishing request summary"
       >
         @for (item of summary(); track item.label) {
-          <div>
-            <strong>{{ item.count }}</strong
-            ><span>{{ item.label }}</span>
-          </div>
+        <div>
+          <strong>{{ item.count }}</strong
+          ><span>{{ item.label }}</span>
+        </div>
         }
       </div>
-      <p class="filters__scope">
+      <!-- <p class="filters__scope">
         Latest {{ rows().length }} requests · up to 100 saved receipts
-      </p>
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Request status</mat-label>
-        <select
-          matNativeControl
-          [value]="status()"
-          (change)="changeStatus($event)"
+      </p> -->
+      <div class="filters">
+        <p class="filters__active">
+          {{ activeCount() }}
+          {{ activeCount() === 1 ? 'filter' : 'filters' }} active
+        </p>
+        <mat-form-field
+          appearance="outline"
+          subscriptSizing="dynamic"
         >
-          <option value="all">All statuses</option>
-          <option value="complete">Completed</option>
-          <option value="running">Running</option>
-          <option value="needs_recovery">Needs attention</option>
-          <option value="unconfirmed">Unconfirmed</option>
-        </select>
-      </mat-form-field>
-      <p class="filters__active">
-        {{ activeCount() }}
-        {{ activeCount() === 1 ? 'filter' : 'filters' }} active
-      </p>
-      <button
-        mat-flat-button
-        ngxButton
-        surface="outline"
-        type="button"
-        (click)="clear.emit()"
-        [disabled]="!activeCount()"
-      >
-        <mat-icon aria-hidden="true">filter_alt_off</mat-icon>Clear
-        filters
-      </button>
+          <mat-label>Request status</mat-label>
+          <select
+            matNativeControl
+            [value]="status()"
+            (change)="changeStatus($event)"
+          >
+            <option value="all">All statuses</option>
+            <option value="complete">Completed</option>
+            <option value="running">Running</option>
+            <option value="needs_recovery">Needs attention</option>
+            <option value="unconfirmed">Unconfirmed</option>
+          </select>
+        </mat-form-field>
+      </div>
     </ng-template>
   `,
   styles: [
@@ -130,7 +142,7 @@ import { observePanelBody } from '../utils/panel-body-viewport';
         position: sticky;
         top: calc(
           var(--publisher-toolbar-top, 96px) +
-            var(--publisher-action-bar-height, 56px) + 16px
+            var(--publisher-action-bar-height, 64px) + 12px
         );
         @include mat.form-field-density(-3);
       }
@@ -152,36 +164,49 @@ import { observePanelBody } from '../utils/panel-body-viewport';
       }
       .filters__summary {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.5rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.35rem;
       }
       .filters__summary div {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
-        padding: 0.65rem 0.4rem;
+        padding: 0.6rem 0.45rem;
+        color: var(--ngx-color-muted);
         background: var(--ngx-color-surface);
         border: 1px solid var(--ngx-color-border);
-        text-align: center;
-        font: var(--ngx-font-label);
+        border-radius: var(--ngx-radius);
         font-size: 0.65rem;
+        text-align: center;
       }
       .filters__summary strong {
-        font-size: 1.1rem;
+        font-size: 1rem;
         color: var(--ngx-color-text);
       }
       .filters__scope,
       .filters__active {
-        margin: 0;
+        display: flex;
+        justify-content: space-between;
+        color: var(--ngx-color-muted);
         font: var(--ngx-font-label);
-        font-size: 0.7rem;
+        font-size: 0.65rem;
+        padding-top: 12px;
       }
       .filters__active {
-        padding-top: 0.75rem;
         border-top: 1px solid var(--ngx-color-border);
       }
       .filters > * {
         flex-shrink: 0;
+      }
+      .filters__clear {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .publishing-filters__search-row {
+        display: grid;
+        gap: 8px;
+        margin: 0.75rem 0 0.5rem;
       }
       @media (max-width: 900px) {
         :host {
@@ -251,12 +276,7 @@ export class PublishingFiltersComponent {
         .length,
     },
     {
-      label: 'Running',
-      count: this.rows().filter((row) => row.status === 'running')
-        .length,
-    },
-    {
-      label: 'Needs attention',
+      label: 'Issues',
       count: this.rows().filter(
         (row) => row.status === 'needs_recovery'
       ).length,
