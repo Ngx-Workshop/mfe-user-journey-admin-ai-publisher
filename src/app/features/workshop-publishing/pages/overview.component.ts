@@ -67,6 +67,7 @@ import { OverviewViewModel } from './overview.view-model';
             <a
               mat-flat-button
               ngxButton
+              surface="glass"
               [routerLink]="['../new']"
               [queryParams]="{ draft: draft.draftId }"
               >Continue review<span class="sr-only">
@@ -157,7 +158,6 @@ import { OverviewViewModel } from './overview.view-model';
         color: var(--ngx-color-text-secondary);
       }
       .drafts a {
-        color: var(--ngx-color-primary);
         white-space: nowrap;
       }
       .sr-only {
