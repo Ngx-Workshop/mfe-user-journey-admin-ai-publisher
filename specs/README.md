@@ -44,4 +44,4 @@ the largest folder number is not automatically the active feature.
 
 | 015 Direct publisher | Deployed; routing smoke verified | [Spec](015-direct-publisher/spec.md) | [Plan](015-direct-publisher/plan.md) | [Tasks](015-direct-publisher/tasks.md) | [Handoff](015-direct-publisher/handoff.md) |
 
-| 016 AI check repair | Implemented; release pending | [Spec](016-ai-check-repair/spec.md) | [Plan](016-ai-check-repair/plan.md) | [Tasks](016-ai-check-repair/tasks.md) | [Handoff](016-ai-check-repair/handoff.md) |
+| 016 AI check repair | Deployed; live CTA verified | [Spec](016-ai-check-repair/spec.md) | [Plan](016-ai-check-repair/plan.md) | [Tasks](016-ai-check-repair/tasks.md) | [Handoff](016-ai-check-repair/handoff.md) |

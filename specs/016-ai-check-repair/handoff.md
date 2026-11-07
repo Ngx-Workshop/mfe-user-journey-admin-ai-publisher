@@ -1,6 +1,6 @@
 # AI check repair handoff
 
-Implemented locally, 2026-11-06; release and paid acceptance pending.
+Deployed 2026-11-06 (2026-11-07 UTC); live CTA verified; paid repair acceptance pending.
 
 ## Behavior
 
@@ -40,8 +40,9 @@ normal validation/review available without a repair CTA.
 
 Independent contracts source version is 1.1.0; frontend installs the reproducible
 vendor/tmdjr-service-ai-publisher-contracts-1.1.0.tgz artifact. It exactly matches
-producer-generated files and is not registry-published. Release publisher API and
-contracts, then frontend. Both may be built without sibling source. Nginx, owner
+producer-generated files. The release workflow published contracts version 1.1.7;
+the frontend retains its verified bundled artifact because the workstation registry
+still returned 404 for 1.1.7 during deployment. Publisher API deployed before frontend. Both may be built without sibling source. Nginx, owner
 schemas, journals and the catalog gateway need no change. Old gateway compatibility
 discovery is historical and is not this frontend's contract source.
 
@@ -67,6 +68,32 @@ are non-failing. PublishingComponent remains a cohesive 439-line composition/inl
 style exception; repair display logic is in its own stateless presenter and change
 comparison is a pure utility.
 
-Unrelated prior deployment notes were preserved. No commit, push, deployment or
-paid generation was performed for this feature. Next step: release publisher and
-frontend together, then an owner-approved live failed-draft repair acceptance.
+## Production deployment evidence
+
+- Backend commit: `d9a6b5dfed75271cf261cb7867388484d33c6003`.
+- Backend validate, contracts publication and deployment succeeded:
+  https://github.com/Ngx-Workshop/service-ai-publisher/actions/runs/42318432649
+- Running image: `service-ai-publisher:ci-42318432649-1`, matching revision.
+  Live container exposes thirteen tools including `get_workshop_repair_options`
+  and accepts the repair input schema.
+- Frontend commit: `ad2df423c39771119152dceb4dbbfc406e249698`.
+- Frontend deployment succeeded:
+  https://github.com/Ngx-Workshop/mfe-user-journey-admin-ai-publisher/actions/runs/42319026477
+- Independent frontend validation succeeded:
+  https://github.com/Ngx-Workshop/mfe-user-journey-admin-ai-publisher/actions/runs/42319026632
+- App-host private rollback backup:
+  `/etc/ngx-workshop/releases/ai-check-repair-20261107T002811Z`
+  (environment, previous image and receipts). Edge static backup:
+  `/opt/ngx-releases/ai-check-repair-20261107T002838Z/publisher.previous-assets.tar.gz`.
+- Public auth/routing smoke checks: OAuth metadata 200; unauthenticated admin
+  publisher POST 401; allowed-origin OPTIONS 204; beta publisher POST 403.
+- Signed-in production browser validation used an unpublished copy with one
+  deliberately invalid objective reference. Preparation
+  `ea4a6d63-0ace-484a-a5cd-43cd92b4fd0f` completed with six checks passed and one
+  failed. The failed Objective coverage row displayed the enabled
+  **Fix Objective coverage with AI** button, selected model and possible-charge
+  notice. Publication remained disabled. Evidence: `ai-fix-live.jpg` in the
+  current Codex visualization workspace.
+- No AI repair/provider call or test-content publication was performed. A live
+  paid repair acceptance remains separate. These postdeployment evidence updates
+  are kept local to avoid triggering a second documentation-only deployment.
