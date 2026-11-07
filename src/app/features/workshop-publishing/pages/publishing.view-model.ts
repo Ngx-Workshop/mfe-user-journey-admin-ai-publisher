@@ -425,7 +425,7 @@ export class PublishingViewModel {
       ),
       catchError(() => {
         this.saveError.set(
-          'Could not confirm the saved draft. Reopen it from Your drafts before starting another request.'
+          'Could not confirm the saved draft. Reopen it from Request history before starting another request.'
         );
         return EMPTY;
       })
@@ -497,7 +497,7 @@ export class PublishingViewModel {
       ),
       catchError(() => {
         this.saveError.set(
-          'Could not open this draft. Return to Your drafts and try again.'
+          'Could not open this draft. Return to Request history and try again.'
         );
         return EMPTY;
       })

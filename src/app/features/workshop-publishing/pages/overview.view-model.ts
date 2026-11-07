@@ -24,11 +24,43 @@ export class OverviewViewModel {
   private readonly commands = new Subject<
     () => Observable<unknown>
   >();
-  readonly busy = this.store.busy;
-  readonly error = this.store.error;
+  readonly busy = computed(
+    () => this.store.busy() || this.drafts.busy()
+  );
+  readonly error = computed(() =>
+    [this.drafts.error(), this.store.error()]
+      .filter(Boolean)
+      .join(' ')
+  );
   readonly search = signal('');
   readonly status = signal<HistoryFilter>('all');
   readonly rows = computed<HistoryRow[]>(() => [
+    ...this.drafts
+      .rows()
+      .filter(
+        (draft) =>
+          !this.store
+            .history()
+            .some((run) => run.requestId === draft.draftId) &&
+          !this.store.unconfirmedRequests().includes(draft.draftId)
+      )
+      .map((draft) => ({
+        requestId: draft.draftId,
+        draftId: draft.draftId,
+        updatedAt: draft.updatedAt,
+        workshopName: draft.name,
+        status: 'draft' as const,
+        steps: [],
+        message: '',
+        summary: {
+          running: 'Processing',
+          interrupted: 'Interrupted · run checks again',
+          ready: 'Ready for review',
+          needs_attention: 'Checks need attention',
+          edited: 'Edited · run checks again',
+          published: 'Published',
+        }[draft.status],
+      })),
     ...this.store
       .unconfirmedRequests()
       .filter(

@@ -10,3 +10,5 @@ AC-001: Import/check, refresh/direct link, return to same draft/checks.
 AC-002: Fresh process/database read restores evidence and rejects foreign users.
 AC-003: Edits survive reopening and invalidate prior checks; stale updates conflict.
 AC-004: API/frontend deploy and production persistence smoke passes without paid generation or publication.
+
+2026-11-07 overview refinement: saved drafts join Request history as Draft rows with Continue review. Remove the separate Your drafts panel. Search, Drafts filtering, errors/loading and cursor pagination remain usable. Receipt/recovery actions retain their existing behavior.

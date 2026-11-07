@@ -28,12 +28,14 @@ import type { HistoryStatus } from '../models/history.models';
 export class PublishingStatusComponent {
   readonly status = input.required<HistoryStatus>();
   readonly labels: Record<HistoryStatus, string> = {
+    draft: 'Draft',
     complete: 'Completed',
     running: 'Running',
     needs_recovery: 'Needs attention',
     unconfirmed: 'Unconfirmed',
   };
   readonly tones: Record<HistoryStatus, NgxInlineStatusTone> = {
+    draft: 'neutral',
     complete: 'success',
     running: 'info',
     needs_recovery: 'error',

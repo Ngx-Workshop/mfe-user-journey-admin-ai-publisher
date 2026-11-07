@@ -75,7 +75,7 @@ import { PublishingViewModel } from './publishing.view-model';
             ? 'Saving changes…'
             : vm.unsaved()
               ? 'Unsaved changes'
-              : 'Draft saved · return anytime from Your drafts'
+              : 'Draft saved · return anytime from Request history'
         }}
       </p>
     }

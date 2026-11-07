@@ -111,6 +111,7 @@ import { PublishingRequestRowComponent } from './publishing-request-row.componen
               [row]="row"
               [busy]="busy()"
               (inspect)="inspect.emit($event)"
+              (resume)="resume.emit($event)"
             />
           } @empty {
             @if (!busy() && !error()) {
@@ -120,13 +121,23 @@ import { PublishingRequestRowComponent } from './publishing-request-row.componen
               </div>
             }
           }
+          @if (hasMoreDrafts() && !issues()) {
+            <button
+              mat-button
+              type="button"
+              [disabled]="busy()"
+              (click)="loadMoreDrafts.emit()"
+            >
+              Load more drafts
+            </button>
+          }
         </div>
       </section>
       <p ngxPanelActions class="request-panel__hint">
         {{
           issues()
             ? 'Inspect a receipt before retrying a publishing request.'
-            : 'Inspect a receipt for complete progress and result details.'
+            : 'Continue a draft review or inspect a publishing receipt.'
         }}
       </p>
     </ngx-panel>
@@ -206,6 +217,9 @@ export class PublishingRequestPanelComponent {
   );
   readonly refresh = output<void>();
   readonly inspect = output<string>();
+  readonly resume = output<string>();
+  readonly hasMoreDrafts = input(false);
+  readonly loadMoreDrafts = output<void>();
   readonly bodyHeight = signal(0);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly body =

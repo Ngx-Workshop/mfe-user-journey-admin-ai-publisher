@@ -1,3 +1,4 @@
+import { SavedDraftsStore } from '../../../../../src/app/features/workshop-publishing/state/saved-drafts.store';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { EMPTY, Subject } from 'rxjs';
@@ -37,6 +38,32 @@ describe('OverviewViewModel', () => {
       ],
     });
     vm = TestBed.inject(OverviewViewModel);
+  });
+  it('searches and filters drafts while suppressing duplicate receipt and unconfirmed rows', () => {
+    const drafts = TestBed.inject(SavedDraftsStore);
+    const summary = {
+      draftId: '22222222-2222-4222-8222-222222222222',
+      version: 1,
+      name: 'Unfinished RxJS',
+      status: 'ready' as const,
+      createdAt: '',
+      updatedAt: '2026-11-07T12:00:00Z',
+    };
+    drafts.rows.set([
+      summary,
+      { ...summary, draftId: run.requestId },
+      { ...summary, draftId: 'unconfirmed-id' },
+    ]);
+    expect(vm.rows().length).toBe(3);
+    vm.status.set('draft');
+    vm.search.set('rxjs');
+    expect(vm.filtered().map((row) => row.draftId)).toEqual([
+      summary.draftId,
+    ]);
+    drafts.error.set('Draft list failed');
+    expect(vm.error()).toContain('Draft list failed');
+    drafts.busy.set(true);
+    expect(vm.busy()).toBeTrue();
   });
   it('combines case-insensitive search with status and includes deduplicated unconfirmed IDs', () => {
     expect(vm.rows().length).toBe(2);

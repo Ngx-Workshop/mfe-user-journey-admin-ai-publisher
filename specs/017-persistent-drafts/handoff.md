@@ -79,3 +79,16 @@ preparation statements.
 
 Postdeployment evidence updates are local documentation only, avoiding another
 unnecessary deployment. Functional source and generated artifacts are committed/pushed.
+
+## Unified history refinement — 2026-11-07
+
+Per user request, drafts now appear in Request history, not a separate Your drafts
+panel. Draft rows preserve a visible Continue review action, status summary, timestamp,
+copyable draft ID, search and a Drafts filter. Resume travels through stateless
+presenters to the stable review route. Pagination and combined errors/loading remain
+in the history panel. Receipt/recovery actions remain distinct, with matching receipt
+IDs preventing duplicate draft rows. Saved-state guidance refers to Request history.
+Three new regressions cover mixed rows/action/pagination, filtered routing/direct
+resume without a separate panel, and search/dedup/source errors. 113 ChromeHeadless
+cases pass; strict types, architecture and production build pass. Deployment/browser
+acceptance pending.

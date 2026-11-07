@@ -1,3 +1,5 @@
+import { DatePipe } from '@angular/common';
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -14,6 +16,8 @@ import { PublishingStatusComponent } from './publishing-status.component';
 @Component({
   selector: 'ngx-publishing-request-row',
   imports: [
+    DatePipe,
+    NgxButton,
     ClipboardModule,
     MatButtonModule,
     MatIconModule,
@@ -27,9 +31,15 @@ import { PublishingStatusComponent } from './publishing-status.component';
           class="request-row__open"
           type="button"
           [disabled]="busy()"
-          [attr.aria-label]="'Inspect receipt ' + row().requestId"
-          title="Inspect receipt"
-          (click)="inspect.emit(row().requestId)"
+          [attr.aria-label]="
+            row().draftId
+              ? 'Continue review of ' + row().workshopName
+              : 'Inspect receipt ' + row().requestId
+          "
+          [title]="
+            row().draftId ? 'Continue review' : 'Inspect receipt'
+          "
+          (click)="open()"
         >
           <span
             class="request-row__name"
@@ -45,8 +55,13 @@ import { PublishingStatusComponent } from './publishing-status.component';
           type="button"
           [cdkCopyToClipboard]="row().requestId"
           (cdkCopyToClipboardCopied)="copied.set($event)"
-          [attr.aria-label]="'Copy request ID ' + row().requestId"
-          title="Copy request ID"
+          [attr.aria-label]="
+            (row().draftId ? 'Copy draft ID ' : 'Copy request ID ') +
+            row().requestId
+          "
+          [title]="
+            row().draftId ? 'Copy draft ID' : 'Copy request ID'
+          "
         >
           <span>{{ row().requestId }}</span
           ><mat-icon aria-hidden="true">content_copy</mat-icon>
@@ -59,16 +74,35 @@ import { PublishingStatusComponent } from './publishing-status.component';
           "
         >
           {{ row().summary }}
+          @if (row().updatedAt) {
+            · Saved {{ row().updatedAt | date: 'short' }}
+          }
           @if (row().message) {
             · {{ row().message }}
           }
         </p>
         <span class="request-row__announcement" role="status">{{
-          copied() ? 'Request ID copied' : ''
+          copied()
+            ? row().draftId
+              ? 'Draft ID copied'
+              : 'Request ID copied'
+            : ''
         }}</span>
       </div>
       <ngx-publishing-status [status]="row().status" />
-      @if (row().workshopUrl; as url) {
+      @if (row().draftId; as id) {
+        <button
+          mat-button
+          ngxButton
+          surface="glass"
+          class="request-row__continue"
+          type="button"
+          [disabled]="busy()"
+          (click)="resume.emit(id)"
+        >
+          Continue review
+        </button>
+      } @else if (row().workshopUrl; as url) {
         <a
           mat-icon-button
           class="request-row__launch"
@@ -192,6 +226,17 @@ import { PublishingStatusComponent } from './publishing-status.component';
         font-size: 0.7rem;
         line-height: 1.6;
       }
+      .request-row__continue {
+        position: relative;
+        z-index: 1;
+        font-size: 0.7rem;
+      }
+      @media (max-width: 600px) {
+        .request-row__continue {
+          grid-column: 1 / -1;
+          justify-self: start;
+        }
+      }
       .request-row__launch {
         position: relative;
         z-index: 1;
@@ -213,4 +258,10 @@ export class PublishingRequestRowComponent {
   readonly busy = input(false);
   readonly inspect = output<string>();
   readonly copied = signal(false);
+  readonly resume = output<string>();
+  open(): void {
+    const row = this.row();
+    if (row.draftId) this.resume.emit(row.draftId);
+    else this.inspect.emit(row.requestId);
+  }
 }

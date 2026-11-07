@@ -98,10 +98,10 @@ import { observePanelBody } from '../utils/panel-body-viewport';
         aria-label="Publishing request summary"
       >
         @for (item of summary(); track item.label) {
-        <div>
-          <strong>{{ item.count }}</strong
-          ><span>{{ item.label }}</span>
-        </div>
+          <div>
+            <strong>{{ item.count }}</strong
+            ><span>{{ item.label }}</span>
+          </div>
         }
       </div>
       <!-- <p class="filters__scope">
@@ -123,6 +123,7 @@ import { observePanelBody } from '../utils/panel-body-viewport';
             (change)="changeStatus($event)"
           >
             <option value="all">All statuses</option>
+            <option value="draft">Drafts</option>
             <option value="complete">Completed</option>
             <option value="running">Running</option>
             <option value="needs_recovery">Needs attention</option>
@@ -310,6 +311,7 @@ export class PublishingFiltersComponent {
     const value = (event.target as HTMLSelectElement).value;
     if (
       value === 'all' ||
+      value === 'draft' ||
       value === 'complete' ||
       value === 'running' ||
       value === 'needs_recovery' ||

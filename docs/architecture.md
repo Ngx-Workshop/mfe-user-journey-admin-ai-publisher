@@ -355,3 +355,14 @@ receipt journal remains authoritative for publication recovery; draft IDs are st
 request IDs. New tools are packaged in independent contracts 1.2.0 via the verified vendor
 artifact; no sibling source is loaded at runtime. PublishingComponent remains a cohesive
 composition/inline-style exception; persistence reads/writes are in API/store boundaries.
+
+### Unified request history — 2026-11-07
+
+Saved draft summaries now join the main Request history rows with a Draft badge,
+readiness/processing summary, saved timestamp and Continue review action. The separate
+Your drafts panel is removed. The Drafts status filter, shared search, combined
+loading/error feedback and in-panel Load more drafts preserve discovery and pagination.
+Drafts appear in API newest-updated order before receipts because receipts expose no
+reliable timestamps. Receipt/unconfirmed IDs suppress duplicate draft rows; receipt
+inspection and the existing Issues panel retain their own actions. The wizard's saved
+and recovery guidance now points to Request history. No backend or contract changes.

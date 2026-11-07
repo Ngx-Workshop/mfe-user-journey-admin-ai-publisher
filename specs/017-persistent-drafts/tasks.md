@@ -4,3 +4,6 @@
 - [x] T002 Generate standalone contracts and implement saved review/list/autosave UI.
 - [x] T003 Verify ownership, conflicts, interruption and resume with isolated database and UI tests.
 - [x] T004 Update context, deploy API/frontend and verify live persistence.
+
+- [x] T005 Merge draft rows, filter and resume/pagination actions into Request history; remove separate panel.
+- [ ] T006 Verify routed draft resume and receipt regressions, production build and deployed overview.

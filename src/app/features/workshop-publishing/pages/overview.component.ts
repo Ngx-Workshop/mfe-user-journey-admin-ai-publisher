@@ -1,5 +1,3 @@
-import { MatButton, MatAnchor } from '@angular/material/button';
-import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,8 +5,7 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PublishingActionsComponent } from '../components/publishing-actions.component';
 import { PublishingHistoryComponent } from '../components/publishing-history.component';
 import { OverviewViewModel } from './overview.view-model';
@@ -19,15 +16,7 @@ import { OverviewViewModel } from './overview.view-model';
     '[style.--publisher-action-bar-height.px]': 'actionBarHeight()',
   },
   selector: 'ngx-publishing-overview',
-  imports: [
-    MatButton,
-    MatAnchor,
-    NgxButton,
-    DatePipe,
-    RouterLink,
-    PublishingActionsComponent,
-    PublishingHistoryComponent,
-  ],
+  imports: [PublishingActionsComponent, PublishingHistoryComponent],
   providers: [OverviewViewModel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -38,65 +27,6 @@ import { OverviewViewModel } from './overview.view-model';
       (createWorkshop)="createWorkshop()"
     />
     <main class="overview" aria-label="AI Publisher">
-      <section class="drafts" aria-label="Your drafts">
-        <header>
-          <h2>Your drafts</h2>
-          <button
-            mat-flat-button
-            ngxButton
-            surface="glass"
-            type="button"
-            [disabled]="vm.drafts.busy()"
-            (click)="vm.refresh()"
-          >
-            Refresh drafts
-          </button>
-        </header>
-        @if (vm.drafts.error()) {
-          <p role="alert">{{ vm.drafts.error() }}</p>
-        }
-        @for (draft of vm.drafts.rows(); track draft.draftId) {
-          <article>
-            <div>
-              <h3>{{ draft.name }}</h3>
-              <p>
-                {{ draftStatus(draft.status) }} · Saved
-                {{ draft.updatedAt | date: 'medium' }}
-              </p>
-            </div>
-            <a
-              mat-flat-button
-              ngxButton
-              surface="glass"
-              [routerLink]="['../new']"
-              [queryParams]="{ draft: draft.draftId }"
-              >Continue review<span class="sr-only">
-                of {{ draft.name }}</span
-              ></a
-            >
-          </article>
-        } @empty {
-          <p>
-            {{
-              vm.drafts.busy()
-                ? 'Loading your drafts…'
-                : 'Your workshop drafts will appear here automatically.'
-            }}
-          </p>
-        }
-        @if (vm.drafts.hasMore()) {
-          <button
-            mat-flat-button
-            ngxButton
-            surface="glass"
-            type="button"
-            [disabled]="vm.drafts.busy()"
-            (click)="vm.loadMoreDrafts()"
-          >
-            Load more drafts
-          </button>
-        }
-      </section>
       <ngx-publishing-history
         [rows]="vm.filtered()"
         [allRows]="vm.rows()"
@@ -109,6 +39,9 @@ import { OverviewViewModel } from './overview.view-model';
         (statusChanged)="vm.status.set($event)"
         (clear)="vm.clearFilters()"
         (refresh)="vm.refresh()"
+        [hasMoreDrafts]="vm.drafts.hasMore()"
+        (loadMoreDrafts)="vm.loadMoreDrafts()"
+        (resume)="resumeDraft($event)"
         (inspect)="inspect($event)"
       />
     </main>
@@ -131,47 +64,6 @@ import { OverviewViewModel } from './overview.view-model';
             transparent 28rem
           ),
           var(--ngx-color-canvas);
-      }
-      .drafts {
-        margin-bottom: 1rem;
-        padding: 1.25rem;
-        border: 1px solid var(--ngx-color-border);
-        border-radius: var(--ngx-radius-lg, 12px);
-        background: var(--ngx-color-surface);
-      }
-      .drafts header,
-      .drafts article {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-      }
-      .drafts article {
-        padding: 1rem 0;
-        border-top: 1px solid var(--ngx-color-border);
-      }
-      .drafts h2,
-      .drafts h3 {
-        margin: 0;
-      }
-      .drafts p {
-        color: var(--ngx-color-text-secondary);
-      }
-      .drafts a {
-        white-space: nowrap;
-      }
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip-path: inset(50%);
-      }
-      @media (max-width: 600px) {
-        .drafts article {
-          align-items: flex-start;
-          flex-direction: column;
-        }
       }
       .overview {
         width: calc(100% - 2rem);
@@ -199,6 +91,7 @@ export class OverviewComponent implements OnInit {
     );
     const status = this.route.snapshot.queryParamMap.get('status');
     if (
+      status === 'draft' ||
       status === 'complete' ||
       status === 'running' ||
       status === 'needs_recovery' ||
@@ -217,18 +110,11 @@ export class OverviewComponent implements OnInit {
       },
     });
   }
-  draftStatus(status: string): string {
-    return (
-      (
-        {
-          running: 'Processing',
-          interrupted: 'Interrupted · run checks again',
-          ready: 'Ready for review',
-          needs_attention: 'Checks need attention',
-          edited: 'Edited · run checks again',
-        } as Record<string, string>
-      )[status] ?? status
-    );
+  resumeDraft(id: string): void {
+    void this.router.navigate(['../new'], {
+      relativeTo: this.route,
+      queryParams: { draft: id },
+    });
   }
   createWorkshop(): void {
     void this.router.navigate(['../new'], { relativeTo: this.route });

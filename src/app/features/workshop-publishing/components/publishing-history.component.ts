@@ -47,28 +47,28 @@ import { PublishingRequestPanelComponent } from './publishing-request-panel.comp
         [class.request-workspace--issues]="hasIssues()"
       >
         @if (hasIssues()) {
-        <div
-          class="request-workspace__switch"
-          role="group"
-          aria-label="Receipt panels"
-        >
-          <button
-            mat-button
-            type="button"
-            [attr.aria-pressed]="activePane() === 'requests'"
-            (click)="selectedPane.set('requests')"
+          <div
+            class="request-workspace__switch"
+            role="group"
+            aria-label="Receipt panels"
           >
-            Requests ({{ requests().length }})
-          </button>
-          <button
-            mat-button
-            type="button"
-            [attr.aria-pressed]="activePane() === 'issues'"
-            (click)="selectedPane.set('issues')"
-          >
-            Issues ({{ issues().length }})
-          </button>
-        </div>
+            <button
+              mat-button
+              type="button"
+              [attr.aria-pressed]="activePane() === 'requests'"
+              (click)="selectedPane.set('requests')"
+            >
+              Requests ({{ requests().length }})
+            </button>
+            <button
+              mat-button
+              type="button"
+              [attr.aria-pressed]="activePane() === 'issues'"
+              (click)="selectedPane.set('issues')"
+            >
+              Issues ({{ issues().length }})
+            </button>
+          </div>
         }
         <ngx-publishing-request-panel
           class="request-workspace__main"
@@ -76,28 +76,32 @@ import { PublishingRequestPanelComponent } from './publishing-request-panel.comp
             hasIssues() && activePane() !== 'requests'
           "
           [rows]="requests()"
+          [hasMoreDrafts]="hasMoreDrafts()"
+          (loadMoreDrafts)="loadMoreDrafts.emit()"
           [busy]="busy()"
           [error]="error()"
           [emptyTitle]="emptyTitle()"
           [emptyDescription]="emptyDescription()"
           (refresh)="refresh.emit()"
           (inspect)="inspect.emit($event)"
+          (resume)="resume.emit($event)"
         />
         @if (hasIssues()) {
-        <ngx-publishing-request-panel
-          class="request-workspace__issues"
-          [issues]="true"
-          [class.request-workspace__panel--hidden]="
-            activePane() !== 'issues'
-          "
-          [rows]="issues()"
-          [busy]="busy()"
-          [error]="error()"
-          emptyTitle="No matching issues"
-          emptyDescription="No issues match your current filters."
-          (refresh)="refresh.emit()"
-          (inspect)="inspect.emit($event)"
-        />
+          <ngx-publishing-request-panel
+            class="request-workspace__issues"
+            [issues]="true"
+            [class.request-workspace__panel--hidden]="
+              activePane() !== 'issues'
+            "
+            [rows]="issues()"
+            [busy]="busy()"
+            [error]="error()"
+            emptyTitle="No matching issues"
+            emptyDescription="No issues match your current filters."
+            (refresh)="refresh.emit()"
+            (inspect)="inspect.emit($event)"
+            (resume)="resume.emit($event)"
+          />
         }
       </div>
     </div>
@@ -184,6 +188,9 @@ export class PublishingHistoryComponent {
   readonly clear = output<void>();
   readonly refresh = output<void>();
   readonly inspect = output<string>();
+  readonly resume = output<string>();
+  readonly hasMoreDrafts = input(false);
+  readonly loadMoreDrafts = output<void>();
   readonly requests = computed(() =>
     this.rows().filter((row) => !this.isIssue(row))
   );
@@ -206,15 +213,15 @@ export class PublishingHistoryComponent {
     !this.total()
       ? 'No publishing requests yet'
       : this.issues().length
-      ? 'No completed or running requests'
-      : 'No matching requests'
+        ? 'No drafts, completed or running requests'
+        : 'No matching requests'
   );
   readonly emptyDescription = computed(() =>
     !this.total()
       ? 'Start a new workshop to create learning materials with AI.'
       : this.issues().length
-      ? 'Requests needing attention are in the Issues panel.'
-      : 'Try another search or clear your filters.'
+        ? 'Requests needing attention are in the Issues panel.'
+        : 'Try another search or clear your filters.'
   );
   readonly workspaceHeight = signal(0);
   private readonly workspace =

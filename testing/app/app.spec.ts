@@ -73,6 +73,52 @@ describe('AI Publisher routed journey', () => {
     });
     history();
   }
+  it('shows a draft in Request history, filters it, and continues the stable review link without a separate panel', async () => {
+    const draftId = '22222222-2222-4222-8222-222222222222';
+    const saved = {
+      draftId,
+      version: 2,
+      name: 'Unfinished Angular workshop',
+      status: 'edited',
+      createdAt: '2026-11-07T12:00:00Z',
+      updatedAt: '2026-11-07T12:00:00Z',
+      json: '{"name":"Unfinished Angular workshop",',
+    };
+    const harness = await RouterTestingHarness.create(
+      '/ai-publisher/overview?status=draft'
+    );
+    const { json: _json, ...summary } = saved;
+    http
+      .expectOne('/api/publisher/tools')
+      .flush({ structuredContent: { data: [summary] } });
+    history([run]);
+    harness.detectChanges();
+    const element = harness.routeNativeElement!;
+    expect(
+      element.querySelector('[aria-label="Your drafts"]')
+    ).toBeNull();
+    const main = element.querySelector('.request-workspace__main')!;
+    expect(main.textContent).toContain(saved.name);
+    expect(main.textContent).not.toContain(run.requestId);
+    main
+      .querySelector<HTMLButtonElement>('.request-row__continue')!
+      .click();
+    await harness.fixture.whenStable();
+    setup();
+    const read = http.expectOne('/api/publisher/tools');
+    expect(read.request.body).toEqual({
+      name: 'get_workshop_draft',
+      input: { draftId },
+    });
+    read.flush({ structuredContent: { data: saved } });
+    harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe(
+      '/ai-publisher/new?draft=' + draftId
+    );
+    expect(harness.routeNativeElement!.textContent).toContain(
+      'Draft saved'
+    );
+  });
   it('lands on overview, combines search and filter, and inspects a receipt', async () => {
     const harness =
       await RouterTestingHarness.create('/ai-publisher');
