@@ -87,38 +87,82 @@ describe('Workshop preview and activity', () => {
     expect(element.textContent).toContain('First page content');
   });
   it('uses linked tabs with arrow, Home and End keyboard navigation', () => {
-    const fixture = TestBed.createComponent(PublishingReviewComponent);
+    const fixture = TestBed.createComponent(
+      PublishingReviewComponent
+    );
     fixture.componentRef.setInput('draft', draft);
     fixture.detectChanges();
     const element: HTMLElement = fixture.nativeElement;
-    const tabs = element.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    const tabs =
+      element.querySelectorAll<HTMLButtonElement>('[role="tab"]');
     expect(tabs.length).toBe(3);
-    tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    tabs[0].dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowRight',
+        bubbles: true,
+      })
+    );
     fixture.detectChanges();
     expect(tabs[1].getAttribute('aria-selected')).toBe('true');
     expect(tabs[0].tabIndex).toBe(-1);
-    expect(element.querySelector('[role="tabpanel"]')?.getAttribute('aria-labelledby')).toBe(tabs[1].id);
-    tabs[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'End' }));
+    expect(
+      element
+        .querySelector('[role="tabpanel"]')
+        ?.getAttribute('aria-labelledby')
+    ).toBe(tabs[1].id);
+    tabs[1].dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'End' })
+    );
     fixture.detectChanges();
     expect(tabs[2].getAttribute('aria-selected')).toBe('true');
-    tabs[2].dispatchEvent(new KeyboardEvent('keydown', { key: 'Home' }));
+    tabs[2].dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Home' })
+    );
     fixture.detectChanges();
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');
   });
   it('shows the first safe draft image with workshop information', () => {
-    const fixture = TestBed.createComponent(PublishingReviewComponent);
+    const fixture = TestBed.createComponent(
+      PublishingReviewComponent
+    );
     fixture.componentRef.setInput('draft', draft);
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('No workshop image');
-    fixture.componentRef.setInput('draft', { ...draft, pages: [{ name: 'Images', blocks: [
-      { blockId: 'bad', sortIndex: 0, componentInstanceName: 'NgxEditorJs2ImageComponent', savedAction: '', dataClean: '{"url":"javascript:alert(1)"}' },
-      { blockId: 'cover', sortIndex: 1, componentInstanceName: 'NgxEditorJs2ImageComponent', savedAction: '', dataClean: '{"url":"https://assets.example/cover.png","title":"Functions illustration"}' }
-    ] }] });
+    expect(fixture.nativeElement.textContent).toContain(
+      'No workshop image'
+    );
+    fixture.componentRef.setInput('draft', {
+      ...draft,
+      pages: [
+        {
+          name: 'Images',
+          blocks: [
+            {
+              blockId: 'bad',
+              sortIndex: 0,
+              componentInstanceName: 'NgxEditorJs2ImageComponent',
+              savedAction: '',
+              dataClean: '{"url":"javascript:alert(1)"}',
+            },
+            {
+              blockId: 'cover',
+              sortIndex: 1,
+              componentInstanceName: 'NgxEditorJs2ImageComponent',
+              savedAction: '',
+              dataClean:
+                '{"url":"https://assets.example/cover.png","title":"Functions illustration"}',
+            },
+          ],
+        },
+      ],
+    });
     fixture.detectChanges();
-    const image: HTMLImageElement = fixture.nativeElement.querySelector('.review__header img');
+    const image: HTMLImageElement =
+      fixture.nativeElement.querySelector('.review__header img');
     expect(image.src).toBe('https://assets.example/cover.png');
     expect(image.alt).toBe('Functions illustration');
-    expect(fixture.nativeElement.querySelector('.review__info').textContent).toContain('Functions');
+    expect(
+      fixture.nativeElement.querySelector('.review__info').textContent
+    ).toContain('Functions');
   });
   it('sorts document blocks, renders images/code, sanitizes markup and labels interactive source fallbacks', () => {
     const fixture = TestBed.createComponent(
@@ -241,7 +285,9 @@ describe('Workshop preview and activity', () => {
     expect(element.textContent).toContain(
       'Nothing has been published'
     );
-    expect(element.textContent).toContain('Preparation is still running');
+    expect(element.textContent).toContain(
+      'Preparation is still running'
+    );
     expect(element.textContent).not.toContain('%');
     fixture.componentRef.setInput('operation', 'validate');
     fixture.detectChanges();

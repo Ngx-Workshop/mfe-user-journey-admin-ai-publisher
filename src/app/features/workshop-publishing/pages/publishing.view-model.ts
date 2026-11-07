@@ -76,10 +76,17 @@ export class PublishingViewModel {
   readonly image = signal<WorkshopImage | null>(null);
   readonly preparation = signal<PreparationReport | null>(null);
   readonly repairOptions = this.store.repairOptions;
-  readonly previousRepair = signal<{ draft: WorkshopDraft; report: PreparationReport; options: PreparationRepairOptions | null } | null>(null);
+  readonly previousRepair = signal<{
+    draft: WorkshopDraft;
+    report: PreparationReport;
+    options: PreparationRepairOptions | null;
+  } | null>(null);
   readonly repairChanges = computed(() => {
-    const previous = this.previousRepair(); const draft = this.draft();
-    return previous && draft ? repairChanges(previous.draft, draft) : [];
+    const previous = this.previousRepair();
+    const draft = this.draft();
+    return previous && draft
+      ? repairChanges(previous.draft, draft)
+      : [];
   });
   readonly checksReady = computed(
     () =>
@@ -272,23 +279,44 @@ export class PublishingViewModel {
     );
   }
   repair(activityId: string): void {
-    const report = this.preparation(); const draft = this.draft(); const options = this.repairOptions();
-    if (this.working() || this.attempted() || this.model.invalid || !draft || !report ||
-        report.status !== 'complete' || report.ready || !report.draftHash ||
-        options?.preparationId !== report.preparationId || options.draftHash !== report.draftHash ||
-        !options.activities.some(row => row.activityId === activityId)) return;
+    const report = this.preparation();
+    const draft = this.draft();
+    const options = this.repairOptions();
+    if (
+      this.working() ||
+      this.attempted() ||
+      this.model.invalid ||
+      !draft ||
+      !report ||
+      report.status !== 'complete' ||
+      report.ready ||
+      !report.draftHash ||
+      options?.preparationId !== report.preparationId ||
+      options.draftHash !== report.draftHash ||
+      !options.activities.some((row) => row.activityId === activityId)
+    )
+      return;
     const snapshot = { draft, report, options };
     this.commands.next(() => {
       this.previousRepair.set(snapshot);
-      this.reviewed.set(false); this.step.set(1);
-      return this.track('repair', () => this.startPreparation({
-        operation: 'repair', sourcePreparationId: report.preparationId,
-        expectedDraftHash: report.draftHash!, activityId, model: this.model.value,
-      }, () => {
-        this.restoreSnapshot(snapshot);
-        this.store.restoreRepairOptions(null);
-        this.previousRepair.set(null);
-      })).pipe(tap(value => this.acceptPreparation(value)));
+      this.reviewed.set(false);
+      this.step.set(1);
+      return this.track('repair', () =>
+        this.startPreparation(
+          {
+            operation: 'repair',
+            sourcePreparationId: report.preparationId,
+            expectedDraftHash: report.draftHash!,
+            activityId,
+            model: this.model.value,
+          },
+          () => {
+            this.restoreSnapshot(snapshot);
+            this.store.restoreRepairOptions(null);
+            this.previousRepair.set(null);
+          }
+        )
+      ).pipe(tap((value) => this.acceptPreparation(value)));
     });
   }
   restorePreviousDraft(): void {
@@ -297,10 +325,15 @@ export class PublishingViewModel {
     this.restoreSnapshot(snapshot);
     this.previousRepair.set(null);
   }
-  private restoreSnapshot(snapshot: { draft: WorkshopDraft; report: PreparationReport; options: PreparationRepairOptions | null }): void {
+  private restoreSnapshot(snapshot: {
+    draft: WorkshopDraft;
+    report: PreparationReport;
+    options: PreparationRepairOptions | null;
+  }): void {
     this.acceptPreparation(snapshot.report);
     this.store.restoreRepairOptions(snapshot.options);
-    this.reviewed.set(false); this.step.set(1);
+    this.reviewed.set(false);
+    this.step.set(1);
   }
   edited(): void {
     this.previousRepair.set(null);

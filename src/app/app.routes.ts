@@ -1,7 +1,7 @@
 import { CanDeactivateFn, Route } from '@angular/router';
-import { ReceiptComponent } from './features/workshop-publishing/pages/receipt.component';
 import { OverviewComponent } from './features/workshop-publishing/pages/overview.component';
 import { PublishingComponent } from './features/workshop-publishing/pages/publishing.component';
+import { ReceiptComponent } from './features/workshop-publishing/pages/receipt.component';
 
 export const preserveWorkshop: CanDeactivateFn<
   PublishingComponent

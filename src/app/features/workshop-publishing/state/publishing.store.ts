@@ -25,9 +25,14 @@ import {
 @Injectable({ providedIn: 'root' })
 export class PublishingStore {
   private readonly api = inject(PublishingApiService);
-  private readonly repairOptionsState = signal<PreparationRepairOptions | null>(null);
+  private readonly repairOptionsState =
+    signal<PreparationRepairOptions | null>(null);
   readonly repairOptions = this.repairOptionsState.asReadonly();
-  restoreRepairOptions(options: PreparationRepairOptions | null): void { this.repairOptionsState.set(options); }
+  restoreRepairOptions(
+    options: PreparationRepairOptions | null
+  ): void {
+    this.repairOptionsState.set(options);
+  }
   private readonly catalogState =
     signal<PublishingModelCatalog | null>(null);
   private readonly historyState = signal<PublishingReceipt[]>([]);
@@ -100,23 +105,59 @@ export class PublishingStore {
     input: StartWorkshopPreparationInput,
     onRejected?: () => void
   ): Observable<PreparationReport> {
-    return this.execute(() => {
-      this.repairOptionsState.set(null);
-      return this.api.prepare(input).pipe(concatMap(report => this.loadRepairOptions(report)));
-    }, error => {
-      if (error instanceof PublishingToolError && ['PREPARATION_UNAVAILABLE', 'PREPARATION_STALE', 'PREPARATION_REPAIR_UNAVAILABLE', 'PREPARATION_CONFLICT', 'PREPARATION_BUSY'].includes(error.code)) onRejected?.();
-    });
+    return this.execute(
+      () => {
+        this.repairOptionsState.set(null);
+        return this.api
+          .prepare(input)
+          .pipe(
+            concatMap((report) => this.loadRepairOptions(report))
+          );
+      },
+      (error) => {
+        if (
+          error instanceof PublishingToolError &&
+          [
+            'PREPARATION_UNAVAILABLE',
+            'PREPARATION_STALE',
+            'PREPARATION_REPAIR_UNAVAILABLE',
+            'PREPARATION_CONFLICT',
+            'PREPARATION_BUSY',
+          ].includes(error.code)
+        )
+          onRejected?.();
+      }
+    );
   }
   watchPreparation(id: string): Observable<PreparationReport> {
-    return this.execute(() => this.api.watchPreparation(id).pipe(concatMap(report => this.loadRepairOptions(report))));
+    return this.execute(() =>
+      this.api
+        .watchPreparation(id)
+        .pipe(concatMap((report) => this.loadRepairOptions(report)))
+    );
   }
-  private loadRepairOptions(report: PreparationReport): Observable<PreparationReport> {
-    if (report.status !== 'complete' || report.ready || !report.draft || !report.draftHash) return of(report);
+  private loadRepairOptions(
+    report: PreparationReport
+  ): Observable<PreparationReport> {
+    if (
+      report.status !== 'complete' ||
+      report.ready ||
+      !report.draft ||
+      !report.draftHash
+    )
+      return of(report);
     return this.api.repairOptions(report.preparationId).pipe(
-      tap(options => this.repairOptionsState.set(options.draftHash === report.draftHash ? options : null)),
+      tap((options) =>
+        this.repairOptionsState.set(
+          options.draftHash === report.draftHash ? options : null
+        )
+      ),
       map(() => report),
       // Older backends can still validate drafts without this additive repair tool.
-      catchError(() => { this.repairOptionsState.set(null); return of(report); })
+      catchError(() => {
+        this.repairOptionsState.set(null);
+        return of(report);
+      })
     );
   }
   draft(

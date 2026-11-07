@@ -59,7 +59,10 @@ import { ReceiptViewModel } from './receipt.view-model';
       @if (vm.receipt()?.preparation; as preparation) {
         <details>
           <summary>Preparation skills and checks</summary>
-          <ngx-publishing-preparation [report]="preparation" [locked]="true" />
+          <ngx-publishing-preparation
+            [report]="preparation"
+            [locked]="true"
+          />
         </details>
       }
       <div #workspace class="receipt__workspace">
@@ -480,7 +483,10 @@ export class ReceiptComponent implements OnInit {
   readonly vm = inject(ReceiptViewModel);
   readonly actionBarHeight = signal(70);
   readonly pane = signal<'receipt' | 'progress' | 'step'>('receipt');
-  private readonly resultPanel = viewChild.required<ReceiptWorkspacePanelComponent, ElementRef<HTMLElement>>('resultPanel', { read: ElementRef });
+  private readonly resultPanel = viewChild.required<
+    ReceiptWorkspacePanelComponent,
+    ElementRef<HTMLElement>
+  >('resultPanel', { read: ElementRef });
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

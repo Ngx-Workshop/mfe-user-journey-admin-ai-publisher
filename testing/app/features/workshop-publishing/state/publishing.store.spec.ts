@@ -160,18 +160,43 @@ describe('PublishingStore streams', () => {
     });
   }
   it('loads repair eligibility after failed checks without unlocking the operation early', () => {
-    const report: PreparationReport = { preparationId: crypto.randomUUID(), status: 'complete', ready: false,
-      draft, draftHash: 'a'.repeat(64), activities: [], repairCount: 0, createdAt: '', updatedAt: '' };
-    const options = { preparationId: report.preparationId, draftHash: report.draftHash, model: 'test-model', activities: [] };
+    const report: PreparationReport = {
+      preparationId: crypto.randomUUID(),
+      status: 'complete',
+      ready: false,
+      draft,
+      draftHash: 'a'.repeat(64),
+      activities: [],
+      repairCount: 0,
+      createdAt: '',
+      updatedAt: '',
+    };
+    const options = {
+      preparationId: report.preparationId,
+      draftHash: report.draftHash,
+      model: 'test-model',
+      activities: [],
+    };
     const pending = new Subject<typeof options>();
-    api.prepare.and.returnValue(of(report)); api.repairOptions.and.returnValue(pending);
-    const seen: PreparationReport[] = []; store.prepare({ operation: 'check', draft }).subscribe(value => seen.push(value));
-    expect(store.busy()).toBeTrue(); expect(seen).toEqual([]);
-    pending.next(options); pending.complete();
-    expect(seen).toEqual([report]); expect(store.repairOptions()).toEqual(options); expect(store.busy()).toBeFalse();
-    api.repairOptions.and.returnValue(throwError(() => new Error('Older server')));
+    api.prepare.and.returnValue(of(report));
+    api.repairOptions.and.returnValue(pending);
+    const seen: PreparationReport[] = [];
+    store
+      .prepare({ operation: 'check', draft })
+      .subscribe((value) => seen.push(value));
+    expect(store.busy()).toBeTrue();
+    expect(seen).toEqual([]);
+    pending.next(options);
+    pending.complete();
+    expect(seen).toEqual([report]);
+    expect(store.repairOptions()).toEqual(options);
+    expect(store.busy()).toBeFalse();
+    api.repairOptions.and.returnValue(
+      throwError(() => new Error('Older server'))
+    );
     store.prepare({ operation: 'check', draft }).subscribe();
-    expect(store.repairOptions()).toBeNull(); expect(store.error()).toBe(''); expect(store.busy()).toBeFalse();
+    expect(store.repairOptions()).toBeNull();
+    expect(store.error()).toBe('');
+    expect(store.busy()).toBeFalse();
   });
-
 });

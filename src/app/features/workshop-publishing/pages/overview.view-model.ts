@@ -40,19 +40,17 @@ export class OverviewViewModel {
         steps: [],
         summary: 'Publishing result not confirmed.',
       })),
-    ...this.store
-      .history()
-      .map((run) => ({
-        requestId: run.requestId,
-        status: run.status,
-        message: run.message ?? '',
-        steps: run.steps.flatMap((step) => [
-          step.name,
-          publishingStepLabel(step.name),
-        ]),
-        summary: publishingProgress(run.steps),
-        ...workshopSummary(run.steps),
-      })),
+    ...this.store.history().map((run) => ({
+      requestId: run.requestId,
+      status: run.status,
+      message: run.message ?? '',
+      steps: run.steps.flatMap((step) => [
+        step.name,
+        publishingStepLabel(step.name),
+      ]),
+      summary: publishingProgress(run.steps),
+      ...workshopSummary(run.steps),
+    })),
   ]);
   readonly filtered = computed(() => {
     const query = this.search().trim().toLowerCase();

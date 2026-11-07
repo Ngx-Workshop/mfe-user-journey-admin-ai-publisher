@@ -63,7 +63,12 @@ describe('PublishingViewModel', () => {
     generateImage: jasmine.Spy;
     loadSections: jasmine.Spy;
     draft: jasmine.Spy;
-    repairOptions: ReturnType<typeof signal<import('../../../../../src/app/features/workshop-publishing/models/publishing.models').PreparationRepairOptions | null>>;
+    repairOptions: ReturnType<
+      typeof signal<
+        | import('../../../../../src/app/features/workshop-publishing/models/publishing.models').PreparationRepairOptions
+        | null
+      >
+    >;
     restoreRepairOptions: jasmine.Spy;
     prepare: jasmine.Spy;
     watchPreparation: jasmine.Spy;
@@ -73,7 +78,9 @@ describe('PublishingViewModel', () => {
   beforeEach(() => {
     store = {
       repairOptions: signal(null),
-      restoreRepairOptions: jasmine.createSpy().and.callFake(options => store.repairOptions.set(options)),
+      restoreRepairOptions: jasmine
+        .createSpy()
+        .and.callFake((options) => store.repairOptions.set(options)),
       busy: signal(false),
       error: signal(''),
       sections: signal<{ id: string; name: string }[]>([]),
@@ -114,7 +121,12 @@ describe('PublishingViewModel', () => {
                 : 'validate_workshop_draft',
               input.operation === 'generate'
                 ? input.input
-                : { draft: input.operation === 'check' ? input.draft : draft }
+                : {
+                    draft:
+                      input.operation === 'check'
+                        ? input.draft
+                        : draft,
+                  }
             )
             .pipe(map((value: WorkshopDraft) => checked(value)))
         ),
@@ -496,50 +508,119 @@ describe('PublishingViewModel', () => {
     expect(vm.model.value).toBe('test-model');
   });
   function repairableDraft() {
-    const report: PreparationReport = { ...checked(draft), ready: false, draftHash: 'a'.repeat(64),
-      activities: [{ id: 'coverage', label: 'Objective coverage', kind: 'check', status: 'failed', detail: 'Missing mapping' }] };
-    const options = { preparationId: report.preparationId, draftHash: report.draftHash, model: 'test-model',
-      activities: [{ activityId: 'coverage', label: 'Objective coverage' }] };
-    vm.model.setValue('test-model'); vm.json.setValue(JSON.stringify(draft), { emitEvent: false });
-    vm.draft.set(draft); vm.preparation.set(report); vm.step.set(1); store.repairOptions.set(options);
+    const report: PreparationReport = {
+      ...checked(draft),
+      ready: false,
+      draftHash: 'a'.repeat(64),
+      activities: [
+        {
+          id: 'coverage',
+          label: 'Objective coverage',
+          kind: 'check',
+          status: 'failed',
+          detail: 'Missing mapping',
+        },
+      ],
+    };
+    const options = {
+      preparationId: report.preparationId,
+      draftHash: report.draftHash,
+      model: 'test-model',
+      activities: [
+        { activityId: 'coverage', label: 'Objective coverage' },
+      ],
+    };
+    vm.model.setValue('test-model');
+    vm.json.setValue(JSON.stringify(draft), { emitEvent: false });
+    vm.draft.set(draft);
+    vm.preparation.set(report);
+    vm.step.set(1);
+    store.repairOptions.set(options);
     return { report, options };
   }
   it('preserves the original while repairing, requires new review and can restore it', () => {
     const { report, options } = repairableDraft();
-    const pending = new Subject<PreparationReport>(); store.prepare.and.returnValue(pending);
-    vm.reviewed.set(true); vm.validation.set('Original check failed'); vm.repair('coverage');
+    const pending = new Subject<PreparationReport>();
+    store.prepare.and.returnValue(pending);
+    vm.reviewed.set(true);
+    vm.validation.set('Original check failed');
+    vm.repair('coverage');
     expect(vm.validation()).toBe('');
     expect(vm.operation()).toBe('repair');
-    expect(vm.draft()).toEqual(draft); expect(vm.reviewed()).toBeFalse();
-    vm.repair('coverage'); vm.restorePreviousDraft();
+    expect(vm.draft()).toEqual(draft);
+    expect(vm.reviewed()).toBeFalse();
+    vm.repair('coverage');
+    vm.restorePreviousDraft();
     expect(store.prepare).toHaveBeenCalledTimes(1);
-    expect(store.prepare.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({
-      operation: 'repair', sourcePreparationId: report.preparationId,
-      expectedDraftHash: report.draftHash, activityId: 'coverage', model: 'test-model' }));
+    expect(store.prepare.calls.mostRecent().args[0]).toEqual(
+      jasmine.objectContaining({
+        operation: 'repair',
+        sourcePreparationId: report.preparationId,
+        expectedDraftHash: report.draftHash,
+        activityId: 'coverage',
+        model: 'test-model',
+      })
+    );
     const revision = { ...draft, summary: 'Improved explanation' };
-    pending.next({ ...checked(revision), preparationId: '22222222-2222-4222-8222-222222222222' }); pending.complete();
-    expect(vm.draft()).toEqual(revision); expect(vm.repairChanges()).toContain('Updated workshop overview or learning plan');
-    expect(vm.step()).toBe(1); expect(vm.reviewed()).toBeFalse(); expect(store.publish).not.toHaveBeenCalled();
-    vm.restorePreviousDraft(); expect(vm.draft()).toEqual(draft); expect(vm.preparation()).toEqual(report);
-    expect(vm.previousRepair()).toBeNull(); expect(store.restoreRepairOptions).toHaveBeenCalledWith(options);
+    pending.next({
+      ...checked(revision),
+      preparationId: '22222222-2222-4222-8222-222222222222',
+    });
+    pending.complete();
+    expect(vm.draft()).toEqual(revision);
+    expect(vm.repairChanges()).toContain(
+      'Updated workshop overview or learning plan'
+    );
+    expect(vm.step()).toBe(1);
+    expect(vm.reviewed()).toBeFalse();
+    expect(store.publish).not.toHaveBeenCalled();
+    vm.restorePreviousDraft();
+    expect(vm.draft()).toEqual(draft);
+    expect(vm.preparation()).toEqual(report);
+    expect(vm.previousRepair()).toBeNull();
+    expect(store.restoreRepairOptions).toHaveBeenCalledWith(options);
   });
   it('does not repair edited or noneligible drafts and preserves an ID for interrupted repairs', () => {
-    repairableDraft(); vm.repair('passed-check'); expect(store.prepare).not.toHaveBeenCalled();
-    store.prepare.and.returnValue(EMPTY); vm.repair('coverage');
+    repairableDraft();
+    vm.repair('passed-check');
+    expect(store.prepare).not.toHaveBeenCalled();
+    store.prepare.and.returnValue(EMPTY);
+    vm.repair('coverage');
     const id = vm.preparation()!.preparationId;
-    expect(vm.draft()).toEqual(draft); expect(vm.previousRepair()).not.toBeNull();
-    store.watchPreparation.and.returnValue(of({ ...checked(draft), status: 'failed', ready: false, message: 'Model unavailable' }));
-    vm.resumeChecks(); expect(store.watchPreparation).toHaveBeenCalledWith(id);
-    expect(vm.draft()).toEqual(draft); expect(vm.validation()).toBe('Model unavailable');
-    vm.restorePreviousDraft(); vm.json.setValue('{}'); vm.repair('coverage');
+    expect(vm.draft()).toEqual(draft);
+    expect(vm.previousRepair()).not.toBeNull();
+    store.watchPreparation.and.returnValue(
+      of({
+        ...checked(draft),
+        status: 'failed',
+        ready: false,
+        message: 'Model unavailable',
+      })
+    );
+    vm.resumeChecks();
+    expect(store.watchPreparation).toHaveBeenCalledWith(id);
+    expect(vm.draft()).toEqual(draft);
+    expect(vm.validation()).toBe('Model unavailable');
+    vm.restorePreviousDraft();
+    vm.json.setValue('{}');
+    vm.repair('coverage');
     expect(store.prepare).toHaveBeenCalledTimes(1);
   });
   it('restores the source after an explicit unstarted repair rejection', () => {
     const { report } = repairableDraft();
-    store.prepare.and.callFake((_input: unknown, rejected: () => void) => { rejected(); return EMPTY; });
-    vm.repair('coverage'); expect(vm.preparation()).toEqual(report); expect(vm.draft()).toEqual(draft);
-    expect(vm.working()).toBeFalse(); expect(store.publish).not.toHaveBeenCalled();
-    expect(store.repairOptions()).toBeNull(); vm.repair('coverage'); expect(store.prepare).toHaveBeenCalledTimes(1);
+    store.prepare.and.callFake(
+      (_input: unknown, rejected: () => void) => {
+        rejected();
+        return EMPTY;
+      }
+    );
+    vm.repair('coverage');
+    expect(vm.preparation()).toEqual(report);
+    expect(vm.draft()).toEqual(draft);
+    expect(vm.working()).toBeFalse();
+    expect(store.publish).not.toHaveBeenCalled();
+    expect(store.repairOptions()).toBeNull();
+    vm.repair('coverage');
+    expect(store.prepare).toHaveBeenCalledTimes(1);
   });
-
 });

@@ -8,7 +8,10 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
-import { PreparationReport, PreparationRepairOptions } from '../models/publishing.models';
+import {
+  PreparationReport,
+  PreparationRepairOptions,
+} from '../models/publishing.models';
 
 @Component({
   selector: 'ngx-publishing-preparation',
@@ -48,7 +51,11 @@ import { PreparationReport, PreparationRepairOptions } from '../models/publishin
       }
       <details
         class="preparation__log"
-        [open]="compact() || report().status === 'running' || !report().ready"
+        [open]="
+          compact() ||
+          report().status === 'running' ||
+          !report().ready
+        "
       >
         <summary>
           Inspect skill and check activity ({{
@@ -58,9 +65,15 @@ import { PreparationReport, PreparationRepairOptions } from '../models/publishin
         </summary>
         <ol class="preparation__timeline">
           @for (activity of report().activities; track activity.id) {
-            <li ngxPreparationActivity [activity]="activity" [compact]="compact()"
-              [repairable]="repairableIds().has(activity.id)" [repairModel]="repairModel()"
-              [locked]="locked()" (repair)="repair.emit($event)"></li>
+            <li
+              ngxPreparationActivity
+              [activity]="activity"
+              [compact]="compact()"
+              [repairable]="repairableIds().has(activity.id)"
+              [repairModel]="repairModel()"
+              [locked]="locked()"
+              (repair)="repair.emit($event)"
+            ></li>
           } @empty {
             <li>Waiting for the first server update…</li>
           }
@@ -94,12 +107,25 @@ import { PreparationReport, PreparationRepairOptions } from '../models/publishin
       min-width: 0;
       margin: 1.25rem 0;
     }
-    :host(.preparation--compact) { margin: 0; }
-    :host(.preparation--compact) .preparation { border: 0; padding: 0; }
-    :host(.preparation--compact) h2 { font-size: 1.05rem; }
-    :host(.preparation--compact) .preparation__header { display: block; }
-    :host(.preparation--compact) .preparation__timeline { margin: .75rem 0; }
-    :host(.preparation--compact) p { line-height: 1.45; }
+    :host(.preparation--compact) {
+      margin: 0;
+    }
+    :host(.preparation--compact) .preparation {
+      border: 0;
+      padding: 0;
+    }
+    :host(.preparation--compact) h2 {
+      font-size: 1.05rem;
+    }
+    :host(.preparation--compact) .preparation__header {
+      display: block;
+    }
+    :host(.preparation--compact) .preparation__timeline {
+      margin: 0.75rem 0;
+    }
+    :host(.preparation--compact) p {
+      line-height: 1.45;
+    }
     .preparation {
       border: 1px solid var(--ngx-color-border);
       background: var(--ngx-color-surface);
@@ -150,15 +176,27 @@ export class PublishingPreparationComponent {
   readonly compact = input(false);
   readonly resume = output<void>();
   readonly repair = output<string>();
-  readonly repairOptions = input<PreparationRepairOptions | null>(null);
+  readonly repairOptions = input<PreparationRepairOptions | null>(
+    null
+  );
   readonly repairModel = input('');
   readonly repairableIds = computed(() => {
-    const report = this.report(); const options = this.repairOptions();
-    return new Set(report.status === 'complete' && !report.ready &&
-      options?.preparationId === report.preparationId && options.draftHash === report.draftHash
-      ? options.activities.map(row => row.activityId) : []);
+    const report = this.report();
+    const options = this.repairOptions();
+    return new Set(
+      report.status === 'complete' &&
+        !report.ready &&
+        options?.preparationId === report.preparationId &&
+        options.draftHash === report.draftHash
+        ? options.activities.map((row) => row.activityId)
+        : []
+    );
   });
-  readonly hasRevisionHistory = computed(() => this.report().activities.some(row => row.id.startsWith('recheck-')));
+  readonly hasRevisionHistory = computed(() =>
+    this.report().activities.some((row) =>
+      row.id.startsWith('recheck-')
+    )
+  );
   readonly heading = computed(() =>
     this.report().status === 'running'
       ? 'Preparing your workshop'

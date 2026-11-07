@@ -31,12 +31,10 @@ describe('PublishingApiService', () => {
       };
       const seen: unknown[] = [];
       let complete = false;
-      api
-        .prepare({ operation: 'check', draft: {} })
-        .subscribe({
-          next: (value) => seen.push(value),
-          complete: () => (complete = true),
-        });
+      api.prepare({ operation: 'check', draft: {} }).subscribe({
+        next: (value) => seen.push(value),
+        complete: () => (complete = true),
+      });
       const start = http.expectOne('/api/publisher/tools');
       expect(start.request.body.name).toBe(
         'start_workshop_preparation'
@@ -76,13 +74,11 @@ describe('PublishingApiService', () => {
     const promise = firstValueFrom(
       api.watchPreparation('11111111-1111-4111-8111-111111111111')
     );
-    http
-      .expectOne('/api/publisher/tools')
-      .flush({
-        structuredContent: {
-          data: { status: 'complete', ready: true },
-        },
-      });
+    http.expectOne('/api/publisher/tools').flush({
+      structuredContent: {
+        data: { status: 'complete', ready: true },
+      },
+    });
     await expectAsync(promise).toBeRejectedWithError(
       'Invalid preparation progress response. Run checks again.'
     );
@@ -184,16 +180,35 @@ describe('PublishingApiService', () => {
   });
   it('validates eligible repair options and rejects a foreign preparation response', async () => {
     const id = '11111111-1111-4111-8111-111111111111';
-    const options = { preparationId: id, draftHash: 'a'.repeat(64), model: 'test-model',
-      activities: [{ activityId: 'coverage', label: 'Objective coverage' }] };
+    const options = {
+      preparationId: id,
+      draftHash: 'a'.repeat(64),
+      model: 'test-model',
+      activities: [
+        { activityId: 'coverage', label: 'Objective coverage' },
+      ],
+    };
     const result = firstValueFrom(api.repairOptions(id));
     const request = http.expectOne('/api/publisher/tools');
-    expect(request.request.body).toEqual({ name: 'get_workshop_repair_options', input: { preparationId: id } });
-    request.flush({ structuredContent: { data: options } }); expect(await result).toEqual(options);
+    expect(request.request.body).toEqual({
+      name: 'get_workshop_repair_options',
+      input: { preparationId: id },
+    });
+    request.flush({ structuredContent: { data: options } });
+    expect(await result).toEqual(options);
     const invalid = firstValueFrom(api.repairOptions(id));
-    http.expectOne('/api/publisher/tools').flush({ structuredContent: { data: { ...options,
-      preparationId: '22222222-2222-4222-8222-222222222222' } } });
-    await expectAsync(invalid).toBeRejectedWithError('Repair options no longer match this preparation. Run checks again.');
+    http
+      .expectOne('/api/publisher/tools')
+      .flush({
+        structuredContent: {
+          data: {
+            ...options,
+            preparationId: '22222222-2222-4222-8222-222222222222',
+          },
+        },
+      });
+    await expectAsync(invalid).toBeRejectedWithError(
+      'Repair options no longer match this preparation. Run checks again.'
+    );
   });
-
 });

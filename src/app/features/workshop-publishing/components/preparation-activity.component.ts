@@ -43,13 +43,21 @@ import { PreparationActivity } from '../models/publishing.models';
       </p>
       @if (repairable()) {
         <p class="activity__meta">
-          Uses {{ repairModel() }} to revise the draft and rerun all checks.
-          Model charges may apply. Review changes before publishing.
+          Uses {{ repairModel() }} to revise the draft and rerun all
+          checks. Model charges may apply. Review changes before
+          publishing.
         </p>
-        <button mat-button ngxButton surface="outline" type="button"
+        <button
+          mat-button
+          ngxButton
+          surface="outline"
+          type="button"
           [disabled]="locked() || !repairModel()"
           [attr.aria-label]="'Fix ' + activity().label + ' with AI'"
-          (click)="repair.emit(activity().id)">Fix with AI</button>
+          (click)="repair.emit(activity().id)"
+        >
+          Fix with AI
+        </button>
       }
       @if (activity().startedAt) {
         <p class="activity__meta">{{ duration() }}</p>
@@ -70,9 +78,22 @@ import { PreparationActivity } from '../models/publishing.models';
       padding: 0.85rem 0;
       overflow-wrap: anywhere;
     }
-    :host(.activity--compact) { grid-template-columns: 1rem minmax(0, 1fr); gap: .35rem; padding: .55rem 0; font-size: .78rem; }
-    :host(.activity--compact) .activity__status { display: block; margin-left: 0; font-size: .72rem; }
-    :host(.activity--compact) p { margin: .4rem 0; line-height: 1.4; font-size: .75rem; }
+    :host(.activity--compact) {
+      grid-template-columns: 1rem minmax(0, 1fr);
+      gap: 0.35rem;
+      padding: 0.55rem 0;
+      font-size: 0.78rem;
+    }
+    :host(.activity--compact) .activity__status {
+      display: block;
+      margin-left: 0;
+      font-size: 0.72rem;
+    }
+    :host(.activity--compact) p {
+      margin: 0.4rem 0;
+      line-height: 1.4;
+      font-size: 0.75rem;
+    }
     .activity__marker {
       color: var(--ngx-color-primary);
     }

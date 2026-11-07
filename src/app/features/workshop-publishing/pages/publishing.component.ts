@@ -20,7 +20,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  MatDialog,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
@@ -81,7 +85,10 @@ import { PublishingViewModel } from './publishing.view-model';
         [locked]="vm.working() || vm.initializing() || vm.attempted()"
         (navigate)="vm.navigate($event)"
       />
-      @if ((vm.step() === 0 || vm.step() === 1) && vm.operation() !== 'generate') {
+      @if (
+        (vm.step() === 0 || vm.step() === 1) &&
+        vm.operation() !== 'generate'
+      ) {
         <ng-container [ngTemplateOutlet]="workspaceContent" />
       } @else {
         <ngx-panel
@@ -138,8 +145,14 @@ import { PublishingViewModel } from './publishing.view-model';
           />
         }
         @if (vm.step() !== 1 && vm.preparation(); as report) {
-          <ngx-publishing-preparation [report]="report" [locked]="vm.working() || vm.attempted()" (resume)="vm.resumeChecks()"
-            [repairOptions]="vm.repairOptions()" [repairModel]="vm.model.value" (repair)="vm.repair($event)" />
+          <ngx-publishing-preparation
+            [report]="report"
+            [locked]="vm.working() || vm.attempted()"
+            (resume)="vm.resumeChecks()"
+            [repairOptions]="vm.repairOptions()"
+            [repairModel]="vm.model.value"
+            (repair)="vm.repair($event)"
+          />
         }
         @if (vm.operation() !== 'generate') {
           @if (vm.step() === 0) {
@@ -162,38 +175,72 @@ import { PublishingViewModel } from './publishing.view-model';
             <div class="publisher__review-layout">
               <aside class="publisher__checks" aria-label="Checks">
                 @if (vm.preparation(); as report) {
-                  <ngx-publishing-preparation [report]="report" [compact]="true"
-                    [locked]="vm.working() || vm.attempted()" (resume)="vm.resumeChecks()"
-            [repairOptions]="vm.repairOptions()" [repairModel]="vm.model.value" (repair)="vm.repair($event)" />
+                  <ngx-publishing-preparation
+                    [report]="report"
+                    [compact]="true"
+                    [locked]="vm.working() || vm.attempted()"
+                    (resume)="vm.resumeChecks()"
+                    [repairOptions]="vm.repairOptions()"
+                    [repairModel]="vm.model.value"
+                    (repair)="vm.repair($event)"
+                  />
                 } @else {
                   <h2>Checks</h2>
-                  <p>Validate your draft to run checks and restore the preview.</p>
+                  <p>
+                    Validate your draft to run checks and restore the
+                    preview.
+                  </p>
                 }
               </aside>
               <div class="publisher__preview-column">
                 @if (vm.previousRepair()) {
-                  <ngx-publishing-repair-review [changes]="vm.repairChanges()"
+                  <ngx-publishing-repair-review
+                    [changes]="vm.repairChanges()"
                     [locked]="vm.working() || vm.attempted()"
-                    (restore)="vm.restorePreviousDraft()" />
+                    (restore)="vm.restorePreviousDraft()"
+                  />
                 }
-              <ngx-panel heading="Workshop Preview" eyebrow="DRAFT REVIEW"
-                shape="stepped" background="solid" class="publisher__preview">
-                <button ngxPanelHeader mat-icon-button type="button"
-                  aria-label="Refine the draft" matTooltip="Refine the draft"
-                  [disabled]="vm.working() || vm.attempted()" (click)="openRefine()">
-                  <mat-icon>tune</mat-icon>
-                </button>
-                @if (vm.draft(); as draft) {
-                  <ngx-publishing-review [draft]="draft"
-                    [locked]="vm.working() || vm.attempted()" [showPublish]="false" />
-                } @else {
-                  <p class="publisher__intro" role="status">
-                    Your draft has unvalidated edits. Open Refine the draft and validate changes to restore the preview.
-                  </p>
-                  <button mat-button ngxButton type="button" [disabled]="vm.working()"
-                    (click)="openRefine()">Refine the draft</button>
-                }
-              </ngx-panel>
+                <ngx-panel
+                  heading="Workshop Preview"
+                  eyebrow="DRAFT REVIEW"
+                  shape="stepped"
+                  background="solid"
+                  class="publisher__preview"
+                >
+                  <button
+                    ngxPanelHeader
+                    mat-icon-button
+                    type="button"
+                    aria-label="Refine the draft"
+                    matTooltip="Refine the draft"
+                    [disabled]="vm.working() || vm.attempted()"
+                    (click)="openRefine()"
+                  >
+                    <mat-icon>tune</mat-icon>
+                  </button>
+                  @if (vm.draft(); as draft) {
+                    <ngx-publishing-review
+                      [draft]="draft"
+                      [locked]="vm.working() || vm.attempted()"
+                      [showPublish]="false"
+                    />
+                  } @else {
+                    <p class="publisher__intro" role="status">
+                      Your draft has unvalidated edits. Open Refine
+                      the draft and validate changes to restore the
+                      preview.
+                    </p>
+                    <button
+                      mat-button
+                      ngxButton
+                      type="button"
+                      [disabled]="vm.working()"
+                      (click)="openRefine()"
+                    >
+                      Refine the draft
+                    </button>
+                  }
+                </ngx-panel>
               </div>
             </div>
             <div class="publisher__navigation">
@@ -213,7 +260,10 @@ import { PublishingViewModel } from './publishing.view-model';
                 shape="chevron"
                 type="button"
                 [disabled]="
-                  !vm.draft() || !vm.checksReady() || vm.working() || vm.attempted()
+                  !vm.draft() ||
+                  !vm.checksReady() ||
+                  vm.working() ||
+                  vm.attempted()
                 "
                 (click)="vm.continueToPublish()"
               >
@@ -251,35 +301,51 @@ import { PublishingViewModel } from './publishing.view-model';
         <div class="publisher__dialog ngx-design-system">
           <h2 mat-dialog-title>Refine the draft</h2>
           <mat-dialog-content>
-            <p>Choose a workshop image or edit the source. Validate changes before publication.</p>
+            <p>
+              Choose a workshop image or edit the source. Validate
+              changes before publication.
+            </p>
             @if (vm.error() || vm.validation()) {
-              <p class="publisher__error" role="alert">{{ vm.error() || vm.validation() }}</p>
+              <p class="publisher__error" role="alert">
+                {{ vm.error() || vm.validation() }}
+              </p>
             }
             @if (vm.working()) {
-              <ngx-publishing-progress [operation]="vm.operation()" [elapsed]="vm.elapsed()" />
+              <ngx-publishing-progress
+                [operation]="vm.operation()"
+                [elapsed]="vm.elapsed()"
+              />
             }
-              <ngx-publishing-images
-                [query]="vm.imageQuery"
-                [prompt]="vm.imagePrompt"
-                [images]="vm.images()"
-                [selected]="vm.image()"
-                [imageModel]="vm.catalog()?.imageModel ?? null"
-                [locked]="vm.working() || vm.attempted()"
-                [initializing]="vm.initializing()"
-                [hasDraft]="!!vm.draft()"
-                (browse)="vm.browseImages()"
-                (select)="vm.selectImage($event)"
-                (generate)="vm.generateImage()"
-                (apply)="vm.applyImage()"
-              />
-              <ngx-publishing-source
-                [json]="vm.json"
-                [locked]="vm.working() || vm.attempted()"
-                (validate)="vm.validate()"
-              />
+            <ngx-publishing-images
+              [query]="vm.imageQuery"
+              [prompt]="vm.imagePrompt"
+              [images]="vm.images()"
+              [selected]="vm.image()"
+              [imageModel]="vm.catalog()?.imageModel ?? null"
+              [locked]="vm.working() || vm.attempted()"
+              [initializing]="vm.initializing()"
+              [hasDraft]="!!vm.draft()"
+              (browse)="vm.browseImages()"
+              (select)="vm.selectImage($event)"
+              (generate)="vm.generateImage()"
+              (apply)="vm.applyImage()"
+            />
+            <ngx-publishing-source
+              [json]="vm.json"
+              [locked]="vm.working() || vm.attempted()"
+              (validate)="vm.validate()"
+            />
           </mat-dialog-content>
           <mat-dialog-actions align="end">
-            <button mat-button ngxButton type="button" [disabled]="vm.working()" (click)="closeRefine()">Done</button>
+            <button
+              mat-button
+              ngxButton
+              type="button"
+              [disabled]="vm.working()"
+              (click)="closeRefine()"
+            >
+              Done
+            </button>
           </mat-dialog-actions>
         </div>
       </ng-template>
@@ -342,7 +408,9 @@ import { PublishingViewModel } from './publishing.view-model';
     .publisher__error p {
       margin: 0.5rem 0;
     }
-    .publisher__preview-column { min-width: 0; }
+    .publisher__preview-column {
+      min-width: 0;
+    }
     .publisher__review-layout {
       display: grid;
       grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);
@@ -351,20 +419,39 @@ import { PublishingViewModel } from './publishing.view-model';
     }
     .publisher__checks {
       position: sticky;
-      top: calc(var(--publisher-toolbar-top, 96px) + var(--publisher-action-height, 70px) + 16px);
-      max-height: calc(100dvh - var(--publisher-toolbar-top, 96px) - var(--publisher-action-height, 70px) - 32px);
+      top: calc(
+        var(--publisher-toolbar-top, 96px) +
+          var(--publisher-action-height, 70px) + 16px
+      );
+      max-height: calc(
+        100dvh - var(--publisher-toolbar-top, 96px) - var(
+            --publisher-action-height,
+            70px
+          ) -
+          32px
+      );
       overflow: auto;
       scrollbar-width: thin;
       border: 1px solid var(--ngx-color-border);
       background: var(--ngx-color-surface);
       padding: 1rem;
-      font-size: .8rem;
+      font-size: 0.8rem;
     }
-    .publisher__preview { min-width: 0; }
-    .publisher__dialog { color: var(--ngx-color-text); background: var(--ngx-color-surface); }
+    .publisher__preview {
+      min-width: 0;
+    }
+    .publisher__dialog {
+      color: var(--ngx-color-text);
+      background: var(--ngx-color-surface);
+    }
     @media (max-width: 960px) {
-      .publisher__review-layout { grid-template-columns: minmax(0, 1fr); }
-      .publisher__checks { position: static; max-height: 360px; }
+      .publisher__review-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .publisher__checks {
+        position: static;
+        max-height: 360px;
+      }
     }
     .publisher__resume,
     ngx-publishing-progress {
@@ -377,15 +464,33 @@ export class PublishingComponent implements OnInit {
   readonly actionBarHeight = signal(70);
   readonly vm = inject(PublishingViewModel);
   private readonly dialog = inject(MatDialog);
-  private readonly refineTemplate = viewChild<TemplateRef<unknown>>('refineDialog');
+  private readonly refineTemplate =
+    viewChild<TemplateRef<unknown>>('refineDialog');
   private refineRef: MatDialogRef<unknown> | undefined;
   openRefine(): void {
     const template = this.refineTemplate();
-    if (!template || this.refineRef || this.vm.working() || this.vm.attempted()) return;
-    this.refineRef = this.dialog.open(template, { width: '960px', maxWidth: 'calc(100vw - 2rem)', maxHeight: '90dvh', ariaLabel: 'Refine the draft', autoFocus: 'dialog', delayFocusTrap: false });
-    this.refineRef.afterClosed().subscribe(() => { this.refineRef = undefined; });
+    if (
+      !template ||
+      this.refineRef ||
+      this.vm.working() ||
+      this.vm.attempted()
+    )
+      return;
+    this.refineRef = this.dialog.open(template, {
+      width: '960px',
+      maxWidth: 'calc(100vw - 2rem)',
+      maxHeight: '90dvh',
+      ariaLabel: 'Refine the draft',
+      autoFocus: 'dialog',
+      delayFocusTrap: false,
+    });
+    this.refineRef.afterClosed().subscribe(() => {
+      this.refineRef = undefined;
+    });
   }
-  closeRefine(): void { if (!this.vm.working()) this.refineRef?.close(); }
+  closeRefine(): void {
+    if (!this.vm.working()) this.refineRef?.close();
+  }
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly generating = computed(
