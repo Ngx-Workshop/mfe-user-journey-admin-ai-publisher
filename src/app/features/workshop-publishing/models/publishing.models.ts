@@ -1,5 +1,6 @@
 export type {
   PreparationReport,
+  PreparationRepairOptions,
   PreparationActivity,
   StartWorkshopPreparationInput,
   WorkshopDraft,
@@ -15,6 +16,7 @@ export interface WorkshopImage {
   storageUrl: string;
 }
 export type PublisherTool =
+  | 'get_workshop_repair_options'
   | 'start_workshop_preparation'
   | 'get_workshop_preparation'
   | 'list_publishing_models'

@@ -18,6 +18,7 @@ import {
 } from '@tmdjr/service-ai-publisher-contracts';
 import {
   PreparationReport,
+  PreparationRepairOptions,
   StartWorkshopPreparationInput,
   PublisherTool,
   PublishingReceipt,
@@ -36,6 +37,10 @@ const preparationTool = mcpPublisherContract.publishing.tools.find(
 const validatePreparation = new Ajv({ strict: false }).compile<{
   data: PreparationReport;
 }>(preparationTool.outputSchema);
+const repairOptionsTool = mcpPublisherContract.publishing.tools.find(
+  (tool) => tool.name === 'get_workshop_repair_options'
+)!;
+const validateRepairOptions = new Ajv({ strict: false }).compile<{ data: PreparationRepairOptions }>(repairOptionsTool.outputSchema);
 @Injectable({ providedIn: 'root' })
 export class PublishingApiService {
   private readonly http = inject(HttpClient);
@@ -50,6 +55,14 @@ export class PublishingApiService {
         timeout(180000),
         map((response) => this.unwrap(response))
       );
+  }
+  repairOptions(preparationId: string): Observable<PreparationRepairOptions> {
+    return this.call('get_workshop_repair_options', { preparationId }).pipe(map(value => {
+      const envelope = { data: value };
+      if (!validateRepairOptions(envelope) || envelope.data.preparationId !== preparationId)
+        throw new Error('Repair options no longer match this preparation. Run checks again.');
+      return envelope.data;
+    }));
   }
   prepare(
     input: StartWorkshopPreparationInput

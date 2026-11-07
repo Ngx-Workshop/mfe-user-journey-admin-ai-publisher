@@ -141,6 +141,8 @@ export class PublishingProgressComponent {
     switch (this.operation()) {
       case 'generate':
         return 'Authoring, checks and any bounded revision run on the server. This may take a few minutes.';
+      case 'repair':
+        return 'Making one targeted revision, then rerunning checks and AI review. The previous draft is preserved; nothing is published.';
       case 'validate':
         return 'Checking the draft, objective coverage and isolated lab execution before review.';
       case 'image':

@@ -36,6 +36,7 @@ describe('Workshop creation workspace', () => {
         {
           provide: PublishingStore,
           useValue: {
+            repairOptions: signal(null),
             busy: signal(false),
             error: signal(''),
             sections: signal([{ id: 'angular', name: 'Angular' }]),

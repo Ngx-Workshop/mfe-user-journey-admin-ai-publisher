@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
-import { PreparationReport } from '../models/publishing.models';
+import { PreparationReport, PreparationRepairOptions } from '../models/publishing.models';
 
 @Component({
   selector: 'ngx-publishing-preparation',
@@ -58,13 +58,15 @@ import { PreparationReport } from '../models/publishing.models';
         </summary>
         <ol class="preparation__timeline">
           @for (activity of report().activities; track activity.id) {
-            <li ngxPreparationActivity [activity]="activity" [compact]="compact()"></li>
+            <li ngxPreparationActivity [activity]="activity" [compact]="compact()"
+              [repairable]="repairableIds().has(activity.id)" [repairModel]="repairModel()"
+              [locked]="locked()" (repair)="repair.emit($event)"></li>
           } @empty {
             <li>Waiting for the first server update…</li>
           }
         </ol>
       </details>
-      @if (report().repairCount) {
+      @if (hasRevisionHistory()) {
         <p class="preparation__meta">
           Earlier failures remain in the activity history. Readiness
           uses the final check attempt.
@@ -147,6 +149,16 @@ export class PublishingPreparationComponent {
   readonly locked = input(false);
   readonly compact = input(false);
   readonly resume = output<void>();
+  readonly repair = output<string>();
+  readonly repairOptions = input<PreparationRepairOptions | null>(null);
+  readonly repairModel = input('');
+  readonly repairableIds = computed(() => {
+    const report = this.report(); const options = this.repairOptions();
+    return new Set(report.status === 'complete' && !report.ready &&
+      options?.preparationId === report.preparationId && options.draftHash === report.draftHash
+      ? options.activities.map(row => row.activityId) : []);
+  });
+  readonly hasRevisionHistory = computed(() => this.report().activities.some(row => row.id.startsWith('recheck-')));
   readonly heading = computed(() =>
     this.report().status === 'running'
       ? 'Preparing your workshop'

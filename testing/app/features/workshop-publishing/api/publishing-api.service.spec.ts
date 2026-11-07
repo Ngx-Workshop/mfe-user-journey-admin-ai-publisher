@@ -182,4 +182,18 @@ describe('PublishingApiService', () => {
     subscription.unsubscribe();
     expect(request.cancelled).toBeTrue();
   });
+  it('validates eligible repair options and rejects a foreign preparation response', async () => {
+    const id = '11111111-1111-4111-8111-111111111111';
+    const options = { preparationId: id, draftHash: 'a'.repeat(64), model: 'test-model',
+      activities: [{ activityId: 'coverage', label: 'Objective coverage' }] };
+    const result = firstValueFrom(api.repairOptions(id));
+    const request = http.expectOne('/api/publisher/tools');
+    expect(request.request.body).toEqual({ name: 'get_workshop_repair_options', input: { preparationId: id } });
+    request.flush({ structuredContent: { data: options } }); expect(await result).toEqual(options);
+    const invalid = firstValueFrom(api.repairOptions(id));
+    http.expectOne('/api/publisher/tools').flush({ structuredContent: { data: { ...options,
+      preparationId: '22222222-2222-4222-8222-222222222222' } } });
+    await expectAsync(invalid).toBeRejectedWithError('Repair options no longer match this preparation. Run checks again.');
+  });
+
 });

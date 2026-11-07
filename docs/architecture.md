@@ -328,3 +328,14 @@ Production edge keeps the protected administrator facade and verified TLS backha
 the backhaul targets publisher directly. The catalog gateway is outside this path.
 Source changes are local until both Nginx hops and this frontend are deployed.
 The gateway compatibility implementation can be retired after that routing rollout.
+
+## AI repair of failed checks
+
+Publisher contracts 1.1.0 are installed as a reproducible vendor artifact. The API
+validates separate repair eligibility; the shared store loads it after failed terminal
+preparation. Failed-check presenters emit an activity ID, not prompt text. The scoped
+VM owns one previous draft/report/options snapshot, progress, changed-material summary
+and restoration. New repair results invalidate publication review. The compositor
+uses PublishingRepairReviewComponent; repairChanges compares content while ignoring
+regenerated editor block IDs. No model calls originate from presenters or the browser.
+See specs/016-ai-check-repair/handoff.md for tests and rollout order.

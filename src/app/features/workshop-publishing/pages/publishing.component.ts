@@ -1,3 +1,4 @@
+import { PublishingRepairReviewComponent } from '../components/publishing-repair-review.component';
 import { PublishingPreparationComponent } from '../components/publishing-preparation.component';
 import { NgTemplateOutlet } from '@angular/common';
 import {
@@ -57,6 +58,7 @@ import { PublishingViewModel } from './publishing.view-model';
     PublishingJourneyComponent,
     PublishingProgressComponent,
     PublishingPreparationComponent,
+    PublishingRepairReviewComponent,
     PublishingConfirmationComponent,
   ],
   providers: [PublishingViewModel],
@@ -121,7 +123,9 @@ import { PublishingViewModel } from './publishing.view-model';
                 {{
                   vm.step() === 0
                     ? 'Review the inputs below, then try again.'
-                    : 'Check your draft and validate changes to continue.'
+                    : vm.repairOptions()?.activities?.length
+                      ? 'Use Fix with AI beside a failed check, or refine and validate the draft.'
+                      : 'Check your draft and validate changes to continue.'
                 }}
               </p>
             }
@@ -134,7 +138,8 @@ import { PublishingViewModel } from './publishing.view-model';
           />
         }
         @if (vm.step() !== 1 && vm.preparation(); as report) {
-          <ngx-publishing-preparation [report]="report" [locked]="vm.working()" (resume)="vm.resumeChecks()" />
+          <ngx-publishing-preparation [report]="report" [locked]="vm.working() || vm.attempted()" (resume)="vm.resumeChecks()"
+            [repairOptions]="vm.repairOptions()" [repairModel]="vm.model.value" (repair)="vm.repair($event)" />
         }
         @if (vm.operation() !== 'generate') {
           @if (vm.step() === 0) {
@@ -158,12 +163,19 @@ import { PublishingViewModel } from './publishing.view-model';
               <aside class="publisher__checks" aria-label="Checks">
                 @if (vm.preparation(); as report) {
                   <ngx-publishing-preparation [report]="report" [compact]="true"
-                    [locked]="vm.working()" (resume)="vm.resumeChecks()" />
+                    [locked]="vm.working() || vm.attempted()" (resume)="vm.resumeChecks()"
+            [repairOptions]="vm.repairOptions()" [repairModel]="vm.model.value" (repair)="vm.repair($event)" />
                 } @else {
                   <h2>Checks</h2>
                   <p>Validate your draft to run checks and restore the preview.</p>
                 }
               </aside>
+              <div class="publisher__preview-column">
+                @if (vm.previousRepair()) {
+                  <ngx-publishing-repair-review [changes]="vm.repairChanges()"
+                    [locked]="vm.working() || vm.attempted()"
+                    (restore)="vm.restorePreviousDraft()" />
+                }
               <ngx-panel heading="Workshop Preview" eyebrow="DRAFT REVIEW"
                 shape="stepped" background="solid" class="publisher__preview">
                 <button ngxPanelHeader mat-icon-button type="button"
@@ -182,6 +194,7 @@ import { PublishingViewModel } from './publishing.view-model';
                     (click)="openRefine()">Refine the draft</button>
                 }
               </ngx-panel>
+              </div>
             </div>
             <div class="publisher__navigation">
               <button
@@ -329,6 +342,7 @@ import { PublishingViewModel } from './publishing.view-model';
     .publisher__error p {
       margin: 0.5rem 0;
     }
+    .publisher__preview-column { min-width: 0; }
     .publisher__review-layout {
       display: grid;
       grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);

@@ -191,3 +191,8 @@ must remain visible. Opening the dialog never calls generation or publication.
 
 Local verification uses a fixture server and no paid model/image/publication calls.
 The deployment remains a separate action; see specs/014-draft-review-layout/handoff.md.
+
+AI repair local verification uses backend/model doubles or an explicitly labelled
+fixture server. Verify failed-check CTA/model cost notice, locked progress, changes,
+restore, stale-edit protection and resumed IDs without paid calls. Production requires
+the publisher repair API plus the new frontend contracts; no Nginx change is needed.

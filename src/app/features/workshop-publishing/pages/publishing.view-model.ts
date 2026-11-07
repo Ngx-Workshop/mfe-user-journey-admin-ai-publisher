@@ -1,3 +1,4 @@
+import { repairChanges } from '../utils/repair-changes';
 import {
   computed,
   DestroyRef,
@@ -26,6 +27,7 @@ import {
 import { PublishingStore } from '../state/publishing.store';
 import {
   PreparationReport,
+  PreparationRepairOptions,
   StartWorkshopPreparationInput,
   PublishingReceipt,
   WorkshopDraft,
@@ -73,6 +75,12 @@ export class PublishingViewModel {
   readonly initializing = signal(false);
   readonly image = signal<WorkshopImage | null>(null);
   readonly preparation = signal<PreparationReport | null>(null);
+  readonly repairOptions = this.store.repairOptions;
+  readonly previousRepair = signal<{ draft: WorkshopDraft; report: PreparationReport; options: PreparationRepairOptions | null } | null>(null);
+  readonly repairChanges = computed(() => {
+    const previous = this.previousRepair(); const draft = this.draft();
+    return previous && draft ? repairChanges(previous.draft, draft) : [];
+  });
   readonly checksReady = computed(
     () =>
       this.preparation()?.ready === true &&
@@ -236,15 +244,16 @@ export class PublishingViewModel {
       return;
     }
     this.commands.next(() =>
-      this.track('generate', () =>
-        this.startPreparation({
+      this.track('generate', () => {
+        this.previousRepair.set(null);
+        return this.startPreparation({
           operation: 'generate',
           input: {
             ...this.form.getRawValue(),
             model: this.model.value,
           } satisfies GenerateWorkshopDraftInput,
-        })
-      ).pipe(tap((report) => this.acceptPreparation(report)))
+        });
+      }).pipe(tap((report) => this.acceptPreparation(report)))
     );
   }
   validate(): void {
@@ -262,14 +271,47 @@ export class PublishingViewModel {
       ).pipe(tap((report) => this.acceptPreparation(report)))
     );
   }
+  repair(activityId: string): void {
+    const report = this.preparation(); const draft = this.draft(); const options = this.repairOptions();
+    if (this.working() || this.attempted() || this.model.invalid || !draft || !report ||
+        report.status !== 'complete' || report.ready || !report.draftHash ||
+        options?.preparationId !== report.preparationId || options.draftHash !== report.draftHash ||
+        !options.activities.some(row => row.activityId === activityId)) return;
+    const snapshot = { draft, report, options };
+    this.commands.next(() => {
+      this.previousRepair.set(snapshot);
+      this.reviewed.set(false); this.step.set(1);
+      return this.track('repair', () => this.startPreparation({
+        operation: 'repair', sourcePreparationId: report.preparationId,
+        expectedDraftHash: report.draftHash!, activityId, model: this.model.value,
+      }, () => {
+        this.restoreSnapshot(snapshot);
+        this.store.restoreRepairOptions(null);
+        this.previousRepair.set(null);
+      })).pipe(tap(value => this.acceptPreparation(value)));
+    });
+  }
+  restorePreviousDraft(): void {
+    const snapshot = this.previousRepair();
+    if (!snapshot || this.working() || this.attempted()) return;
+    this.restoreSnapshot(snapshot);
+    this.previousRepair.set(null);
+  }
+  private restoreSnapshot(snapshot: { draft: WorkshopDraft; report: PreparationReport; options: PreparationRepairOptions | null }): void {
+    this.acceptPreparation(snapshot.report);
+    this.store.restoreRepairOptions(snapshot.options);
+    this.reviewed.set(false); this.step.set(1);
+  }
   edited(): void {
+    this.previousRepair.set(null);
     this.preparation.set(null);
     this.reviewed.set(false);
     this.draft.set(null);
     if (!this.attempted() && this.step() > 1) this.step.set(1);
   }
   private startPreparation(
-    input: StartWorkshopPreparationInput
+    input: StartWorkshopPreparationInput,
+    onRejected?: () => void
   ): Observable<PreparationReport> {
     const preparationId = crypto.randomUUID();
     const now = new Date().toISOString();
@@ -284,7 +326,9 @@ export class PublishingViewModel {
       message:
         'Starting preparation. If the connection is interrupted, resume with this ID before starting again.',
     });
-    return this.store.prepare({ ...input, preparationId });
+    return input.operation === 'repair'
+      ? this.store.prepare({ ...input, preparationId }, onRejected)
+      : this.store.prepare({ ...input, preparationId });
   }
   resumeChecks(): void {
     const report = this.preparation();
@@ -297,7 +341,7 @@ export class PublishingViewModel {
       return;
     this.commands.next(() =>
       this.track(
-        'validate',
+        this.previousRepair() ? 'repair' : 'validate',
         () => this.store.watchPreparation(report.preparationId),
         true
       ).pipe(tap((value) => this.acceptPreparation(value)))
@@ -402,6 +446,7 @@ export class PublishingViewModel {
       this.activeOperation = token;
       this.operation.set(operation);
       this.elapsed.set(0);
+      if (operation === 'repair') this.validation.set('');
       if (operation === 'generate' || operation === 'validate') {
         this.validation.set('');
         if (!retainPreparation) this.preparation.set(null);
@@ -426,6 +471,7 @@ export class PublishingViewModel {
 
   newDraft(): void {
     if (this.busy()) return;
+    this.previousRepair.set(null);
     this.preparation.set(null);
     this.step.set(0);
     this.reviewed.set(false);

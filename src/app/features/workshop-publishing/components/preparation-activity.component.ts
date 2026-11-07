@@ -1,8 +1,11 @@
+import { MatButtonModule } from '@angular/material/button';
+import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   input,
+  output,
 } from '@angular/core';
 import { PreparationActivity } from '../models/publishing.models';
 
@@ -13,6 +16,7 @@ import { PreparationActivity } from '../models/publishing.models';
     '[class.activity--compact]': 'compact()',
     '[attr.data-status]': 'activity().status',
   },
+  imports: [MatButtonModule, NgxButton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="activity__marker" aria-hidden="true">{{
@@ -37,6 +41,16 @@ import { PreparationActivity } from '../models/publishing.models';
       <p class="activity__evidence">
         {{ activity().detail || 'Waiting for the result…' }}
       </p>
+      @if (repairable()) {
+        <p class="activity__meta">
+          Uses {{ repairModel() }} to revise the draft and rerun all checks.
+          Model charges may apply. Review changes before publishing.
+        </p>
+        <button mat-button ngxButton surface="outline" type="button"
+          [disabled]="locked() || !repairModel()"
+          [attr.aria-label]="'Fix ' + activity().label + ' with AI'"
+          (click)="repair.emit(activity().id)">Fix with AI</button>
+      }
       @if (activity().startedAt) {
         <p class="activity__meta">{{ duration() }}</p>
       }
@@ -109,6 +123,10 @@ import { PreparationActivity } from '../models/publishing.models';
 })
 export class PreparationActivityComponent {
   readonly compact = input(false);
+  readonly repairable = input(false);
+  readonly repairModel = input('');
+  readonly locked = input(false);
+  readonly repair = output<string>();
   readonly activity = input.required<PreparationActivity>();
   readonly status = computed(() => {
     const row = this.activity();

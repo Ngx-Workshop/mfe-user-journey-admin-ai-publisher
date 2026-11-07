@@ -6,6 +6,7 @@ import { PublishingApiService } from '../../../../../src/app/features/workshop-p
 import type {
   WorkshopDraft,
   PublishingReceipt,
+  PreparationReport,
 } from '../../../../../src/app/features/workshop-publishing/models/publishing.models';
 
 describe('PublishingStore streams', () => {
@@ -25,6 +26,8 @@ describe('PublishingStore streams', () => {
   };
   let store: PublishingStore;
   let api: {
+    prepare: jasmine.Spy;
+    repairOptions: jasmine.Spy;
     call: jasmine.Spy;
     receipt: jasmine.Spy;
     sections: jasmine.Spy;
@@ -33,6 +36,8 @@ describe('PublishingStore streams', () => {
   };
   beforeEach(() => {
     api = {
+      prepare: jasmine.createSpy(),
+      repairOptions: jasmine.createSpy(),
       call: jasmine
         .createSpy()
         .and.returnValue(
@@ -154,4 +159,19 @@ describe('PublishingStore streams', () => {
       expect(store.busy()).toBeFalse();
     });
   }
+  it('loads repair eligibility after failed checks without unlocking the operation early', () => {
+    const report: PreparationReport = { preparationId: crypto.randomUUID(), status: 'complete', ready: false,
+      draft, draftHash: 'a'.repeat(64), activities: [], repairCount: 0, createdAt: '', updatedAt: '' };
+    const options = { preparationId: report.preparationId, draftHash: report.draftHash, model: 'test-model', activities: [] };
+    const pending = new Subject<typeof options>();
+    api.prepare.and.returnValue(of(report)); api.repairOptions.and.returnValue(pending);
+    const seen: PreparationReport[] = []; store.prepare({ operation: 'check', draft }).subscribe(value => seen.push(value));
+    expect(store.busy()).toBeTrue(); expect(seen).toEqual([]);
+    pending.next(options); pending.complete();
+    expect(seen).toEqual([report]); expect(store.repairOptions()).toEqual(options); expect(store.busy()).toBeFalse();
+    api.repairOptions.and.returnValue(throwError(() => new Error('Older server')));
+    store.prepare({ operation: 'check', draft }).subscribe();
+    expect(store.repairOptions()).toBeNull(); expect(store.error()).toBe(''); expect(store.busy()).toBeFalse();
+  });
+
 });
