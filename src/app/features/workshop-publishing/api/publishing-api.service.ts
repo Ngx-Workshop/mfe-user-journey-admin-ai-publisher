@@ -17,6 +17,8 @@ import {
   type WorkshopDraft,
 } from '@tmdjr/service-ai-publisher-contracts';
 import {
+  SavedWorkshopDraft,
+  WorkshopDraftSummary,
   PreparationReport,
   PreparationRepairOptions,
   StartWorkshopPreparationInput,
@@ -43,6 +45,21 @@ const repairOptionsTool = mcpPublisherContract.publishing.tools.find(
 const validateRepairOptions = new Ajv({ strict: false }).compile<{
   data: PreparationRepairOptions;
 }>(repairOptionsTool.outputSchema);
+const draftValidators = new Map(
+  [
+    'list_workshop_drafts',
+    'get_workshop_draft',
+    'save_workshop_draft',
+  ].map((name) => {
+    const tool = mcpPublisherContract.publishing.tools.find(
+      (tool) => tool.name === name
+    )!;
+    return [
+      name,
+      new Ajv({ strict: false }).compile(tool.outputSchema),
+    ] as const;
+  })
+);
 @Injectable({ providedIn: 'root' })
 export class PublishingApiService {
   private readonly http = inject(HttpClient);
@@ -57,6 +74,48 @@ export class PublishingApiService {
         timeout(180000),
         map((response) => this.unwrap(response))
       );
+  }
+  savedDraft(id: string): Observable<SavedWorkshopDraft> {
+    return this.draftCall<SavedWorkshopDraft>('get_workshop_draft', {
+      draftId: id,
+    }).pipe(
+      map((row) => {
+        if (row.draftId !== id)
+          throw new Error('Saved draft response has a different ID.');
+        return row;
+      })
+    );
+  }
+  savedDrafts(before?: string): Observable<WorkshopDraftSummary[]> {
+    return this.draftCall<WorkshopDraftSummary[]>(
+      'list_workshop_drafts',
+      before ? { before } : {}
+    );
+  }
+  saveDraft(
+    row: SavedWorkshopDraft,
+    json: string
+  ): Observable<SavedWorkshopDraft> {
+    return this.draftCall<SavedWorkshopDraft>('save_workshop_draft', {
+      draftId: row.draftId,
+      version: row.version,
+      json,
+    });
+  }
+  private draftCall<T>(
+    name:
+      | 'get_workshop_draft'
+      | 'list_workshop_drafts'
+      | 'save_workshop_draft',
+    input: unknown
+  ): Observable<T> {
+    return this.call(name, input).pipe(
+      map((data) => {
+        if (!draftValidators.get(name)!({ data }))
+          throw new Error('Invalid saved draft response.');
+        return data as T;
+      })
+    );
   }
   repairOptions(
     preparationId: string

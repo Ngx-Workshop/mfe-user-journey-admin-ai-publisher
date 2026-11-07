@@ -339,3 +339,19 @@ and restoration. New repair results invalidate publication review. The composito
 uses PublishingRepairReviewComponent; repairChanges compares content while ignoring
 regenerated editor block IDs. No model calls originate from presenters or the browser.
 See specs/016-ai-check-repair/handoff.md for tests and rollout order.
+
+## Persistent workshop drafts (017) — 2026-11-07
+
+SavedDraftsStore owns private summary reads and versioned source saves through the stateless
+publisher API client. Overview lists Your drafts newest updated first with cursor paging and
+Continue review. The existing new route uses ?draft=<uuid> as a stable review link; restoring
+requires no prior in-memory state. The scoped VM restores draft source, generation brief/model,
+latest evidence and previous repair revision; explicit publication approval is always fresh.
+Source edits autosave after 400ms, including incomplete JSON, and invalidate preparation.
+Save status and errors remain visible; navigation/unload guards protect unsaved work.
+MongoDB on service-ai-publisher persists records across refresh/redeployment. Interrupted
+processing is non-ready and requires new checks without automatic paid replay. The existing
+receipt journal remains authoritative for publication recovery; draft IDs are stable publication
+request IDs. New tools are packaged in independent contracts 1.2.0 via the verified vendor
+artifact; no sibling source is loaded at runtime. PublishingComponent remains a cohesive
+composition/inline-style exception; persistence reads/writes are in API/store boundaries.

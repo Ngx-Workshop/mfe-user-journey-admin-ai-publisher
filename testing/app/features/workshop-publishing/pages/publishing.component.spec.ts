@@ -1,3 +1,4 @@
+import { SavedDraftsStore } from '../../../../../src/app/features/workshop-publishing/state/saved-drafts.store';
 import {
   provideZonelessChangeDetection,
   signal,
@@ -30,6 +31,27 @@ describe('Workshop creation workspace', () => {
     TestBed.configureTestingModule({
       imports: [PublishingComponent],
       providers: [
+        {
+          provide: SavedDraftsStore,
+          useValue: {
+            get: (draftId: string) =>
+              of({
+                draftId,
+                version: 1,
+                name: 'Functions',
+                json: '',
+                status: 'ready',
+                createdAt: '',
+                updatedAt: '',
+              }),
+            save: (_row: unknown, json: string) =>
+              of({
+                draftId: '11111111-1111-4111-8111-111111111111',
+                version: 2,
+                json,
+              }),
+          },
+        },
         provideZonelessChangeDetection(),
         {
           provide: MAT_DIALOG_DEFAULT_OPTIONS,

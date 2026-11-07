@@ -196,3 +196,8 @@ AI repair local verification uses backend/model doubles or an explicitly labelle
 fixture server. Verify failed-check CTA/model cost notice, locked progress, changes,
 restore, stale-edit protection and resumed IDs without paid calls. Production requires
 the publisher repair API plus the new frontend contracts; no Nginx change is needed.
+
+Persistent drafts acceptance: verify Your drafts/Continue review, direct ?draft= links,
+refresh, incomplete-source autosave/conflict feedback, interrupted checks and fresh explicit
+publication review. ChromeHeadless cases use HTTP doubles. Production persistence acceptance
+uses check-only unpublished content, no paid generation or owner publication.

@@ -1,3 +1,4 @@
+import { SavedDraftsStore } from '../../../../../src/app/features/workshop-publishing/state/saved-drafts.store';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { PublishingViewModel } from '../../../../../src/app/features/workshop-publishing/pages/publishing.view-model';
@@ -136,6 +137,27 @@ describe('PublishingViewModel', () => {
     };
     TestBed.configureTestingModule({
       providers: [
+        {
+          provide: SavedDraftsStore,
+          useValue: {
+            get: (draftId: string) =>
+              of({
+                draftId,
+                version: 1,
+                name: 'Functions',
+                json: '',
+                status: 'ready',
+                createdAt: '',
+                updatedAt: '',
+              }),
+            save: (_row: unknown, json: string) =>
+              of({
+                draftId: '11111111-1111-4111-8111-111111111111',
+                version: 2,
+                json,
+              }),
+          },
+        },
         PublishingViewModel,
         { provide: PublishingStore, useValue: store },
       ],
@@ -575,8 +597,9 @@ describe('PublishingViewModel', () => {
     expect(vm.reviewed()).toBeFalse();
     expect(store.publish).not.toHaveBeenCalled();
     vm.restorePreviousDraft();
-    expect(vm.draft()).toEqual(draft);
-    expect(vm.preparation()).toEqual(report);
+    expect(vm.draft()).toBeNull();
+    expect(vm.preparation()).toBeNull();
+    expect(vm.unsaved()).toBeTrue();
     expect(vm.previousRepair()).toBeNull();
     expect(store.restoreRepairOptions).toHaveBeenCalledWith(options);
   });

@@ -36,7 +36,14 @@ describe('AI Publisher routed journey', () => {
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
+  function flushDrafts(): void {
+    for (const req of http.match(
+      (request) => request.body?.name === 'list_workshop_drafts'
+    ))
+      req.flush({ structuredContent: { data: [] } });
+  }
   function history(rows: PublishingReceipt[] = []): void {
+    flushDrafts();
     const request = http.expectOne('/api/publisher/tools');
     expect(request.request.body.name).toBe('list_publishing_runs');
     request.flush({ structuredContent: { data: rows } });
@@ -234,6 +241,7 @@ describe('AI Publisher routed journey', () => {
     const harness = await RouterTestingHarness.create(
       '/ai-publisher/overview'
     );
+    flushDrafts();
     http
       .expectOne('/api/publisher/tools')
       .flush({}, { status: 403, statusText: 'Forbidden' });
@@ -264,6 +272,7 @@ describe('AI Publisher routed journey', () => {
         '/ai-publisher/overview'
       )
     ).toBeFalse();
+    flushDrafts();
     http
       .expectOne('/api/publisher/tools')
       .flush({}, { status: 403, statusText: 'Forbidden' });

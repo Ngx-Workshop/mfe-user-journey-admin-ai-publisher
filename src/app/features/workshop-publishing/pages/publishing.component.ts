@@ -68,6 +68,32 @@ import { PublishingViewModel } from './publishing.view-model';
   providers: [PublishingViewModel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @if (vm.savedDraftId()) {
+      <p class="publisher__saved" role="status">
+        {{
+          vm.saving()
+            ? 'Saving changes…'
+            : vm.unsaved()
+              ? 'Unsaved changes'
+              : 'Draft saved · return anytime from Your drafts'
+        }}
+      </p>
+    }
+    @if (vm.saveError()) {
+      <div class="publisher__saved" role="alert">
+        {{ vm.saveError() }}
+        <button
+          mat-flat-button
+          ngxButton
+          surface="glass"
+          type="button"
+          [disabled]="vm.working()"
+          (click)="vm.retrySave()"
+        >
+          Retry save
+        </button>
+      </div>
+    }
     <ngx-publishing-actions
       heading="New workshop"
       [status]="vm.status()"
@@ -453,6 +479,12 @@ import { PublishingViewModel } from './publishing.view-model';
         max-height: 360px;
       }
     }
+    .publisher__saved {
+      margin: 0;
+      padding: 0.5rem 1rem;
+      color: var(--ngx-color-text);
+      background: var(--ngx-color-surface);
+    }
     .publisher__resume,
     ngx-publishing-progress {
       display: block;
@@ -502,7 +534,27 @@ export class PublishingComponent implements OnInit {
     viewChild<ElementRef<HTMLElement>>('phaseHeading');
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.refineRef?.close());
+    const warn = (event: BeforeUnloadEvent) => {
+      if (this.vm.unsaved() || this.vm.saving()) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', warn);
+    inject(DestroyRef).onDestroy(() => {
+      this.refineRef?.close();
+      window.removeEventListener('beforeunload', warn);
+    });
+    effect(() => {
+      const id = this.vm.savedDraftId();
+      if (id && this.route.snapshot.queryParamMap.get('draft') !== id)
+        void this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { draft: id },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+    });
     effect(() => {
       const working = this.vm.working();
       if (this.refineRef) this.refineRef.disableClose = working;
@@ -521,13 +573,14 @@ export class PublishingComponent implements OnInit {
   }
   canLeave(): boolean {
     if (this.vm.working() || this.vm.initializing()) return false;
+    if (this.vm.savedDraftId() && !this.vm.unsaved()) return true;
     if (
       this.vm.attempted() ||
       (!this.vm.json.value && !this.vm.form.dirty)
     )
       return true;
     return window.confirm(
-      'Leave this workshop? Your unpublished draft will be discarded.'
+      'Leave this workshop? Unsaved changes will be discarded.'
     );
   }
   back(): void {
@@ -536,9 +589,19 @@ export class PublishingComponent implements OnInit {
     });
   }
   restart(): void {
-    if (this.canLeave()) this.vm.newDraft();
+    if (this.canLeave()) {
+      this.vm.newDraft();
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { draft: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
   }
   ngOnInit(): void {
-    this.vm.initialize();
+    this.vm.initialize(
+      this.route.snapshot.queryParamMap.get('draft') ?? undefined
+    );
   }
 }

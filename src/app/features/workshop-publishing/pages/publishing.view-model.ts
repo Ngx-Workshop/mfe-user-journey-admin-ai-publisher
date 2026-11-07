@@ -1,3 +1,4 @@
+import { SavedDraftsStore } from '../state/saved-drafts.store';
 import { repairChanges } from '../utils/repair-changes';
 import {
   computed,
@@ -9,6 +10,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import {
+  catchError,
+  debounceTime,
+  EMPTY,
+  filter,
+  map,
+  of,
   concatMap,
   defaultIfEmpty,
   defer,
@@ -26,6 +33,7 @@ import {
 } from '../models/publishing-operation';
 import { PublishingStore } from '../state/publishing.store';
 import {
+  SavedWorkshopDraft,
   PreparationReport,
   PreparationRepairOptions,
   StartWorkshopPreparationInput,
@@ -38,6 +46,15 @@ import {
 @Injectable()
 export class PublishingViewModel {
   private readonly store = inject(PublishingStore);
+  private readonly savedDrafts = inject(SavedDraftsStore);
+  private requestedDraftId?: string;
+  readonly savedDraft = signal<SavedWorkshopDraft | null>(null);
+  readonly saving = signal(false);
+  readonly saveError = signal('');
+  readonly unsaved = signal(false);
+  readonly savedDraftId = computed(
+    () => this.savedDraft()?.draftId ?? null
+  );
   private readonly commands = new Subject<
     () => Observable<unknown>
   >();
@@ -52,7 +69,7 @@ export class PublishingViewModel {
   readonly operation = signal<PublishingOperation>('idle');
   readonly elapsed = signal(0);
   readonly working = computed(
-    () => this.busy() || this.operation() !== 'idle'
+    () => this.busy() || this.saving() || this.operation() !== 'idle'
   );
   readonly status = computed(() =>
     this.operation() !== 'idle'
@@ -98,7 +115,7 @@ export class PublishingViewModel {
   readonly reviewed = signal(false);
   readonly draft = signal<WorkshopDraft | null>(null);
   readonly receipt = signal<PublishingReceipt | null>(null);
-  readonly requestId = signal(crypto.randomUUID());
+  readonly requestId = signal<string>(crypto.randomUUID());
   readonly attempted = signal(false);
   readonly imageQuery = new FormControl('', { nonNullable: true });
   readonly imagePrompt = new FormControl('', {
@@ -142,8 +159,22 @@ export class PublishingViewModel {
     this.json.valueChanges
       .pipe(takeUntilDestroyed(destroyRef))
       .subscribe(() => this.edited());
+    this.json.valueChanges
+      .pipe(
+        debounceTime(400),
+        filter(() => !!this.savedDraft() && !this.attempted()),
+        concatMap(() =>
+          this.busy() || this.operation() !== 'idle'
+            ? EMPTY
+            : this.saveSource()
+        ),
+        takeUntilDestroyed(destroyRef)
+      )
+      .subscribe();
   }
-  initialize(): void {
+  initialize(draftId?: string): void {
+    this.requestedDraftId = draftId ?? this.requestedDraftId;
+    draftId = this.requestedDraftId;
     if (this.busy() || this.initializing()) return;
     this.commands.next(() => {
       this.initializing.set(true);
@@ -152,6 +183,7 @@ export class PublishingViewModel {
         () => this.track('sections', () => this.store.loadSections()),
         () => this.track('models', () => this.store.loadModels()),
         () => this.track('history', () => this.store.loadHistory()),
+        ...(draftId ? [() => this.openSavedDraft(draftId)] : []),
       ];
       return from(reads).pipe(
         concatMap((read) =>
@@ -264,7 +296,7 @@ export class PublishingViewModel {
     );
   }
   validate(): void {
-    if (this.busy() || this.attempted()) return;
+    if (this.working() || this.attempted()) return;
     let value: unknown;
     try {
       value = JSON.parse(this.json.value);
@@ -324,6 +356,12 @@ export class PublishingViewModel {
     if (!snapshot || this.working() || this.attempted()) return;
     this.restoreSnapshot(snapshot);
     this.previousRepair.set(null);
+    if (this.savedDraft()) {
+      this.json.setValue(JSON.stringify(snapshot.draft, null, 2));
+      this.validation.set(
+        'Previous draft restored. Validate changes before publishing.'
+      );
+    }
   }
   private restoreSnapshot(snapshot: {
     draft: WorkshopDraft;
@@ -336,6 +374,7 @@ export class PublishingViewModel {
     this.step.set(1);
   }
   edited(): void {
+    this.unsaved.set(true);
     this.previousRepair.set(null);
     this.preparation.set(null);
     this.reviewed.set(false);
@@ -359,9 +398,140 @@ export class PublishingViewModel {
       message:
         'Starting preparation. If the connection is interrupted, resume with this ID before starting again.',
     });
-    return input.operation === 'repair'
-      ? this.store.prepare({ ...input, preparationId }, onRejected)
-      : this.store.prepare({ ...input, preparationId });
+    const saved = this.savedDraft();
+    const draftId = saved?.draftId ?? preparationId;
+    const request = {
+      ...input,
+      preparationId,
+      draftId,
+      ...(saved ? { draftVersion: saved.version } : {}),
+    };
+    return (
+      onRejected
+        ? this.store.prepare(request, onRejected)
+        : this.store.prepare(request)
+    ).pipe(
+      concatMap((report) =>
+        this.savedDrafts.get(draftId).pipe(
+          tap((row) => {
+            this.savedDraft.set(row);
+            this.requestedDraftId = row.draftId;
+            this.requestId.set(row.draftId);
+            this.unsaved.set(false);
+            this.saveError.set('');
+          }),
+          map(() => report)
+        )
+      ),
+      catchError(() => {
+        this.saveError.set(
+          'Could not confirm the saved draft. Reopen it from Your drafts before starting another request.'
+        );
+        return EMPTY;
+      })
+    );
+  }
+  private openSavedDraft(id: string): Observable<unknown> {
+    this.saveError.set('');
+    if (!/^[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i.test(id)) {
+      this.saveError.set('Invalid saved draft link.');
+      return EMPTY;
+    }
+    return this.savedDrafts.get(id).pipe(
+      tap((row) => {
+        this.savedDraft.set(row);
+        this.requestId.set(row.publishedRequestId ?? row.draftId);
+        this.json.setValue(row.json, { emitEvent: false });
+        this.unsaved.set(false);
+        this.step.set(row.json ? 1 : 0);
+        this.reviewed.set(false);
+        if (row.brief) {
+          this.form.patchValue({
+            brief: row.brief.brief,
+            sectionId: row.brief.sectionId,
+            level: row.brief.level,
+          });
+          if (row.brief.model) this.model.setValue(row.brief.model);
+        }
+        try {
+          this.draft.set(this.store.parseDraft(JSON.parse(row.json)));
+        } catch {
+          this.draft.set(null);
+        }
+        if (!row.preparationId)
+          this.validation.set(
+            'Saved edits restored. Run Validate changes before publishing.'
+          );
+      }),
+      concatMap((row) =>
+        row.previousPreparationId
+          ? this.store
+              .watchPreparation(row.previousPreparationId)
+              .pipe(
+                tap((previous) => {
+                  if (previous.draft)
+                    this.previousRepair.set({
+                      draft: previous.draft,
+                      report: previous,
+                      options: null,
+                    });
+                }),
+                map(() => row)
+              )
+          : of(row)
+      ),
+      concatMap((row) =>
+        row.publishedRequestId
+          ? this.store.receipt(row.publishedRequestId).pipe(
+              tap((receipt) => {
+                this.receipt.set(receipt);
+                this.attempted.set(true);
+                this.step.set(2);
+              })
+            )
+          : row.preparationId
+            ? this.store
+                .watchPreparation(row.preparationId)
+                .pipe(tap((report) => this.acceptPreparation(report)))
+            : of(row)
+      ),
+      catchError(() => {
+        this.saveError.set(
+          'Could not open this draft. Return to Your drafts and try again.'
+        );
+        return EMPTY;
+      })
+    );
+  }
+  private saveSource(): Observable<unknown> {
+    const row = this.savedDraft();
+    if (!row || !this.unsaved()) return EMPTY;
+    const json = this.json.value;
+    this.saving.set(true);
+    this.saveError.set('');
+    return this.savedDrafts.save(row, json).pipe(
+      tap((saved) => {
+        this.savedDraft.set(saved);
+        this.unsaved.set(this.json.value !== json);
+      }),
+      catchError(() => {
+        this.saveError.set(
+          'Changes could not be saved. Another tab may have changed this draft. Copy your changes before reopening it.'
+        );
+        return EMPTY;
+      }),
+      finalize(() => this.saving.set(false))
+    );
+  }
+  retrySave(): void {
+    if (this.working()) return;
+    this.commands.next(() =>
+      this.unsaved()
+        ? this.saveSource()
+        : this.requestedDraftId
+          ? this.openSavedDraft(this.requestedDraftId)
+          : EMPTY
+    );
   }
   resumeChecks(): void {
     const report = this.preparation();
@@ -382,6 +552,7 @@ export class PublishingViewModel {
   }
   private acceptPreparation(report: PreparationReport): void {
     this.preparation.set(report);
+    if (report.model) this.model.setValue(report.model);
     if (report.status === 'running') return;
     if (report.draft) this.accept(report.draft);
     this.validation.set(
@@ -504,6 +675,10 @@ export class PublishingViewModel {
 
   newDraft(): void {
     if (this.busy()) return;
+    this.requestedDraftId = undefined;
+    this.savedDraft.set(null);
+    this.unsaved.set(false);
+    this.saveError.set('');
     this.previousRepair.set(null);
     this.preparation.set(null);
     this.step.set(0);
@@ -511,7 +686,7 @@ export class PublishingViewModel {
     this.requestId.set(crypto.randomUUID());
     this.attempted.set(false);
     this.receipt.set(null);
-    this.json.setValue('');
+    this.json.setValue('', { emitEvent: false });
     this.image.set(null);
     this.receiptId.setValue('');
     this.validation.set('');

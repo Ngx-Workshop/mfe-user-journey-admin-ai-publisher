@@ -52,6 +52,9 @@ export class PublishingStore {
   readonly busy = this.busyState.asReadonly();
   readonly error = this.errorState.asReadonly();
 
+  parseDraft(value: unknown): WorkshopDraft {
+    return this.api.draft(value);
+  }
   loadModels(): Observable<PublishingModelCatalog> {
     return this.execute(() =>
       this.api
@@ -123,6 +126,7 @@ export class PublishingStore {
             'PREPARATION_REPAIR_UNAVAILABLE',
             'PREPARATION_CONFLICT',
             'PREPARATION_BUSY',
+            'DRAFT_CONFLICT',
           ].includes(error.code)
         )
           onRejected?.();

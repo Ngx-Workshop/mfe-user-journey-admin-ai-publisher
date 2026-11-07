@@ -1,3 +1,4 @@
+import { SavedDraftsStore } from '../state/saved-drafts.store';
 import {
   computed,
   DestroyRef,
@@ -6,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { defer, exhaustMap, Observable, Subject } from 'rxjs';
+import { concat, defer, exhaustMap, Observable, Subject } from 'rxjs';
 import { workshopSummary } from '../utils/publishing-workshop-summary';
 import { PublishingStore } from '../state/publishing.store';
 import {
@@ -18,6 +19,7 @@ import { HistoryFilter, HistoryRow } from '../models/history.models';
 
 @Injectable()
 export class OverviewViewModel {
+  readonly drafts = inject(SavedDraftsStore);
   private readonly store = inject(PublishingStore);
   private readonly commands = new Subject<
     () => Observable<unknown>
@@ -78,7 +80,12 @@ export class OverviewViewModel {
       .subscribe();
   }
   refresh(): void {
-    this.commands.next(() => this.store.loadHistory());
+    this.commands.next(() =>
+      concat(this.drafts.load(), this.store.loadHistory())
+    );
+  }
+  loadMoreDrafts(): void {
+    this.commands.next(() => this.drafts.load(true));
   }
   clearFilters(): void {
     this.search.set('');
