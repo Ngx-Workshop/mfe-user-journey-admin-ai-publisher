@@ -46,4 +46,4 @@ the largest folder number is not automatically the active feature.
 
 | 016 AI check repair | Deployed; live CTA verified | [Spec](016-ai-check-repair/spec.md) | [Plan](016-ai-check-repair/plan.md) | [Tasks](016-ai-check-repair/tasks.md) | [Handoff](016-ai-check-repair/handoff.md) |
 
-| 017 Persistent workshop drafts | In progress | [Spec](017-persistent-drafts/spec.md) | [Plan](017-persistent-drafts/plan.md) | [Tasks](017-persistent-drafts/tasks.md) | [Handoff](017-persistent-drafts/handoff.md) |
+| 017 Persistent workshop drafts | Deployed; live recovery verified | [Spec](017-persistent-drafts/spec.md) | [Plan](017-persistent-drafts/plan.md) | [Tasks](017-persistent-drafts/tasks.md) | [Handoff](017-persistent-drafts/handoff.md) |
