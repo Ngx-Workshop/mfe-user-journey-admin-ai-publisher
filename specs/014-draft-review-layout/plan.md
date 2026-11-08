@@ -1,6 +1,6 @@
 # Implementation plan: Draft review layout
 
-Status: Complete locally; not deployed
+Status: Deployed 2026-11-08; authenticated session acceptance pending
 Spec: [spec.md](spec.md)
 Updated: 2026-11-06
 

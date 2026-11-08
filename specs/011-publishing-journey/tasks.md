@@ -36,5 +36,5 @@ claim of successful live validation.
 ## Journey heading and release — 2026-11-08
 - [x] T008 — Replace creation action-bar heading with journey and retain measured
   sticky offsets/page heading; repair stale history/receipt test expectations.
-- [ ] T009 — Pass all release checks and deploy accumulated UI work through the
+- [x] T009 — Pass all release checks and deploy accumulated UI work through the
   repository production workflow; record exact release and outcome in handoff.

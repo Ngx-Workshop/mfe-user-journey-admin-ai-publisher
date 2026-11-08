@@ -230,3 +230,10 @@ including repaired stale history/receipt expectations and restored-JSON coverage
 Architecture, strict app/test types, production federation build/license and diff
 checks pass. Journey-first desktop/mobile preview was checked against the isolated
 production sample. This supersedes earlier baseline-failure notes for this checkout.
+
+Production release (2026-11-08): fa03543 deployed successfully via workflow run
+42450642740; independent validation run 42450642757 also passed. Both clean Node 22
+jobs report 113 passing tests and build hash 801aee09dd811518. The public federation
+entry references the new application chunk, which matches the verified local bytes.
+See spec 011 production release record. Earlier undeployed/failing-test notes are
+historical. Authenticated UI acceptance still requires the user's expired session.

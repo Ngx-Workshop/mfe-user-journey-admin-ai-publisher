@@ -1,6 +1,6 @@
 # Feature: Draft review layout
 
-Status: Complete locally; not deployed
+Status: Deployed 2026-11-08; authenticated session acceptance pending
 Feature ID: 014-draft-review-layout
 Created: 2026-11-06
 Request/source: User request and supplied current-page screenshot.

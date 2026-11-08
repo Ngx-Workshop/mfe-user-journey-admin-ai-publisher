@@ -105,3 +105,11 @@ Verification:
   acceptance remains unavailable because the prior administrator session expired.
 
 Local implementation complete; no deployment or external work required.
+
+## Released — 2026-11-08
+All review layout/outline/bounded-check changes above are included in production
+commit fa03543. Deployment 42450642740 and validation 42450642757 succeeded, each
+with 113 passing tests. Published federation application chunk matches the verified
+local artifact. Earlier not-deployed/baseline-failure notes describe historical
+checkpoints and are superseded by this release. See spec 011's production release
+record for exact URLs, artifact checksum and authenticated-session limits.

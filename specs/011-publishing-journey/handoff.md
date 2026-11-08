@@ -164,3 +164,23 @@ measurement and no horizontal overflow at 390px. No live workshop mutations occu
 This release includes the brief/review/outline/check-panel changes recorded above
 and in spec 014. Production release will use the push-to-main deployment workflow;
 its final run and deployed-artifact verification are recorded in the release follow-up.
+
+## Production release — 2026-11-08
+Released commit fa03543c2ec6ce4d7f26833b5b277e9d3de9d04e to main.
+[Deployment run](https://github.com/Ngx-Workshop/mfe-user-journey-admin-ai-publisher/actions/runs/42450642740)
+and [validation run](https://github.com/Ngx-Workshop/mfe-user-journey-admin-ai-publisher/actions/runs/42450642757)
+both completed successfully. Each clean Node 22 job reports 113 passing tests and
+production build hash 801aee09dd811518; deployment's static asset copy succeeded.
+
+Post-deployment: the public beta.ngx-workshop.io publisher remoteEntry.js returns 200
+and references 2181.9ed6d12a891452b4.js. That application chunk returns 200, matches
+the locally verified chunk byte-for-byte (SHA-256
+5e12250b7e573a056e4caaf1268541c9e30e07ee6a6e8583002167d012f5845f), and contains
+the journey heading, integrated outline and bounded-checks components. Standalone
+bootstrap assets are separately hashed; verification follows the federation entry's
+actual application chunk. No paid model calls, saved draft changes or live publication
+were performed. Authenticated-shell review still requires renewing the expired user
+session; deployment and static artifact delivery are verified independently.
+
+The accompanying documentation-only completion record uses [skip ci] to avoid
+redeploying unchanged application assets. Local working tree is committed and clean.
