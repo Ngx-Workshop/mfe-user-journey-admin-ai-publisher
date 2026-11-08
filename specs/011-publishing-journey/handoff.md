@@ -199,3 +199,12 @@ source preservation and existing publication/recovery gates. Architecture, stric
 application/test types, production build/license and diff checks pass. No API, route,
 dependency, persistence or federation changes; no live workshop operations performed.
 The follow-up release uses the existing authorized push-to-main production workflow.
+
+Activity-only view deployed 2026-11-08 in commit 4776c3e103070c4ea939932729d3035d28e52c62.
+[Deployment](https://github.com/Ngx-Workshop/mfe-user-journey-admin-ai-publisher/actions/runs/42452383130)
+and [validation](https://github.com/Ngx-Workshop/mfe-user-journey-admin-ai-publisher/actions/runs/42452383173)
+both succeeded with 113 passing tests. Production build hash: 7407e3a391148346.
+Public remoteEntry.js and referenced 2181.559f6de093d96824.js return 200; that
+application chunk matches the verified local build byte-for-byte. No live draft,
+model or publication operations were performed. Completion record is documentation
+only and skips CI to avoid redeploying unchanged assets.

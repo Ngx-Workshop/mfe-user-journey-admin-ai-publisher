@@ -242,3 +242,7 @@ Activity-only workspace (2026-11-08): all 113 tests pass, including every operat
 panel hiding/restoration, retained source and publication gates. Architecture,
 strict app/test types, production build/license and diff checks pass. The workspace
 shows progress alone during non-idle operations and restores phase panels at idle.
+
+Activity-only view released in 4776c3e (2026-11-08). Deployment 42452383130 and
+validation 42452383173 succeeded with 113 tests; published application chunk matches
+the verified build. See spec 011 handoff for links and production verification.
