@@ -1,13 +1,13 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   afterRenderEffect,
-  ElementRef,
-  viewChild,
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   input,
   output,
+  viewChild,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import {
@@ -29,28 +29,28 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (journeyHeading()) {
-      <header
-        #journeyBar
-        class="publisher-actions__bar"
-        aria-label="Workshop publishing actions"
-      >
-        <ng-content select="[publisherJourney]" />
-        <ng-container [ngTemplateOutlet]="statusIndicator" />
-        <div class="publisher-actions__buttons">
-          <ng-container [ngTemplateOutlet]="buttons" />
-        </div>
-      </header>
-    } @else {
-      <ngx-action-bar
-        [heading]="heading()"
-        (heightChange)="heightChange.emit($event)"
-      >
-        <ng-container
-          ngxActionBarIndicators
-          [ngTemplateOutlet]="statusIndicator"
-        />
+    <header
+      #journeyBar
+      class="publisher-actions__bar"
+      aria-label="Workshop publishing actions"
+    >
+      <ng-content select="[publisherJourney]" />
+      <ng-container [ngTemplateOutlet]="statusIndicator" />
+      <div class="publisher-actions__buttons">
         <ng-container [ngTemplateOutlet]="buttons" />
-      </ngx-action-bar>
+      </div>
+    </header>
+    } @else {
+    <ngx-action-bar
+      [heading]="heading()"
+      (heightChange)="heightChange.emit($event)"
+    >
+      <ng-container
+        ngxActionBarIndicators
+        [ngTemplateOutlet]="statusIndicator"
+      />
+      <ng-container [ngTemplateOutlet]="buttons" />
+    </ngx-action-bar>
     }
     <ng-template #statusIndicator>
       <ngx-inline-status
@@ -64,31 +64,30 @@ import {
     </ng-template>
     <ng-template #buttons>
       @if (showBack()) {
-        <button
-          mat-flat-button
-          ngxButton
-          shape="chevron"
-          surface="glass"
-          type="button"
-          [disabled]="disabled()"
-          (click)="back.emit()"
-        >
-          <mat-icon aria-hidden="true">arrow_forward</mat-icon>Request
-          history
-        </button>
-      }
-      @if (showCreate()) {
-        <button
-          mat-flat-button
-          ngxButton
-          shape="chevron"
-          surface="outline"
-          type="button"
-          [disabled]="disabled()"
-          (click)="createWorkshop.emit()"
-        >
-          <mat-icon aria-hidden="true">add</mat-icon>New workshop
-        </button>
+      <button
+        mat-flat-button
+        ngxButton
+        shape="chevron"
+        surface="glass"
+        type="button"
+        [disabled]="disabled()"
+        (click)="back.emit()"
+      >
+        <mat-icon aria-hidden="true">arrow_forward</mat-icon>Request
+        history
+      </button>
+      } @if (showCreate()) {
+      <button
+        mat-flat-button
+        ngxButton
+        shape="chevron"
+        surface="outline"
+        type="button"
+        [disabled]="disabled()"
+        (click)="createWorkshop.emit()"
+      >
+        <mat-icon aria-hidden="true">add</mat-icon>New workshop
+      </button>
       }
     </ng-template>
   `,
@@ -123,6 +122,11 @@ import {
       @media (max-width: 720px) {
         :host {
           --ngx-action-bar-top: var(--publisher-toolbar-top, 76px);
+        }
+      }
+      @media (min-width: 900px) and (max-width: 1024px) {
+        :host {
+          --ngx-action-bar-top: var(--publisher-toolbar-top, 52px);
         }
       }
     `,
