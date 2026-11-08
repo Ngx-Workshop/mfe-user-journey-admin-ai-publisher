@@ -1,4 +1,3 @@
-import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -6,20 +5,13 @@ import {
   output,
 } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { PublishingForm } from '../forms/publishing-form';
 
 @Component({
   selector: 'ngx-publishing-brief',
-  imports: [
-    NgxButton,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form
@@ -84,19 +76,6 @@ import { PublishingForm } from '../forms/publishing-form';
           such as duration or technologies to use.</mat-hint
         >
       </mat-form-field>
-      <button
-        mat-flat-button
-        ngxButton
-        type="submit"
-        [disabled]="
-          locked() ||
-          initializing() ||
-          form().invalid ||
-          !modelValid()
-        "
-      >
-        Generate workshop draft
-      </button>
     </form>
   `,
   styles: [
@@ -126,6 +105,5 @@ export class PublishingBriefComponent {
     input.required<readonly { id: string; name: string }[]>();
   readonly locked = input(false);
   readonly initializing = input(false);
-  readonly modelValid = input(false);
   readonly generate = output<void>();
 }

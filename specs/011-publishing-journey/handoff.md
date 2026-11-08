@@ -107,3 +107,60 @@ At 390px: outer workspace/guidance stack at 358px and inner panels at 314px; doc
 width is exactly 390px. Viewport overrides were reset. No paid generation, validation
 or publishing was performed. Browser login renewal was attempted using existing
 autofill; authenticated shell layout verification remains unclaimed for this change.
+
+## Brief workspace polish — 2026-11-07
+Compact guarded phases are projected into the action bar. New workshop is hidden on
+creation; Request history uses chevron / arrow_forward. Setup replaces the source
+panel with model options and retry, moves Generate to creation panel actions, and
+opens JSON import from a labelled file_upload header icon. The wider 340–420px
+FROM IDEA TO WORKSHOP rail shows guidance by default and embedded preparation
+checks when present. Return to draft review is removed; phase navigation remains.
+
+The page owns both Material dialog lifetimes. Import preserves the existing JSON
+control, displays errors/progress and respects operation locks. Success moves to
+review and closes import; closing/reopening preserves edits. No API, dependency,
+route, persistence or federation changes. Preparation's 238-line cohesive exception
+keeps check rendering and its compact/embedded variants together. The page's existing
+size exception now includes both inline dialog templates and shared dialog lifecycle;
+presentation/state access boundaries remain enforced by the architecture check.
+
+Verification on Node 24.9.0:
+- Architecture, strict application types, test types and git diff --check pass.
+- Production federation build passes with normal license extraction.
+- ChromeHeadless: 110 pass / 3 fail. An isolated HEAD baseline using the same installed
+  dependencies reproduces the same three failures: app.spec.ts draft continuation,
+  publishing-history.spec.ts draft continuation (obsolete .request-row__continue
+  selectors), and receipt.component.spec.ts expecting Needs attention instead of
+  Recovery. These unchanged history/receipt issues are outside this layout change.
+- Updated workspace regression passes: action placement, phase gating, default/check
+  guidance replacement, invalid JSON dialog errors, preserved source on reopen,
+  successful validation closing import, generation and explicit publication review.
+- Authenticated admin shell with local remote: desktop 1920px, intermediate 1024px,
+  mobile 390px inspected. Document width equals viewport at 1024px and 390px; inner
+  panels stack at intermediate widths and outer panels stack on mobile. Import opens
+  the existing saved JSON and closes without modifying it. Viewport restored and
+  user tab returned to Workshop brief. No live generation/validation/publication run.
+
+Local implementation complete; no deployment performed. No external producer work
+is required. Existing baseline test failures remain separately identified above.
+
+## Journey heading release candidate — 2026-11-08
+Creation now projects journey navigation as the first action-bar content, replacing
+its visible New workshop h1. The visually hidden phase heading supplies the page h1.
+Overview/receipts retain NgxActionBar. Its installed public API cannot project a
+custom heading, so the opt-in creation header uses the same shell spacing/sticky
+layer tokens and a cleaned-up ResizeObserver for measured toolbar offsets.
+
+The previously failing history tests now exercise the actual workshop-name resume
+button. Routed saved-draft coverage verifies preserved JSON through Refine; the
+receipt test expects the implemented Recovery status. Wizard navigation coverage
+expects the phase heading and asserts no action-bar h1 and journey-first placement.
+No domain behavior was weakened to make tests pass.
+
+All 113 ChromeHeadless tests pass; architecture, strict application/test types,
+production federation build with licenses and diff checks pass. Isolated production
+sample preview confirms journey-first layout, 69px desktop / 167px mobile action-bar
+measurement and no horizontal overflow at 390px. No live workshop mutations occurred.
+This release includes the brief/review/outline/check-panel changes recorded above
+and in spec 014. Production release will use the push-to-main deployment workflow;
+its final run and deployed-artifact verification are recorded in the release follow-up.

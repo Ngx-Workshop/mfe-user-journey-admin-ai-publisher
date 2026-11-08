@@ -26,3 +26,15 @@ claim of successful live validation.
   and responsive stacking. Expanded JSON retains control binding, validation,
   locking and review disclosure defaults. Full suite: 86 tests pass; production
   build, architecture, strict app/test types and diff checks pass.
+
+## Brief polish — 2026-11-07
+- [x] T006 — Compact action-bar journey, conditional creation action, widened checks
+  rail, model panel, header import modal and panel generation action (FR-007/AC-007).
+- [x] T007 — Verify modal preservation, locks, guidance replacement, responsive
+  layout and standard architecture/types/tests/build; record evidence in handoff.
+
+## Journey heading and release — 2026-11-08
+- [x] T008 — Replace creation action-bar heading with journey and retain measured
+  sticky offsets/page heading; repair stale history/receipt test expectations.
+- [ ] T009 — Pass all release checks and deploy accumulated UI work through the
+  repository production workflow; record exact release and outcome in handoff.

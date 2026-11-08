@@ -38,16 +38,15 @@ import {
     .journey {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
+      gap: 0.35rem;
     }
     .journey__phase {
       display: flex;
       align-items: center;
-      gap: 0.8rem;
-      padding: 1rem;
+      gap: 0.5rem;
+      padding: 0.4rem 0.65rem;
       text-align: left;
-      font: inherit;
+      font: 0.8rem var(--ngx-font-body);
       color: var(--ngx-color-muted);
       border: 1px solid var(--ngx-color-border);
       background: var(--ngx-color-surface);
@@ -55,7 +54,7 @@ import {
       min-width: 0;
     }
     .journey__number {
-      font: 1.15rem var(--ngx-font-mono);
+      font: 0.9rem var(--ngx-font-mono);
       color: var(--ngx-color-primary);
     }
     strong,
@@ -63,8 +62,8 @@ import {
       display: block;
     }
     small {
-      margin-top: 0.3rem;
-      font-size: 0.75rem;
+      margin-top: 0.15rem;
+      font-size: 0.65rem;
     }
     .journey__phase--active {
       border-color: var(--ngx-color-primary);
@@ -86,7 +85,7 @@ import {
         gap: 0.4rem;
       }
       .journey__phase {
-        padding: 0.75rem 0.4rem;
+        padding: 0.5rem 0.4rem;
         gap: 0.4rem;
         font-size: 0.8rem;
       }

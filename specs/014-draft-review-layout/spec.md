@@ -23,3 +23,19 @@ Administrators must scroll through a large checks report before reaching worksho
 
 ## Quality and data boundaries
 Standalone OnPush, inline BEM styles and shell theme tokens. No new API, paid generation or publication triggered by opening the dialog. Existing API/store/view-model ownership and validation remain. The draft has no cover field: derive its first valid image in page/block order. Actual external service integration is outside this layout change.
+
+## Review columns follow-up — 2026-11-07
+FR-006 / AC-005: Checks uses a solid chamfered ngx-panel. The preview panel header
+shows the draft name and WORKSHOP PREVIEW / LEVEL {actual level}; remove duplicate
+identity from its body. Material tabs occupy their own unframed desktop column,
+flush below the action bar and sticky during scrolling. Tabs retain counts, linked
+panels and keyboard selection (including vertical Up/Down). On narrow screens use a
+sticky horizontal tab row above stacked checks/preview without document overflow.
+
+## Integrated outline and bounded checks — 2026-11-07
+FR-007 / AC-006: Desktop columns are sticky material tabs/outline, workshop preview,
+and checks. Show documentation pages, labs or assessment questions below the selected
+tab; selecting an item updates the middle preview. Remove Back to brief. Place
+Continue to publish in checks panel actions with existing readiness/operation gates.
+Checks activity scrolls independently; measured panel chrome and footer must fit
+within the available viewport, including wrapped action bars and expanded evidence.

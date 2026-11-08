@@ -130,7 +130,7 @@ describe('Compact receipt detail', () => {
     harness.detectChanges();
     await harness.fixture.whenStable();
     const element = harness.routeNativeElement!;
-    expect(element.textContent).toContain('Needs attention');
+    expect(element.textContent).toContain('Recovery');
     expect(element.textContent).toContain(
       '2 of 2 publishing steps complete'
     );

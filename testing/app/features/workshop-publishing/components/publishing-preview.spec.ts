@@ -62,7 +62,7 @@ describe('Workshop preview and activity', () => {
     expect(element.textContent).toContain('First page content');
     expect(element.textContent).not.toContain('Second page content');
     const pages =
-      element.querySelectorAll<HTMLButtonElement>('.review__item');
+      element.querySelectorAll<HTMLButtonElement>('.outline__item');
     pages[1].click();
     fixture.detectChanges();
     expect(element.textContent).toContain('Second page content');

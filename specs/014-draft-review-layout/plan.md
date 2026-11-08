@@ -19,3 +19,23 @@ No HTTP/state changes or federation changes. Presenters accept typed inputs. Pag
 
 ## Verification
 Mirrored component tests cover tabs, image fallback and dialog controls; existing wizard tests enforce publication gates. Run architecture checks, strict app/test TypeScript, full ChromeHeadless suite and isolated production build. Inspect desktop/mobile local fixture with mocked preparation and no publication/paid calls. Test sticky positioning during scroll and dialog interaction.
+
+## Review columns follow-up — 2026-11-07
+Extract stateless PublishingReviewTabsComponent, shared by standalone review and the
+page's dedicated column. Page owns material selection; review retains outline state
+and resets it when material changes. Reuse a stable panel ID for ARIA links across
+columns. A lifetime-bound media query updates tab orientation at the CSS breakpoint.
+Keep checks/report intents intact with an opt-in hidden inner heading to avoid a
+second heading under the shared panel header. Preserve existing uncommitted brief
+layout work. No API, route, federation or dependency change.
+
+## Integrated outline follow-up — 2026-11-07
+Extract PublishingReviewOutlineComponent for standalone review and integrated tabs.
+Share typed material/item selection through page-owned signals. Vertical tab and
+outline grid rows interleave visually while keeping only tabs inside the ARIA tablist.
+Assessment preview optionally renders one selected question; standalone retains all.
+PublishingChecksPanelComponent reuses observePanelBody in container mode to subtract
+actual panel chrome/actions from the viewport-sized host. Panel actions stay outside
+the activity scroll region. Desktop grid becomes tabs / preview / checks; narrow
+layouts stack navigation / preview / checks with bounded navigation/report scrolling.
+No contract, routing, dependency or persistence changes.

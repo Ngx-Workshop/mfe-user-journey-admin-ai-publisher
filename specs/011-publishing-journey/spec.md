@@ -64,3 +64,18 @@ Follow the referenced catalog's 16px gutters and responsive minmax columns. Stac
 inner panels before they become cramped, and stack outer panels on narrow screens.
 Both authoring methods retain their controls/validation/locking, and the review-stage
 JSON disclosure remains compact. Generation/review/publication behavior is preserved.
+
+## Brief workspace polish — 2026-11-07
+FR-007 / AC-007: Compact guarded phase navigation lives in the action bar. Creation
+hides New workshop; Request history uses chevron / arrow_forward. The guidance rail
+grows to 340–420px and replaces default guidance with preparation checks when present.
+The creation header opens source JSON in a keyboard-accessible modal. Source edits,
+validation errors and locks survive closing/reopening; successful validation opens
+review and closes the modal. The former source panel now holds model selection and
+setup retry. Generate belongs to creation panel actions; remove Return to draft review.
+
+## Journey heading and release — 2026-11-08
+FR-008 / AC-008: On creation, journey navigation replaces the New workshop action-bar
+heading and precedes status/actions. Keep a descriptive page h1 for accessibility.
+Repair the full test suite and release the accumulated publisher layout changes
+through the existing production deployment workflow after successful verification.

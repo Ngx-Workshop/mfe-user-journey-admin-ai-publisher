@@ -29,30 +29,34 @@ import { WorkshopDraft } from '../models/publishing.models';
         track $index;
         let index = $index
       ) {
-        <section class="assessment__question">
-          <h4>
-            <span class="assessment__number">{{ index + 1 }}.</span>
-            {{ question.question }}
-          </h4>
-          <ol type="A" class="assessment__choices">
-            @for (choice of question.choices; track $index) {
-              <li>{{ choice.value }}</li>
+        @if (
+          selectedQuestion() === null || selectedQuestion() === index
+        ) {
+          <section class="assessment__question">
+            <h4>
+              <span class="assessment__number">{{ index + 1 }}.</span>
+              {{ question.question }}
+            </h4>
+            <ol type="A" class="assessment__choices">
+              @for (choice of question.choices; track $index) {
+                <li>{{ choice.value }}</li>
+              }
+            </ol>
+            @if (answers()) {
+              <div class="assessment__answer">
+                <p><strong>Answer:</strong> {{ question.answer }}</p>
+                <p>
+                  <strong>Correct feedback:</strong>
+                  {{ question.correctResponse }}
+                </p>
+                <p>
+                  <strong>Incorrect feedback:</strong>
+                  {{ question.incorrectResponse }}
+                </p>
+              </div>
             }
-          </ol>
-          @if (answers()) {
-            <div class="assessment__answer">
-              <p><strong>Answer:</strong> {{ question.answer }}</p>
-              <p>
-                <strong>Correct feedback:</strong>
-                {{ question.correctResponse }}
-              </p>
-              <p>
-                <strong>Incorrect feedback:</strong>
-                {{ question.incorrectResponse }}
-              </p>
-            </div>
-          }
-        </section>
+          </section>
+        }
       } @empty {
         <p>No assessment questions in this draft.</p>
       }
@@ -103,6 +107,7 @@ import { WorkshopDraft } from '../models/publishing.models';
   `,
 })
 export class PublishingAssessmentPreviewComponent {
+  readonly selectedQuestion = input<number | null>(null);
   readonly assessment = input.required<WorkshopDraft['assessment']>();
   readonly answers = signal(false);
   constructor() {

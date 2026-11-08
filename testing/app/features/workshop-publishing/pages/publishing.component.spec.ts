@@ -18,13 +18,24 @@ describe('Workshop creation workspace', () => {
       name: 'Functions',
       summary: 'Learn functions',
       level: 1,
-      pages: [],
+      pages: [
+        { name: 'Introduction', blocks: [] },
+        { name: 'Practice', blocks: [] },
+      ],
       labs: [],
       assessment: {
         name: 'Quiz',
         subject: 'angular',
         level: 1,
-        testQuestions: [],
+        testQuestions: ['First question?', 'Second question?'].map(
+          (question) => ({
+            question,
+            choices: [{ value: 'Yes' }],
+            answer: 'Yes',
+            correctResponse: 'Correct',
+            incorrectResponse: 'Try again',
+          })
+        ),
       },
     };
     const publish = jasmine.createSpy().and.returnValue(EMPTY);
@@ -112,6 +123,78 @@ describe('Workshop creation workspace', () => {
         b.textContent?.includes(text)
       )!;
     expect(element.querySelector('mat-stepper')).toBeNull();
+    expect(
+      element.querySelector('.publisher-actions__bar h1')
+    ).toBeNull();
+    expect(
+      element.querySelector('.publisher-actions__bar')
+        ?.firstElementChild?.tagName
+    ).toBe('NGX-PUBLISHING-JOURNEY');
+    expect(element.querySelector('main h1')).not.toBeNull();
+    expect(
+      element.querySelector(
+        '.publisher-actions__bar > ngx-publishing-journey'
+      )
+    ).not.toBeNull();
+    expect(button('New workshop')).toBeUndefined();
+    expect(button('Request history').getAttribute('shape')).toBe(
+      'chevron'
+    );
+    expect(button('Request history').textContent).toContain(
+      'arrow_forward'
+    );
+    expect(
+      element.querySelector('.setup__guidance')?.textContent
+    ).toContain('A complete draft. Your final say.');
+    expect(
+      element.querySelector('.setup__model-panel select')
+    ).not.toBeNull();
+    expect(element.querySelector('ngx-publishing-source')).toBeNull();
+    expect(
+      button('Generate workshop draft').closest('mat-card-actions')
+    ).not.toBeNull();
+    const openImport = async () => {
+      element
+        .querySelector<HTMLButtonElement>(
+          '[aria-label="Import workshop draft JSON"]'
+        )!
+        .click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      return document.querySelector<HTMLElement>('[role="dialog"]')!;
+    };
+    let sourceDialog = await openImport();
+    const source = sourceDialog.querySelector('textarea')!;
+    source.value = '{invalid';
+    source.dispatchEvent(new Event('input', { bubbles: true }));
+    sourceDialog
+      .querySelector<HTMLButtonElement>(
+        'ngx-publishing-source button'
+      )!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(
+      sourceDialog.querySelector('[role="alert"]')
+    ).not.toBeNull();
+    [...sourceDialog.querySelectorAll('button')]
+      .find((b) => b.textContent?.includes('Close'))!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
+    sourceDialog = await openImport();
+    expect(sourceDialog.querySelector('textarea')!.value).toBe(
+      '{invalid'
+    );
+    [...sourceDialog.querySelectorAll('button')]
+      .find((b) => b.textContent?.includes('Close'))!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
+
     button('Publication').click();
     fixture.detectChanges();
     expect(fixture.componentInstance.vm.step()).toBe(0);
@@ -126,9 +209,102 @@ describe('Workshop creation workspace', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(fixture.componentInstance.vm.step()).toBe(1);
+    button('Workshop brief').click();
+    fixture.detectChanges();
+    expect(
+      element.querySelector(
+        '.setup__guidance ngx-publishing-preparation'
+      )
+    ).not.toBeNull();
+    expect(
+      element.querySelector('.setup__guidance')?.textContent
+    ).not.toContain('A complete draft. Your final say.');
+    expect(element.textContent).not.toContain(
+      'Return to draft review'
+    );
+    sourceDialog = await openImport();
+    sourceDialog
+      .querySelector<HTMLButtonElement>(
+        'ngx-publishing-source button'
+      )!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
+    expect(fixture.componentInstance.vm.step()).toBe(1);
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+
     button('Publication').click();
     fixture.detectChanges();
     expect(fixture.componentInstance.vm.step()).toBe(1);
+    const checks = element.querySelector(
+      '.publisher__checks ngx-panel'
+    )!;
+    expect(checks.getAttribute('data-shape')).toBe('chamfered');
+    const preview = element.querySelector(
+      'ngx-panel.publisher__preview'
+    )!;
+    expect(
+      preview.querySelector('mat-card-header')?.textContent
+    ).toContain('Functions');
+    expect(
+      preview.querySelector('mat-card-header')?.textContent
+    ).toContain('WORKSHOP PREVIEW / LEVEL 1');
+    expect(preview.querySelector('.review__info h2')).toBeNull();
+    const tabs = element.querySelector(
+      '.publisher__review-layout > ngx-publishing-review-tabs'
+    )!;
+    expect(tabs.closest('ngx-panel')).toBeNull();
+    expect(element.textContent).not.toContain('Back to brief');
+    expect(
+      button('Continue to publish')
+        .closest('mat-card-actions')
+        ?.closest('ngx-panel')
+    ).toBe(checks);
+    expect(
+      preview.querySelector('ngx-publishing-review-outline')
+    ).toBeNull();
+    const outlineButton = (name: string) =>
+      [
+        ...tabs.querySelectorAll<HTMLButtonElement>('.outline__item'),
+      ].find((item) => item.textContent?.includes(name))!;
+    outlineButton('Practice').click();
+    fixture.detectChanges();
+    expect(preview.textContent).toContain('Practice');
+    expect(preview.textContent).toContain('DOCUMENTATION / PAGE 2');
+
+    expect(preview.querySelector('[role="tablist"]')).toBeNull();
+    const materialTabs = [
+      ...tabs.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
+    ];
+    materialTabs[1].click();
+    fixture.detectChanges();
+    expect(preview.textContent).toContain(
+      'No coding labs to preview'
+    );
+    materialTabs[1].dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowDown',
+        bubbles: true,
+      })
+    );
+    fixture.detectChanges();
+    expect(materialTabs[2].getAttribute('aria-selected')).toBe(
+      'true'
+    );
+    expect(
+      preview
+        .querySelector('[role="tabpanel"]')
+        ?.getAttribute('aria-labelledby')
+    ).toBe(materialTabs[2].id);
+
+    outlineButton('Second question?').click();
+    fixture.detectChanges();
+    expect(preview.textContent).toContain('Second question?');
+    expect(preview.textContent).not.toContain('First question?');
+    materialTabs[0].click();
+    fixture.detectChanges();
+
     expect(
       element.querySelector(
         '.publisher__checks ngx-publishing-preparation'

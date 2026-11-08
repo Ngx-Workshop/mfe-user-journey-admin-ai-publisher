@@ -5,6 +5,8 @@ import {
   output,
 } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import {
   NgxButton,
@@ -14,7 +16,6 @@ import { PublishingModelCatalog } from '../models/publishing.models';
 import { PublishingForm } from '../forms/publishing-form';
 import { PublishingModelComponent } from './publishing-model.component';
 import { PublishingBriefComponent } from './publishing-brief.component';
-import { PublishingSourceComponent } from './publishing-source.component';
 
 @Component({
   selector: 'ngx-publishing-setup',
@@ -24,7 +25,8 @@ import { PublishingSourceComponent } from './publishing-source.component';
     MatButtonModule,
     PublishingModelComponent,
     PublishingBriefComponent,
-    PublishingSourceComponent,
+    MatIconModule,
+    MatTooltipModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -36,6 +38,32 @@ import { PublishingSourceComponent } from './publishing-source.component';
         shape="stepped"
         background="solid"
       >
+        <button
+          ngxPanelHeader
+          mat-icon-button
+          type="button"
+          aria-label="Import workshop draft JSON"
+          matTooltip="Import workshop draft JSON"
+          [disabled]="locked() || initializing()"
+          (click)="importSource.emit()"
+        >
+          <mat-icon>file_upload</mat-icon>
+        </button>
+        <button
+          ngxPanelActions
+          mat-flat-button
+          ngxButton
+          type="button"
+          [disabled]="
+            locked() ||
+            initializing() ||
+            form().invalid ||
+            model().invalid
+          "
+          (click)="generate.emit()"
+        >
+          Generate workshop draft
+        </button>
         <div class="setup__authoring">
           <ngx-panel
             class="setup__brief"
@@ -50,6 +78,21 @@ import { PublishingSourceComponent } from './publishing-source.component';
               AI will draft documentation, coding labs and an
               assessment for you to review.
             </p>
+            <ngx-publishing-brief
+              [form]="form()"
+              [sections]="sections()"
+              [locked]="locked()"
+              [initializing]="initializing()"
+              (generate)="generate.emit()"
+            />
+          </ngx-panel>
+          <ngx-panel
+            class="setup__model-panel"
+            heading="Choose your AI model"
+            eyebrow="WORKSHOP / MODEL"
+            shape="beveled"
+            background="glass"
+          >
             <ngx-publishing-model
               [model]="model()"
               [catalog]="catalog()"
@@ -68,82 +111,49 @@ import { PublishingSourceComponent } from './publishing-source.component';
                 Retry workshop setup
               </button>
             }
-            <ngx-publishing-brief
-              [form]="form()"
-              [sections]="sections()"
-              [locked]="locked()"
-              [initializing]="initializing()"
-              [modelValid]="model().valid"
-              (generate)="generate.emit()"
-            />
-            @if (hasDraft()) {
-              <button
-                class="setup__resume"
-                mat-flat-button
-                ngxButton
-                type="button"
-                [disabled]="locked()"
-                (click)="resume.emit()"
-              >
-                Return to draft review
-              </button>
-            }
-          </ngx-panel>
-          <ngx-panel
-            class="setup__source-panel"
-            heading="Import or edit workshop draft JSON"
-            eyebrow="WORKSHOP / SOURCE"
-            shape="beveled"
-            background="glass"
-          >
-            <p class="setup__intro">
-              Already have a draft? Paste its JSON here, then validate
-              it to open the workshop preview.
-            </p>
-            <ngx-publishing-source
-              [json]="json()"
-              [expanded]="true"
-              [locked]="locked() || initializing()"
-              (validate)="validate.emit()"
-            />
           </ngx-panel>
         </div>
       </ngx-panel>
       <ngx-panel
         class="setup__guidance"
-        heading="A complete draft. Your final say."
+        [heading]="
+          hasChecks() ? '' : 'A complete draft. Your final say.'
+        "
         eyebrow="FROM IDEA TO WORKSHOP"
         shape="chamfered"
         background="solid"
         aria-label="What happens next"
       >
-        <ol>
-          <li>
-            <strong>Set the direction</strong>
-            <p>
-              Add the topic, audience, prerequisites and a concrete
-              learning outcome.
-            </p>
-          </li>
-          <li>
-            <strong>Explore the materials</strong>
-            <p>
-              Read each page, inspect lab instructions and code, and
-              review assessment questions.
-            </p>
-          </li>
-          <li>
-            <strong>Publish with confidence</strong>
-            <p>
-              Approve the reviewed draft, then check the publication
-              receipt.
-            </p>
-          </li>
-        </ol>
-        <p class="setup__note">
-          Generation may take a few minutes. Your draft stays
-          unpublished until you explicitly publish it.
-        </p>
+        <ng-content select="[publisherChecks]" />
+        @if (!hasChecks()) {
+          <ol>
+            <li>
+              <strong>Set the direction</strong>
+              <p>
+                Add the topic, audience, prerequisites and a concrete
+                learning outcome.
+              </p>
+            </li>
+            <li>
+              <strong>Explore the materials</strong>
+              <p>
+                Read each page, inspect lab instructions and code, and
+                review assessment questions.
+              </p>
+            </li>
+            <li>
+              <strong>Publish with confidence</strong>
+              <p>
+                Approve the reviewed draft, then check the publication
+                receipt.
+              </p>
+            </li>
+          </ol>
+          <p class="setup__note">
+            Generation may take a few minutes. Your draft stays
+            unpublished until you explicitly publish it.
+          </p>
+        }
       </ngx-panel>
     </div>
   `,
@@ -154,7 +164,7 @@ import { PublishingSourceComponent } from './publishing-source.component';
     }
     .setup__layout {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+      grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
       gap: var(--ngx-space-4);
       align-items: start;
     }
@@ -166,7 +176,7 @@ import { PublishingSourceComponent } from './publishing-source.component';
     }
     .setup__workspace,
     .setup__brief,
-    .setup__source-panel,
+    .setup__model-panel,
     .setup__guidance {
       display: block;
       min-width: 0;
@@ -192,9 +202,6 @@ import { PublishingSourceComponent } from './publishing-source.component';
       line-height: 1.7;
       margin: 0 0 1.5rem;
     }
-    .setup__resume {
-      margin-top: 1.25rem;
-    }
     @media (max-width: 1200px) {
       .setup__authoring {
         grid-template-columns: minmax(0, 1fr);
@@ -214,12 +221,10 @@ export class PublishingSetupComponent {
   readonly form = input.required<PublishingForm>();
   readonly sections =
     input.required<readonly { id: string; name: string }[]>();
-  readonly json = input.required<FormControl<string>>();
   readonly locked = input(false);
   readonly initializing = input(false);
-  readonly hasDraft = input(false);
+  readonly hasChecks = input(false);
   readonly generate = output<void>();
-  readonly validate = output<void>();
+  readonly importSource = output<void>();
   readonly retry = output<void>();
-  readonly resume = output<void>();
 }

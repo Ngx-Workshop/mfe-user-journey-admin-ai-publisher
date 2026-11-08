@@ -47,3 +47,12 @@ the largest folder number is not automatically the active feature.
 | 016 AI check repair | Deployed; live CTA verified | [Spec](016-ai-check-repair/spec.md) | [Plan](016-ai-check-repair/plan.md) | [Tasks](016-ai-check-repair/tasks.md) | [Handoff](016-ai-check-repair/handoff.md) |
 
 | 017 Persistent workshop drafts | Deployed; live recovery verified | [Spec](017-persistent-drafts/spec.md) | [Plan](017-persistent-drafts/plan.md) | [Tasks](017-persistent-drafts/tasks.md) | [Handoff](017-persistent-drafts/handoff.md) |
+
+Spec 011 brief workspace polish (2026-11-07): complete locally; baseline test failures
+and authenticated responsive evidence recorded in its handoff. Not deployed.
+
+Spec 014 review columns follow-up (2026-11-07): complete locally; isolated responsive
+and sticky-scroll evidence plus baseline test limits in its handoff. Not deployed.
+
+Spec 014 integrated outline/bounded checks follow-up (2026-11-07): complete locally;
+selection and below-fold measurements recorded in handoff. Not deployed.

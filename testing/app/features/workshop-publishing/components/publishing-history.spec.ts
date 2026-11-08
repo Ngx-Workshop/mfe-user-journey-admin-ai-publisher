@@ -79,7 +79,7 @@ describe('Publisher receipt workspace', () => {
     expect(main.textContent).toContain('Draft');
     expect(main.textContent).toContain('Ready for review');
     main
-      .querySelector<HTMLButtonElement>('.request-row__continue')!
+      .querySelector<HTMLButtonElement>('.request-row__open')!
       .click();
     expect(resume).toHaveBeenCalledOnceWith('draft-id');
     expect(inspect).not.toHaveBeenCalled();
@@ -92,7 +92,7 @@ describe('Publisher receipt workspace', () => {
     fixture.componentRef.setInput('busy', true);
     fixture.detectChanges();
     expect(
-      main.querySelector<HTMLButtonElement>('.request-row__continue')!
+      main.querySelector<HTMLButtonElement>('.request-row__open')!
         .disabled
     ).toBeTrue();
   });

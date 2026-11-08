@@ -201,3 +201,32 @@ Persistent drafts acceptance: verify Your drafts/Continue review, direct ?draft=
 refresh, incomplete-source autosave/conflict feedback, interrupted checks and fresh explicit
 publication review. ChromeHeadless cases use HTTP doubles. Production persistence acceptance
 uses check-only unpublished content, no paid generation or owner publication.
+
+Brief workspace polish (2026-11-07): architecture, strict application/test types,
+production build/license and diff checks pass. ChromeHeadless reports 110 pass and
+3 failures, reproduced against isolated unchanged HEAD: two stale draft continuation
+selectors and the receipt Needs attention/Recovery label expectation. Updated brief
+composition/import/preservation/success/phase regression passes. Authenticated local
+remote layout inspected at 1920/1024/390px; import opened existing JSON without live
+validation, generation or publication. See spec 011 handoff for evidence and limits.
+
+Review column follow-up (2026-11-07): production build/license, architecture, strict
+app/test types and diff checks pass; 110 tests pass with the same 3 baseline failures
+listed in spec 011. New workspace assertions cover the chamfered panel, draft header
+identity and external tab/preview keyboard selection. Isolated production sample
+preview verified at 1920/1024/390px, including sticky tabs after 907px of scrolling.
+The admin session expired; successful authenticated-shell acceptance is not claimed.
+No live model/validation/publication requests were performed. See spec 014 handoff.
+
+Integrated outline follow-up (2026-11-07): architecture/types/build/license/diff pass;
+110 tests pass with the same three baseline failures. Isolated production fixture
+verified page selection, 30 checks and expanded evidence, internal activity scrolling
+and visible actions at 1920x963 and 1280x600. Mobile document width equals 390px.
+The sample server is stopped; no live save, paid generation, validation or publication
+was performed. See spec 014 handoff for measurements and authentication limitation.
+
+Journey heading release candidate (2026-11-08): all 113 ChromeHeadless tests pass,
+including repaired stale history/receipt expectations and restored-JSON coverage.
+Architecture, strict app/test types, production federation build/license and diff
+checks pass. Journey-first desktop/mobile preview was checked against the isolated
+production sample. This supersedes earlier baseline-failure notes for this checkout.

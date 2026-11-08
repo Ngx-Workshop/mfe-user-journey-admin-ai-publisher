@@ -1,3 +1,4 @@
+import { MatDialog } from '@angular/material/dialog';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -101,7 +102,7 @@ describe('AI Publisher routed journey', () => {
     expect(main.textContent).toContain(saved.name);
     expect(main.textContent).not.toContain(run.requestId);
     main
-      .querySelector<HTMLButtonElement>('.request-row__continue')!
+      .querySelector<HTMLButtonElement>('.request-row__open')!
       .click();
     await harness.fixture.whenStable();
     setup();
@@ -115,9 +116,24 @@ describe('AI Publisher routed journey', () => {
     expect(TestBed.inject(Router).url).toBe(
       '/ai-publisher/new?draft=' + draftId
     );
-    expect(harness.routeNativeElement!.textContent).toContain(
-      'Draft saved'
-    );
+    expect(
+      harness.routeNativeElement!.querySelector(
+        'ngx-publishing-journey'
+      )
+    ).not.toBeNull();
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>(
+        '[aria-label="Refine the draft"]'
+      )!
+      .click();
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    expect(
+      document.querySelector<HTMLTextAreaElement>(
+        'ngx-publishing-source textarea'
+      )?.value
+    ).toBe(saved.json);
+    TestBed.inject(MatDialog).closeAll();
   });
   it('lands on overview, combines search and filter, and inspects a receipt', async () => {
     const harness =
@@ -265,7 +281,7 @@ describe('AI Publisher routed journey', () => {
     harness.detectChanges();
     const element = harness.routeNativeElement!;
     expect(element.querySelector('h1')?.textContent).toContain(
-      'New workshop'
+      'Start with a clear brief'
     );
     expect(element.textContent).toContain('Start with a clear brief');
     expect(element.textContent).toContain('Draft review');

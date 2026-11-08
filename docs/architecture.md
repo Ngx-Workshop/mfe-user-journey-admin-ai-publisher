@@ -366,3 +366,37 @@ Drafts appear in API newest-updated order before receipts because receipts expos
 reliable timestamps. Receipt/unconfirmed IDs suppress duplicate draft rows; receipt
 inspection and the existing Issues panel retain their own actions. The wizard's saved
 and recovery guidance now points to Request history. No backend or contract changes.
+
+### Brief workspace polish — 2026-11-07
+The creation action bar now projects compact guarded phase navigation and hides its
+New workshop action. Setup owns brief/model sibling panels and a wider guidance rail;
+the rail replaces default guidance with projected embedded preparation checks. The
+page owns the header-triggered source import dialog, preserving scoped JSON controls,
+errors/operation locks and closing after successful validation opens review. Generate
+is projected into the outer creation panel actions. See spec 011's follow-up handoff;
+API, persistence, routes and federation boundaries are unchanged.
+
+### Review columns — 2026-11-07
+The review page composes a chamfered checks panel, an unframed sticky material-tab
+column and the preview panel. Preview header identity comes from the draft name and
+level. PublishingReviewTabsComponent shares typed selection and ARIA IDs with the
+review presenter; the latter retains outline selection and resets it on tab changes.
+Below 1101px tabs become a sticky horizontal row over stacked panels. A lifetime-bound
+media query supplies orientation; report scrolling stays inside its panel frame.
+See spec 014 follow-up for verification and existing cohesive size exceptions.
+
+### Integrated review outlines and bounded checks — 2026-11-07
+Desktop review now reads navigation / preview / checks. The shared outline presenter
+shows pages, labs or assessment questions under the active tab and binds item selection
+to the middle preview. Assessment optionally renders a selected question. The checks
+wrapper measures actual panel chrome/actions through observePanelBody and reserves
+viewport space for activity scrolling; Continue to publish stays in panel actions.
+Back to brief is removed in favor of existing phase navigation. Narrow layouts stack
+navigation, preview and checks. See spec 014 follow-up evidence; contracts unchanged.
+
+### Creation journey heading — 2026-11-08
+PublishingActionsComponent now has an opt-in creation header with projected journey
+navigation in the heading position, followed by status and actions. It measures its
+height with a lifetime-bound ResizeObserver. The installed NgxActionBar only exposes
+a string heading, so overview and receipt continue using that shared component.
+The page's visually hidden phase heading is now h1. API/routes/federation unchanged.

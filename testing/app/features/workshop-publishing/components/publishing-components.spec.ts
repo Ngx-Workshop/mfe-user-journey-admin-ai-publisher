@@ -30,7 +30,6 @@ describe('Publishing presentation components', () => {
     fixture.componentRef.setInput('sections', [
       { id: 'angular', name: 'Angular' },
     ]);
-    fixture.componentRef.setInput('modelValid', true);
     const generate = jasmine.createSpy();
     fixture.componentInstance.generate.subscribe(generate);
     fixture.detectChanges();
@@ -56,7 +55,7 @@ describe('Publishing presentation components', () => {
     expect(generate).toHaveBeenCalledTimes(1);
     fixture.componentRef.setInput('locked', true);
     fixture.detectChanges();
-    expect(element.querySelector('button')?.disabled).toBeTrue();
+    expect(element.querySelector('button')).toBeNull();
     expect(element.querySelector('textarea')?.readOnly).toBeTrue();
   });
 

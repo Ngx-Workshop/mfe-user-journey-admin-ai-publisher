@@ -15,7 +15,10 @@ import {
 
 @Component({
   selector: 'ngx-publishing-preparation',
-  host: { '[class.preparation--compact]': 'compact()' },
+  host: {
+    '[class.preparation--compact]': 'compact()',
+    '[class.preparation--embedded]': 'embedded()',
+  },
   imports: [MatButtonModule, NgxButton, PreparationActivityComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -25,10 +28,12 @@ import {
       [attr.aria-busy]="report().status === 'running'"
     >
       <header class="preparation__header">
-        <div>
-          <p class="preparation__eyebrow">SKILLS AND CHECKS</p>
-          <h2>{{ compact() ? 'Checks' : heading() }}</h2>
-        </div>
+        @if (showHeading()) {
+          <div>
+            <p class="preparation__eyebrow">SKILLS AND CHECKS</p>
+            <h2>{{ compact() ? 'Checks' : heading() }}</h2>
+          </div>
+        }
         <p
           class="preparation__summary"
           role="status"
@@ -107,12 +112,17 @@ import {
       min-width: 0;
       margin: 1.25rem 0;
     }
+    :host(.preparation--embedded),
     :host(.preparation--compact) {
       margin: 0;
     }
+    :host(.preparation--embedded) .preparation,
     :host(.preparation--compact) .preparation {
       border: 0;
       padding: 0;
+    }
+    :host(.preparation--embedded) .preparation {
+      background: transparent;
     }
     :host(.preparation--compact) h2 {
       font-size: 1.05rem;
@@ -173,6 +183,8 @@ import {
 export class PublishingPreparationComponent {
   readonly report = input.required<PreparationReport>();
   readonly locked = input(false);
+  readonly showHeading = input(true);
+  readonly embedded = input(false);
   readonly compact = input(false);
   readonly resume = output<void>();
   readonly repair = output<string>();

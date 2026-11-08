@@ -62,3 +62,20 @@ content template. PublishingSourceComponent gains an expanded presentation input
 Use 16px catalog-style gaps, a 280–320px guidance rail and minmax(0,1fr) authoring
 columns. Validate desktop/intermediate/mobile rendering and existing authoring tests;
 add a behavioral check that expanded JSON retains binding/locking/validation.
+
+## Brief polish — 2026-11-07
+Use projected journey content in the shared action presenter and projected embedded
+checks in setup. Keep the page responsible for source/refine MatDialog lifetime and
+VM intents; keep source/model controls bound to the existing scoped forms. The source
+dialog closes when validation moves to review, with errors kept in the dialog on failure.
+No API, route, federation or dependencies change. Verify composition, invalid input
+preservation, generation gating and guidance replacement plus standard checks.
+
+## Journey heading and release — 2026-11-08
+The shared NgxActionBar API only accepts a string heading. Keep it for overview and
+receipt, and add an opt-in local creation header using shell tokens, projected journey,
+existing buttons/status templates and lifetime-bound ResizeObserver height reporting.
+Move semantic h1 to the visually hidden phase heading. Update stale history tests to
+use the actual workshop-name resume button and receipt status label; assert restored
+JSON in the routed draft test. Run architecture/types/full tests/production build,
+commit the authorized layout work and push main to trigger the production workflow.

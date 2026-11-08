@@ -34,6 +34,11 @@ import { PublishingPreparationComponent } from '../components/publishing-prepara
 import { PublishingProgressComponent } from '../components/publishing-progress.component';
 import { PublishingReceiptsComponent } from '../components/publishing-receipts.component';
 import { PublishingRepairReviewComponent } from '../components/publishing-repair-review.component';
+import {
+  PreviewSection,
+  PublishingReviewTabsComponent,
+} from '../components/publishing-review-tabs.component';
+import { PublishingChecksPanelComponent } from '../components/publishing-checks-panel.component';
 import { PublishingReviewComponent } from '../components/publishing-review.component';
 import { PublishingSetupComponent } from '../components/publishing-setup.component';
 import { PublishingSourceComponent } from '../components/publishing-source.component';
@@ -57,6 +62,8 @@ import { PublishingViewModel } from './publishing.view-model';
     PublishingImagesComponent,
     PublishingSourceComponent,
     PublishingReviewComponent,
+    PublishingChecksPanelComponent,
+    PublishingReviewTabsComponent,
     PublishingReceiptsComponent,
     PublishingActionsComponent,
     PublishingJourneyComponent,
@@ -94,22 +101,24 @@ import { PublishingViewModel } from './publishing.view-model';
     </div>
     } -->
     <ngx-publishing-actions
-      heading="New workshop"
+      [journeyHeading]="true"
       [status]="vm.status()"
       (heightChange)="actionBarHeight.set($event)"
       [disabled]="vm.working() || vm.initializing()"
       [showBack]="true"
       (back)="back()"
-      (createWorkshop)="restart()"
-    />
-    <main #workspace class="publisher" aria-label="New workshop">
+      [showCreate]="false"
+    >
       <ngx-publishing-journey
+        publisherJourney
         [step]="vm.step()"
         [hasSource]="!!vm.json.value"
         [reviewed]="vm.reviewed() && !!vm.draft()"
         [locked]="vm.working() || vm.initializing() || vm.attempted()"
         (navigate)="vm.navigate($event)"
       />
+    </ngx-publishing-actions>
+    <main #workspace class="publisher" aria-label="New workshop">
       @if (
         (vm.step() === 0 || vm.step() === 1) &&
         vm.operation() !== 'generate'
@@ -135,7 +144,7 @@ import { PublishingViewModel } from './publishing.view-model';
         </ngx-panel>
       }
       <ng-template #workspaceContent>
-        <h2 #phaseHeading class="publisher__title" tabindex="-1">
+        <h1 #phaseHeading class="publisher__title" tabindex="-1">
           {{
             vm.operation() === 'generate'
               ? 'Creating your workshop'
@@ -145,7 +154,7 @@ import { PublishingViewModel } from './publishing.view-model';
                   ? 'Explore the draft before you publish'
                   : 'Your publication checkpoint'
           }}
-        </h2>
+        </h1>
         @if (vm.error() || vm.validation()) {
           <div class="publisher__error" role="alert">
             <p>{{ vm.error() || vm.validation() }}</p>
@@ -169,7 +178,11 @@ import { PublishingViewModel } from './publishing.view-model';
             [elapsed]="vm.elapsed()"
           />
         }
-        @if (vm.step() !== 1 && vm.preparation(); as report) {
+        @if (
+          (vm.step() === 2 || vm.operation() === 'generate') &&
+            vm.preparation();
+          as report
+        ) {
           <ngx-publishing-preparation
             [report]="report"
             [locked]="vm.working() || vm.attempted()"
@@ -187,36 +200,39 @@ import { PublishingViewModel } from './publishing.view-model';
               [errors]="vm.setupErrors()"
               [form]="vm.form"
               [sections]="vm.sections()"
-              [json]="vm.json"
               [locked]="vm.working() || vm.attempted()"
               [initializing]="vm.initializing()"
-              [hasDraft]="!!vm.draft()"
+              [hasChecks]="!!vm.preparation()"
               (generate)="vm.generate()"
-              (validate)="vm.validate()"
               (retry)="vm.initialize()"
-              (resume)="vm.navigate(1)"
-            />
+              (importSource)="openSource()"
+            >
+              @if (vm.preparation(); as report) {
+                <ngx-publishing-preparation
+                  publisherChecks
+                  [report]="report"
+                  [embedded]="true"
+                  [locked]="vm.working() || vm.attempted()"
+                  (resume)="vm.resumeChecks()"
+                  [repairOptions]="vm.repairOptions()"
+                  [repairModel]="vm.model.value"
+                  (repair)="vm.repair($event)"
+                />
+              }
+            </ngx-publishing-setup>
           } @else if (vm.step() === 1) {
             <div class="publisher__review-layout">
-              <aside class="publisher__checks" aria-label="Checks">
-                @if (vm.preparation(); as report) {
-                  <ngx-publishing-preparation
-                    [report]="report"
-                    [compact]="true"
-                    [locked]="vm.working() || vm.attempted()"
-                    (resume)="vm.resumeChecks()"
-                    [repairOptions]="vm.repairOptions()"
-                    [repairModel]="vm.model.value"
-                    (repair)="vm.repair($event)"
-                  />
-                } @else {
-                  <h2>Checks</h2>
-                  <p>
-                    Validate your draft to run checks and restore the
-                    preview.
-                  </p>
-                }
-              </aside>
+              @if (vm.draft(); as draft) {
+                <ngx-publishing-review-tabs
+                  class="publisher__material-tabs"
+                  [draft]="draft"
+                  panelId="publisher-material-preview"
+                  [vertical]="verticalReviewTabs()"
+                  [(section)]="reviewSection"
+                  [showOutline]="true"
+                  [(selected)]="reviewItem"
+                />
+              }
               <div class="publisher__preview-column">
                 @if (vm.previousRepair()) {
                   <ngx-publishing-repair-review
@@ -226,8 +242,13 @@ import { PublishingViewModel } from './publishing.view-model';
                   />
                 }
                 <ngx-panel
-                  heading="Workshop Preview"
-                  eyebrow="DRAFT REVIEW"
+                  [heading]="vm.draft()?.name ?? 'Workshop Preview'"
+                  [eyebrow]="
+                    vm.draft()
+                      ? 'WORKSHOP PREVIEW / LEVEL ' +
+                        vm.draft()!.level
+                      : 'WORKSHOP PREVIEW'
+                  "
                   shape="stepped"
                   background="solid"
                   class="publisher__preview"
@@ -248,6 +269,12 @@ import { PublishingViewModel } from './publishing.view-model';
                       [draft]="draft"
                       [locked]="vm.working() || vm.attempted()"
                       [showPublish]="false"
+                      [showTabs]="false"
+                      [showOutline]="false"
+                      [(selected)]="reviewItem"
+                      [showIdentity]="false"
+                      panelId="publisher-material-preview"
+                      [(section)]="reviewSection"
                     />
                   } @else {
                     <p class="publisher__intro" role="status">
@@ -267,33 +294,42 @@ import { PublishingViewModel } from './publishing.view-model';
                   }
                 </ngx-panel>
               </div>
-            </div>
-            <div class="publisher__navigation">
-              <button
-                mat-button
-                ngxButton
-                surface="outline"
-                type="button"
-                [disabled]="vm.working() || vm.attempted()"
-                (click)="vm.navigate(0)"
-              >
-                Back to brief
-              </button>
-              <button
-                mat-flat-button
-                ngxButton
-                shape="chevron"
-                type="button"
-                [disabled]="
-                  !vm.draft() ||
-                  !vm.checksReady() ||
-                  vm.working() ||
-                  vm.attempted()
-                "
-                (click)="vm.continueToPublish()"
-              >
-                Continue to publish
-              </button>
+              <ngx-publishing-checks-panel class="publisher__checks">
+                @if (vm.preparation(); as report) {
+                  <ngx-publishing-preparation
+                    [report]="report"
+                    [compact]="true"
+                    [showHeading]="false"
+                    [embedded]="true"
+                    [locked]="vm.working() || vm.attempted()"
+                    (resume)="vm.resumeChecks()"
+                    [repairOptions]="vm.repairOptions()"
+                    [repairModel]="vm.model.value"
+                    (repair)="vm.repair($event)"
+                  />
+                } @else {
+                  <p>
+                    Validate your draft to run checks and restore the
+                    preview.
+                  </p>
+                }
+                <button
+                  publisherChecksActions
+                  mat-flat-button
+                  ngxButton
+                  shape="chevron"
+                  type="button"
+                  [disabled]="
+                    !vm.draft() ||
+                    !vm.checksReady() ||
+                    vm.working() ||
+                    vm.attempted()
+                  "
+                  (click)="vm.continueToPublish()"
+                >
+                  Continue to publish
+                </button>
+              </ngx-publishing-checks-panel>
             </div>
           } @else {
             @if (vm.draft(); as draft) {
@@ -321,6 +357,47 @@ import { PublishingViewModel } from './publishing.view-model';
             />
           }
         }
+      </ng-template>
+      <ng-template #sourceDialog>
+        <div class="publisher__dialog ngx-design-system">
+          <h2 mat-dialog-title>Import or edit workshop draft JSON</h2>
+          <mat-dialog-content>
+            <p>
+              Paste your draft JSON, then validate it to open the
+              workshop preview.
+            </p>
+            @if (vm.error() || vm.validation()) {
+              <p class="publisher__error" role="alert">
+                {{ vm.error() || vm.validation() }}
+              </p>
+            }
+            @if (vm.working()) {
+              <ngx-publishing-progress
+                [operation]="vm.operation()"
+                [elapsed]="vm.elapsed()"
+              />
+            }
+            <ngx-publishing-source
+              [json]="vm.json"
+              [expanded]="true"
+              [locked]="
+                vm.working() || vm.initializing() || vm.attempted()
+              "
+              (validate)="vm.validate()"
+            />
+          </mat-dialog-content>
+          <mat-dialog-actions align="end">
+            <button
+              mat-button
+              ngxButton
+              type="button"
+              [disabled]="vm.working()"
+              (click)="closeRefine()"
+            >
+              Close
+            </button>
+          </mat-dialog-actions>
+        </div>
       </ng-template>
       <ng-template #refineDialog>
         <div class="publisher__dialog ngx-design-system">
@@ -378,9 +455,10 @@ import { PublishingViewModel } from './publishing.view-model';
   `,
   styles: `
     :host {
+      --publisher-sticky-top: var(--publisher-toolbar-top, 96px);
       display: block;
       min-width: 0;
-      min-height: calc(100dvh - var(--publisher-toolbar-top, 96px));
+      min-height: calc(100dvh - var(--publisher-sticky-top));
       color: var(--ngx-color-text);
       background: var(--ngx-color-canvas);
     }
@@ -389,7 +467,7 @@ import { PublishingViewModel } from './publishing.view-model';
       margin: 0 auto;
       padding: 1rem 0 2rem;
       scroll-margin-top: calc(
-        var(--publisher-toolbar-top, 96px) +
+        var(--publisher-sticky-top) +
           var(--publisher-action-height, 70px) + 16px
       );
     }
@@ -434,32 +512,61 @@ import { PublishingViewModel } from './publishing.view-model';
       margin: 0.5rem 0;
     }
     .publisher__preview-column {
+      grid-area: preview;
       min-width: 0;
+      padding-top: 1rem;
     }
     .publisher__review-layout {
       display: grid;
-      grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);
+      grid-template-columns: 260px minmax(0, 1fr) minmax(
+          280px,
+          320px
+        );
+      grid-template-areas: 'tabs preview checks';
+      margin-top: -1rem;
       gap: 1rem;
       align-items: start;
     }
-    .publisher__checks {
-      position: sticky;
-      top: calc(
-        var(--publisher-toolbar-top, 96px) +
-          var(--publisher-action-height, 70px) + 16px
-      );
+    .publisher__material-tabs {
+      --review-tabs-margin: 0;
+      grid-area: tabs;
       max-height: calc(
-        100dvh - var(--publisher-toolbar-top, 96px) - var(
+        100dvh - var(--publisher-sticky-top) - var(
             --publisher-action-height,
             70px
           ) -
-          32px
+          16px
       );
       overflow: auto;
       scrollbar-width: thin;
-      border: 1px solid var(--ngx-color-border);
-      background: var(--ngx-color-surface);
-      padding: 1rem;
+      position: sticky;
+      top: calc(
+        var(--publisher-sticky-top) +
+          var(--publisher-action-height, 70px)
+      );
+      z-index: 2;
+      background: var(--ngx-color-canvas);
+    }
+    .publisher__checks {
+      grid-area: checks;
+      height: max(
+        0px,
+        calc(
+          100dvh - var(--publisher-sticky-top) - var(
+              --publisher-action-height,
+              70px
+            ) -
+            32px
+        )
+      );
+      display: block;
+      min-width: 0;
+      margin-top: 1rem;
+      position: sticky;
+      top: calc(
+        var(--publisher-sticky-top) +
+          var(--publisher-action-height, 70px) + 16px
+      );
       font-size: 0.8rem;
     }
     .publisher__preview {
@@ -469,13 +576,38 @@ import { PublishingViewModel } from './publishing.view-model';
       color: var(--ngx-color-text);
       background: var(--ngx-color-surface);
     }
-    @media (max-width: 960px) {
+    @media (max-width: 1100px) {
       .publisher__review-layout {
         grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: 'tabs' 'preview' 'checks';
+      }
+      .publisher__material-tabs {
+        max-height: min(
+          300px,
+          calc(
+            100dvh - var(--publisher-sticky-top) - var(
+                --publisher-action-height,
+                70px
+              ) -
+              16px
+          )
+        );
+      }
+      .publisher__preview-column {
+        padding-top: 0;
       }
       .publisher__checks {
+        margin-top: 0;
+      }
+    }
+    @media (max-width: 1100px) {
+      .publisher__checks {
         position: static;
-        max-height: 360px;
+      }
+    }
+    @media (max-width: 720px) {
+      :host {
+        --publisher-sticky-top: var(--publisher-toolbar-top, 76px);
       }
     }
     .publisher__saved {
@@ -493,13 +625,32 @@ import { PublishingViewModel } from './publishing.view-model';
 })
 export class PublishingComponent implements OnInit {
   readonly actionBarHeight = signal(70);
+  readonly reviewItem = signal(0);
+  readonly reviewSection = signal<PreviewSection>('pages');
+  readonly verticalReviewTabs = signal(window.innerWidth > 1100);
   readonly vm = inject(PublishingViewModel);
   private readonly dialog = inject(MatDialog);
   private readonly refineTemplate =
     viewChild<TemplateRef<unknown>>('refineDialog');
   private refineRef: MatDialogRef<unknown> | undefined;
+  private readonly sourceTemplate =
+    viewChild<TemplateRef<unknown>>('sourceDialog');
+  private sourceOpen = false;
+  openSource(): void {
+    if (this.vm.initializing()) return;
+    this.openDialog(
+      this.sourceTemplate(),
+      'Import workshop draft JSON'
+    );
+    this.sourceOpen = !!this.refineRef;
+  }
   openRefine(): void {
-    const template = this.refineTemplate();
+    this.openDialog(this.refineTemplate(), 'Refine the draft');
+  }
+  private openDialog(
+    template: TemplateRef<unknown> | undefined,
+    label: string
+  ): void {
     if (
       !template ||
       this.refineRef ||
@@ -511,12 +662,13 @@ export class PublishingComponent implements OnInit {
       width: '960px',
       maxWidth: 'calc(100vw - 2rem)',
       maxHeight: '90dvh',
-      ariaLabel: 'Refine the draft',
+      ariaLabel: label,
       autoFocus: 'dialog',
       delayFocusTrap: false,
     });
     this.refineRef.afterClosed().subscribe(() => {
       this.refineRef = undefined;
+      this.sourceOpen = false;
     });
   }
   closeRefine(): void {
@@ -533,6 +685,14 @@ export class PublishingComponent implements OnInit {
     viewChild<ElementRef<HTMLElement>>('phaseHeading');
 
   constructor() {
+    const reviewMedia = window.matchMedia('(min-width: 1101px)');
+    const updateReviewTabs = () =>
+      this.verticalReviewTabs.set(reviewMedia.matches);
+    updateReviewTabs();
+    reviewMedia.addEventListener('change', updateReviewTabs);
+    inject(DestroyRef).onDestroy(() =>
+      reviewMedia.removeEventListener('change', updateReviewTabs)
+    );
     const warn = (event: BeforeUnloadEvent) => {
       if (this.vm.unsaved() || this.vm.saving()) {
         event.preventDefault();
@@ -557,6 +717,8 @@ export class PublishingComponent implements OnInit {
     effect(() => {
       const working = this.vm.working();
       if (this.refineRef) this.refineRef.disableClose = working;
+      if (this.vm.step() !== 0 && this.sourceOpen)
+        this.refineRef?.close();
     });
     afterRenderEffect(() => {
       this.vm.step();
