@@ -1,5 +1,5 @@
+import { ClipboardModule } from '@angular/cdk/clipboard';
 import { DatePipe } from '@angular/common';
-import { NgxButton } from '@tmdjr/ngx-workshop-design-system';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,7 +7,6 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { ClipboardModule } from '@angular/cdk/clipboard';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import type { HistoryRow } from '../models/history.models';
@@ -17,7 +16,6 @@ import { PublishingStatusComponent } from './publishing-status.component';
   selector: 'ngx-publishing-request-row',
   imports: [
     DatePipe,
-    NgxButton,
     ClipboardModule,
     MatButtonModule,
     MatIconModule,
@@ -91,17 +89,17 @@ import { PublishingStatusComponent } from './publishing-status.component';
       </div>
       <ngx-publishing-status [status]="row().status" />
       @if (row().draftId; as id) {
-        <button
-          mat-button
-          ngxButton
-          surface="glass"
-          class="request-row__continue"
-          type="button"
-          [disabled]="busy()"
-          (click)="resume.emit(id)"
-        >
-          Continue review
-        </button>
+        <!-- <button
+        mat-button
+        ngxButton
+        surface="glass"
+        class="request-row__continue"
+        type="button"
+        [disabled]="busy()"
+        (click)="resume.emit(id)"
+      >
+        Continue review
+      </button> -->
       } @else if (row().workshopUrl; as url) {
         <a
           mat-icon-button

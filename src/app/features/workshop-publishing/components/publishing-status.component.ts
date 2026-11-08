@@ -31,11 +31,11 @@ export class PublishingStatusComponent {
     draft: 'Draft',
     complete: 'Completed',
     running: 'Running',
-    needs_recovery: 'Needs attention',
+    needs_recovery: 'Recovery',
     unconfirmed: 'Unconfirmed',
   };
   readonly tones: Record<HistoryStatus, NgxInlineStatusTone> = {
-    draft: 'neutral',
+    draft: 'warning',
     complete: 'success',
     running: 'info',
     needs_recovery: 'error',

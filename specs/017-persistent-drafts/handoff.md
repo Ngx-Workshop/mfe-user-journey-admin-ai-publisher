@@ -92,3 +92,15 @@ Three new regressions cover mixed rows/action/pagination, filtered routing/direc
 resume without a separate panel, and search/dedup/source errors. 113 ChromeHeadless
 cases pass; strict types, architecture and production build pass. Deployment/browser
 acceptance pending.
+
+Unified-history deployment complete: commit 66941e8c0722877bcb6a2dd90935467522e9ecf5.
+Deployment https://github.com/Ngx-Workshop/mfe-user-journey-admin-ai-publisher/actions/runs/42407164843
+and validation run 42407164775 succeeded. A signed-in production Chrome check after
+hard refresh confirmed one Draft row mixed with three completed receipts in Request
+history, no separate Your drafts panel, readable Continue review, and the Drafts
+filter reducing the main list to that row. Continue review restored draft
+b931d743-e6a3-44d4-b233-1f6d9a9fdf4e and its seven passed checks without generation,
+validation or publication requests. The wizard's saved message refers to Request
+history. Existing Issues rows remain distinct. Screenshot: unified-publisher-history.jpg
+in the current Codex visualization workspace. No browser development override changed.
+Postdeployment evidence updates remain local documentation to avoid another rollout.

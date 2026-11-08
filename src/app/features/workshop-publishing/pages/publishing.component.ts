@@ -1,25 +1,19 @@
-import { PublishingRepairReviewComponent } from '../components/publishing-repair-review.component';
-import { PublishingPreparationComponent } from '../components/publishing-preparation.component';
 import { NgTemplateOutlet } from '@angular/common';
-import {
-  NgxButton,
-  NgxPanel,
-} from '@tmdjr/ngx-workshop-design-system';
 import {
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
-  ElementRef,
   DestroyRef,
+  effect,
+  ElementRef,
   inject,
   OnInit,
   signal,
-  effect,
   TemplateRef,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
 import {
   MatDialog,
   MatDialogModule,
@@ -27,16 +21,22 @@ import {
 } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatButtonModule } from '@angular/material/button';
-import { PublishingSetupComponent } from '../components/publishing-setup.component';
-import { PublishingImagesComponent } from '../components/publishing-images.component';
-import { PublishingSourceComponent } from '../components/publishing-source.component';
-import { PublishingReviewComponent } from '../components/publishing-review.component';
-import { PublishingReceiptsComponent } from '../components/publishing-receipts.component';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  NgxButton,
+  NgxPanel,
+} from '@tmdjr/ngx-workshop-design-system';
 import { PublishingActionsComponent } from '../components/publishing-actions.component';
-import { PublishingJourneyComponent } from '../components/publishing-journey.component';
-import { PublishingProgressComponent } from '../components/publishing-progress.component';
 import { PublishingConfirmationComponent } from '../components/publishing-confirmation.component';
+import { PublishingImagesComponent } from '../components/publishing-images.component';
+import { PublishingJourneyComponent } from '../components/publishing-journey.component';
+import { PublishingPreparationComponent } from '../components/publishing-preparation.component';
+import { PublishingProgressComponent } from '../components/publishing-progress.component';
+import { PublishingReceiptsComponent } from '../components/publishing-receipts.component';
+import { PublishingRepairReviewComponent } from '../components/publishing-repair-review.component';
+import { PublishingReviewComponent } from '../components/publishing-review.component';
+import { PublishingSetupComponent } from '../components/publishing-setup.component';
+import { PublishingSourceComponent } from '../components/publishing-source.component';
 import { PublishingViewModel } from './publishing.view-model';
 
 @Component({
@@ -68,32 +68,31 @@ import { PublishingViewModel } from './publishing.view-model';
   providers: [PublishingViewModel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (vm.savedDraftId()) {
-      <p class="publisher__saved" role="status">
-        {{
-          vm.saving()
-            ? 'Saving changes…'
-            : vm.unsaved()
-              ? 'Unsaved changes'
-              : 'Draft saved · return anytime from Request history'
-        }}
-      </p>
-    }
-    @if (vm.saveError()) {
-      <div class="publisher__saved" role="alert">
-        {{ vm.saveError() }}
-        <button
-          mat-flat-button
-          ngxButton
-          surface="glass"
-          type="button"
-          [disabled]="vm.working()"
-          (click)="vm.retrySave()"
-        >
-          Retry save
-        </button>
-      </div>
-    }
+    <!-- @if (vm.savedDraftId()) {
+    <p class="publisher__saved" role="status">
+      {{
+        vm.saving()
+          ? 'Saving changes…'
+          : vm.unsaved()
+          ? 'Unsaved changes'
+          : 'Draft saved · return anytime from Request history'
+      }}
+    </p>
+    } @if (vm.saveError()) {
+    <div class="publisher__saved" role="alert">
+      {{ vm.saveError() }}
+      <button
+        mat-flat-button
+        ngxButton
+        surface="glass"
+        type="button"
+        [disabled]="vm.working()"
+        (click)="vm.retrySave()"
+      >
+        Retry save
+      </button>
+    </div>
+    } -->
     <ngx-publishing-actions
       heading="New workshop"
       [status]="vm.status()"

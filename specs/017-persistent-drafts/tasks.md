@@ -6,4 +6,4 @@
 - [x] T004 Update context, deploy API/frontend and verify live persistence.
 
 - [x] T005 Merge draft rows, filter and resume/pagination actions into Request history; remove separate panel.
-- [ ] T006 Verify routed draft resume and receipt regressions, production build and deployed overview.
+- [x] T006 Verify routed draft resume and receipt regressions, production build and deployed overview.
