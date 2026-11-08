@@ -79,3 +79,10 @@ Move semantic h1 to the visually hidden phase heading. Update stale history test
 use the actual workshop-name resume button and receipt status label; assert restored
 JSON in the routed draft test. Run architecture/types/full tests/production build,
 commit the authorized layout work and push main to trigger the production workflow.
+
+## Activity-only loading view — 2026-11-08
+Render the workspace content without an outer panel during active operations. Make
+progress and phase panels mutually exclusive; keep phase heading/errors available.
+Retain scoped VM-owned controls across panel destruction/recreation and update the
+long-generation guidance so it no longer refers to hidden checks. Regression-check
+all operation types across brief, review and publication, plus restored JSON.

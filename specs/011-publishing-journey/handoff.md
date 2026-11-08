@@ -184,3 +184,18 @@ session; deployment and static artifact delivery are verified independently.
 
 The accompanying documentation-only completion record uses [skip ci] to avoid
 redeploying unchanged application assets. Local working tree is committed and clean.
+
+## Activity-only loading workspace — 2026-11-08
+Progress and workspace panels are now mutually exclusive for every non-idle
+operation. The progress view renders without the outer publication/generation panel;
+setup, review, checks and publication panels return at idle. Scoped VM controls retain
+source/brief data across presenter recreation. Long-generation guidance no longer
+refers to hidden check activity. Phase navigation remains visible and appropriately
+locked; modal operations retain their existing progress/lock behavior.
+
+All 113 ChromeHeadless tests pass. Regression coverage checks every operation across
+brief/review/publication, absence of workspace panels while active, return at idle,
+source preservation and existing publication/recovery gates. Architecture, strict
+application/test types, production build/license and diff checks pass. No API, route,
+dependency, persistence or federation changes; no live workshop operations performed.
+The follow-up release uses the existing authorized push-to-main production workflow.

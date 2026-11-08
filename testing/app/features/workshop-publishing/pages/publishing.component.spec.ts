@@ -123,6 +123,37 @@ describe('Workshop creation workspace', () => {
         b.textContent?.includes(text)
       )!;
     expect(element.querySelector('mat-stepper')).toBeNull();
+    const vm = fixture.componentInstance.vm;
+    const expectOnlyActivity = () => {
+      fixture.detectChanges();
+      expect(
+        element.querySelector('main ngx-publishing-progress')
+      ).not.toBeNull();
+      expect(element.querySelectorAll('main ngx-panel').length).toBe(
+        0
+      );
+      expect(
+        element.querySelector('ngx-publishing-setup')
+      ).toBeNull();
+      expect(
+        element.querySelector('.publisher__review-layout')
+      ).toBeNull();
+    };
+    for (const operation of [
+      'sections',
+      'models',
+      'history',
+      'generate',
+    ] as const) {
+      vm.operation.set(operation);
+      expectOnlyActivity();
+    }
+    vm.operation.set('idle');
+    fixture.detectChanges();
+    expect(
+      element.querySelector('ngx-publishing-setup')
+    ).not.toBeNull();
+
     expect(
       element.querySelector('.publisher-actions__bar h1')
     ).toBeNull();
@@ -237,11 +268,11 @@ describe('Workshop creation workspace', () => {
     button('Publication').click();
     fixture.detectChanges();
     expect(fixture.componentInstance.vm.step()).toBe(1);
-    const checks = element.querySelector(
+    let checks = element.querySelector(
       '.publisher__checks ngx-panel'
     )!;
     expect(checks.getAttribute('data-shape')).toBe('chamfered');
-    const preview = element.querySelector(
+    let preview = element.querySelector(
       'ngx-panel.publisher__preview'
     )!;
     expect(
@@ -251,6 +282,25 @@ describe('Workshop creation workspace', () => {
       preview.querySelector('mat-card-header')?.textContent
     ).toContain('WORKSHOP PREVIEW / LEVEL 1');
     expect(preview.querySelector('.review__info h2')).toBeNull();
+    const preservedJson = vm.json.value;
+    for (const operation of [
+      'validate',
+      'repair',
+      'images',
+      'image',
+    ] as const) {
+      vm.operation.set(operation);
+      expectOnlyActivity();
+    }
+    vm.operation.set('idle');
+    fixture.detectChanges();
+    expect(vm.json.value).toBe(preservedJson);
+    expect(
+      element.querySelector('.publisher__review-layout')
+    ).not.toBeNull();
+
+    checks = element.querySelector('.publisher__checks ngx-panel')!;
+    preview = element.querySelector('ngx-panel.publisher__preview')!;
     const tabs = element.querySelector(
       '.publisher__review-layout > ngx-publishing-review-tabs'
     )!;
@@ -339,6 +389,13 @@ describe('Workshop creation workspace', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(fixture.componentInstance.vm.step()).toBe(2);
+    for (const operation of ['publish', 'receipt'] as const) {
+      vm.operation.set(operation);
+      expectOnlyActivity();
+    }
+    vm.operation.set('idle');
+    fixture.detectChanges();
+
     button('Publish reviewed workshop').click();
     fixture.detectChanges();
     expect(publish).toHaveBeenCalledTimes(1);

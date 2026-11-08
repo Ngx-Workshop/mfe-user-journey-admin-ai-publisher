@@ -79,3 +79,9 @@ FR-008 / AC-008: On creation, journey navigation replaces the New workshop actio
 heading and precedes status/actions. Keep a descriptive page h1 for accessibility.
 Repair the full test suite and release the accumulated publisher layout changes
 through the existing production deployment workflow after successful verification.
+
+## Activity-only loading view — 2026-11-08
+FR-009 / AC-009: While a publishing operation is active, show its progress view and
+hide workspace panels, including preparation, setup, review and publication panels.
+Restore the appropriate workspace when the operation returns idle, preserving
+view-model-owned brief/source data and existing error and publication gates.

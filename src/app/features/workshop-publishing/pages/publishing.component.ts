@@ -120,8 +120,9 @@ import { PublishingViewModel } from './publishing.view-model';
     </ngx-publishing-actions>
     <main #workspace class="publisher" aria-label="New workshop">
       @if (
-        (vm.step() === 0 || vm.step() === 1) &&
-        vm.operation() !== 'generate'
+        vm.operation() !== 'idle' ||
+        vm.step() === 0 ||
+        vm.step() === 1
       ) {
         <ng-container [ngTemplateOutlet]="workspaceContent" />
       } @else {
@@ -177,22 +178,17 @@ import { PublishingViewModel } from './publishing.view-model';
             [operation]="vm.operation()"
             [elapsed]="vm.elapsed()"
           />
-        }
-        @if (
-          (vm.step() === 2 || vm.operation() === 'generate') &&
-            vm.preparation();
-          as report
-        ) {
-          <ngx-publishing-preparation
-            [report]="report"
-            [locked]="vm.working() || vm.attempted()"
-            (resume)="vm.resumeChecks()"
-            [repairOptions]="vm.repairOptions()"
-            [repairModel]="vm.model.value"
-            (repair)="vm.repair($event)"
-          />
-        }
-        @if (vm.operation() !== 'generate') {
+        } @else {
+          @if (vm.step() === 2 && vm.preparation(); as report) {
+            <ngx-publishing-preparation
+              [report]="report"
+              [locked]="vm.working() || vm.attempted()"
+              (resume)="vm.resumeChecks()"
+              [repairOptions]="vm.repairOptions()"
+              [repairModel]="vm.model.value"
+              (repair)="vm.repair($event)"
+            />
+          }
           @if (vm.step() === 0) {
             <ngx-publishing-setup
               [model]="vm.model"

@@ -38,3 +38,9 @@ claim of successful live validation.
   sticky offsets/page heading; repair stale history/receipt test expectations.
 - [x] T009 — Pass all release checks and deploy accumulated UI work through the
   repository production workflow; record exact release and outcome in handoff.
+
+## Activity-only loading view — 2026-11-08
+- [x] T010 — Hide workspace panels whenever operation progress is visible and restore
+  them at idle, preserving form/source state (FR-009 / AC-009).
+- [x] T011 — Verify operation/phase visibility, restored source, architecture/types,
+  full tests and production build; record handoff evidence.

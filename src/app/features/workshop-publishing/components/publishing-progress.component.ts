@@ -47,8 +47,8 @@ import {
         </p>
         @if (elapsed() >= 60) {
           <p role="status">
-            Preparation is still running. Follow the reported skills
-            and checks below; keep this page open.
+            Preparation is still running. Keep this page open; your
+            workshop materials will return when it finishes.
           </p>
         }
       }

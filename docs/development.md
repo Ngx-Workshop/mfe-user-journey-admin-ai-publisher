@@ -237,3 +237,8 @@ jobs report 113 passing tests and build hash 801aee09dd811518. The public federa
 entry references the new application chunk, which matches the verified local bytes.
 See spec 011 production release record. Earlier undeployed/failing-test notes are
 historical. Authenticated UI acceptance still requires the user's expired session.
+
+Activity-only workspace (2026-11-08): all 113 tests pass, including every operation's
+panel hiding/restoration, retained source and publication gates. Architecture,
+strict app/test types, production build/license and diff checks pass. The workspace
+shows progress alone during non-idle operations and restores phase panels at idle.
