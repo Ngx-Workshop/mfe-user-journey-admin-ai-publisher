@@ -36,31 +36,33 @@ import { WorkshopDraft } from '../models/publishing.models';
         labs must pass verification first.
       </p>
       <p class="confirmation__note">
-        After submitting, use the receipt below to confirm which
-        resources were published.
+        When publishing finishes, the receipt detail page will open
+        to show which resources were published.
       </p>
-      <div class="confirmation__actions">
-        <button
-          mat-button
-          ngxButton
-          surface="outline"
-          type="button"
-          [disabled]="locked()"
-          (click)="back.emit()"
-        >
-          Back to review
-        </button>
-        <button
-          mat-flat-button
-          ngxButton
-          shape="chevron"
-          type="button"
-          [disabled]="locked() || !reviewed()"
-          (click)="publish.emit()"
-        >
-          Publish reviewed workshop
-        </button>
-      </div>
+      @if (showActions()) {
+        <div class="confirmation__actions">
+          <button
+            mat-button
+            ngxButton
+            surface="outline"
+            type="button"
+            [disabled]="locked()"
+            (click)="back.emit()"
+          >
+            Back to review
+          </button>
+          <button
+            mat-flat-button
+            ngxButton
+            shape="chevron"
+            type="button"
+            [disabled]="locked() || !reviewed()"
+            (click)="publish.emit()"
+          >
+            Publish reviewed workshop
+          </button>
+        </div>
+      }
     </section>
   `,
   styles: `
@@ -117,6 +119,7 @@ import { WorkshopDraft } from '../models/publishing.models';
 export class PublishingConfirmationComponent {
   readonly draft = input.required<WorkshopDraft>();
   readonly locked = input(false);
+  readonly showActions = input(true);
   readonly reviewed = input(false);
   readonly back = output<void>();
   readonly publish = output<void>();

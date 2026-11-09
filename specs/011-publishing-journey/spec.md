@@ -85,3 +85,22 @@ FR-009 / AC-009: While a publishing operation is active, show its progress view 
 hide workspace panels, including preparation, setup, review and publication panels.
 Restore the appropriate workspace when the operation returns idle, preserving
 view-model-owned brief/source data and existing error and publication gates.
+
+## Publication panels — 2026-11-08
+FR-010 / AC-010: Publication shows sibling confirmation/receipt and checks panels,
+with embedded preparation content on the right. Stack panels below 900px. Remove
+receipt lookup input/button on this phase; retain the current request ID, returned
+receipt and Request history recovery. Active operations still show progress alone.
+
+## Single publication panel — 2026-11-08
+FR-011 / AC-011 supersedes FR-010's two-panel arrangement: remove checks content
+from Publication. Match Create MFE remote's centered 765px stepped/glass panel,
+viewport NgxBackground, fade entrance and right-aligned panel actions. Retain the
+confirmation, request/receipt details, hidden lookup controls and publication gates.
+
+## Publication completion routing — 2026-11-08
+FR-012 / AC-012: When a publication returns a terminal receipt and active work has
+settled, navigate to sibling requests/{actual requestId}. Complete and recovery
+receipts open detail; pending work, receipts without a publish attempt and mismatched
+request IDs do not redirect. Keep mount-relative routing, route guards and duplicate
+protection intact. Failed requests without a receipt retain existing recovery state.

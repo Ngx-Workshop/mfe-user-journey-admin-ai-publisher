@@ -44,3 +44,21 @@ claim of successful live validation.
   them at idle, preserving form/source state (FR-009 / AC-009).
 - [x] T011 — Verify operation/phase visibility, restored source, architecture/types,
   full tests and production build; record handoff evidence.
+
+## Publication panels — 2026-11-08
+- [x] T012 — Two publication panels, embedded right-side checks, no lookup controls,
+  current receipt/identity and Request history recovery retained (FR-010 / AC-010).
+- [x] T013 — Verify layout composition, operation hiding, publication guards and
+  receipt recovery guidance; run architecture/types/tests/build and record evidence.
+
+## Single publication panel — 2026-11-08
+- [x] T014 — Replace publication columns with the referenced centered glass panel,
+  viewport background/fade and panel actions; remove publication checks (FR-011).
+- [x] T015 — Verify single-panel composition, no checks/lookup, footer gates,
+  responsive background, architecture/types/tests/build and record handoff.
+
+## Publication completion routing — 2026-11-08
+- [x] T016 — Navigate matching terminal publication results to mounted receipt detail,
+  waiting for work to settle and guarding repeated/unrelated navigation (FR-012).
+- [x] T017 — Verify routed success/recovery and non-result behavior, then run standard
+  architecture/types/tests/build checks and update handoff.

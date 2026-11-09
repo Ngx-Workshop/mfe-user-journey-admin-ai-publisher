@@ -400,3 +400,25 @@ navigation in the heading position, followed by status and actions. It measures 
 height with a lifetime-bound ResizeObserver. The installed NgxActionBar only exposes
 a string heading, so overview and receipt continue using that shared component.
 The page's visually hidden phase heading is now h1. API/routes/federation unchanged.
+
+### Publication workspace — 2026-11-08
+Publication now owns two sibling NgxPanels: confirmation/current receipt and embedded
+preparation checks. They stack below 900px. The page's shared content outlet is
+unframed so checks are a true sibling; active operations still display progress alone.
+PublishingReceiptsComponent adds showLookup (default true); publication disables it
+while retaining identity/result display and directing recovery to Request history.
+API, state, route and federation contracts are unchanged. See spec 011 handoff.
+
+### Single publication panel — 2026-11-08
+Supersedes the two-column publication layout above: Publication now follows the
+Create MFE remote presentation with one centered 765px stepped/glass panel, a viewport
+NgxBackground and fade entrance. Confirmation and returned receipt remain in its body;
+publication/back controls use panel actions. Preparation/checks are absent from this
+phase, while existing domain readiness gates stay enforced. See spec 011 follow-up.
+
+### Publication result navigation — 2026-11-08
+PublishingComponent observes attempted state and its matching terminal receipt after
+work settles, then navigates once to the sibling requests/{requestId} route. The API,
+store and scoped VM retain their data responsibilities; routing stays in the page.
+The receipt page reads the run independently. Pending work and missing/mismatched
+receipts do not redirect. See spec 011 handoff for routed verification.

@@ -400,7 +400,35 @@ describe('Workshop creation workspace', () => {
     fixture.detectChanges();
     expect(publish).toHaveBeenCalledTimes(1);
     expect(button('Publish reviewed workshop').disabled).toBeTrue();
-    expect(button('Check publishing receipt').disabled).toBeFalse();
+    expect(button('Check publishing receipt')).toBeUndefined();
+    expect(
+      element.querySelector('ngx-publishing-receipts input')
+    ).toBeNull();
+    expect(
+      element.querySelectorAll(
+        '.publisher__publication-layout > ngx-panel'
+      ).length
+    ).toBe(1);
+    const publication = element.querySelector(
+      '.publisher__publication'
+    )!;
+    expect(
+      element.querySelector('.publisher__publication-checks')
+    ).toBeNull();
+    expect(
+      publication.querySelector('ngx-publishing-preparation')
+    ).toBeNull();
+    expect(publication.getAttribute('data-background')).toBe('glass');
+    expect(
+      element.querySelector(
+        '.publisher__publication-layout > ngx-background'
+      )
+    ).not.toBeNull();
+    expect(
+      button('Publish reviewed workshop').closest('mat-card-actions')
+    ).not.toBeNull();
+    expect(element.textContent).not.toContain('SKILLS AND CHECKS');
+    expect(element.textContent).toContain('Open Request history');
     expect(element.textContent).toContain('Keep this ID.');
   });
 });

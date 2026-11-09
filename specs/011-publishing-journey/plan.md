@@ -86,3 +86,26 @@ progress and phase panels mutually exclusive; keep phase heading/errors availabl
 Retain scoped VM-owned controls across panel destruction/recreation and update the
 long-generation guidance so it no longer refers to hidden checks. Regression-check
 all operation types across brief, review and publication, plus restored JSON.
+
+## Publication panels — 2026-11-08
+Unframe the page's shared content outlet and compose two NgxPanel siblings only for
+publication: stepped confirmation/receipt and chamfered embedded checks. Add an
+opt-in showLookup toggle to receipts (default true for other callers); publication
+opts out and directs recovery to Request history. Preserve returned receipt display,
+request identity, explicit publication approval and duplicate protection. Leave
+concurrent unrelated receipt/filter edits untouched.
+
+## Single publication panel — 2026-11-08
+Follow the explicitly referenced orchestrator create-mfe-page.ts presentation:
+relative isolated centered wrapper (765px maximum), viewport NgxBackground,
+NgxEntrance fade, stepped/glass NgxPanel and projected panel actions. Remove the
+Publication preparation presenter entirely. Confirmation's default actions stay
+available to standalone callers; the page opts out and projects the gated actions
+into the panel footer. No domain/contract changes. Preserve unrelated receipt edits.
+
+## Publication completion routing — 2026-11-08
+The page observes the current receipt, attempted state and operation/initialization
+locks. Navigate once per matching terminal receipt ID to ../requests/{id}; route
+ownership stays out of API/store/VM. Wait for work to settle so canDeactivate permits
+leaving without a discard prompt. Routed HTTP-backed tests exercise completed and
+recovery results under the /ai-publisher mount and the receipt page's independent read.

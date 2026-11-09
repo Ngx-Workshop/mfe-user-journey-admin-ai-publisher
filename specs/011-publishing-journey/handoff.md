@@ -208,3 +208,64 @@ Public remoteEntry.js and referenced 2181.559f6de093d96824.js return 200; that
 application chunk matches the verified local build byte-for-byte. No live draft,
 model or publication operations were performed. Completion record is documentation
 only and skips CI to avoid redeploying unchanged assets.
+
+## Publication two-panel layout — 2026-11-08
+Publication now composes two sibling panels: stepped Publish and confirm on the left
+and chamfered Skills and checks on the right. The right panel uses embedded preparation
+content with its inner heading suppressed; the outer heading reports Automated checks
+passed / Preparing your workshop / Checks need attention from the current report.
+Panels stack below 900px. Progress-only operation behavior remains intact.
+
+Publication opts out of receipt lookup controls via showLookup=false; the current
+request ID, returned receipt and recovery guidance remain. Other receipt presenter
+callers retain lookup by default. Request history provides receipt recovery after a
+connection failure. Publishing approval and duplicate protection are unchanged.
+
+Verification: 113 ChromeHeadless tests pass, plus architecture, strict app/test types,
+production federation build/license and diff checks. Updated workspace regression
+asserts two sibling panels, embedded right-side checks, absence of receipt lookup,
+current request/recovery guidance, operation hiding and publication gates. Isolated
+production sample preview verified at 1920px and 390px: two columns on desktop,
+one 358px column on mobile, 390px document width and zero receipt lookup inputs.
+No live publication or draft edits were performed. Viewport restored; sample server
+stopped. Existing unrelated edits to pages/receipt.component.ts were preserved.
+
+Implemented locally; no production deployment performed for this follow-up.
+
+## Single publication panel with background — 2026-11-08
+This replaces the preceding two-panel publication change. Publication no longer
+renders any preparation/checks content. Its single stepped/glass panel is centered
+at a 765px maximum width over NgxBackground placement=viewport, with NgxEntrance fade,
+matching the explicitly referenced orchestrator Create MFE remote page. Back to review
+and Publish reviewed workshop are projected into right-aligned panel actions; approval,
+check readiness, operation and duplicate-submission gates remain intact. The receipt
+lookup field/button remain absent; request ID and returned receipt stay available.
+
+All 113 ChromeHeadless tests pass, along with architecture, strict app/test types,
+production federation build/license and diff checks. Regression asserts one glass
+panel, viewport background, no checks, no lookup and a gated publication footer.
+Isolated production sample preview verified the 765px desktop panel, visible viewport
+background and 358px mobile panel within a 390px document, with zero preparation
+presenters. No live draft mutation/publication was performed. Viewport restored and
+sample server stopped. Unrelated receipt-page edits remain untouched.
+
+Local implementation complete; not deployed. The page's existing cohesive inline
+wizard/dialog/layout exception remains (804 lines); supporting confirmation presenter
+has opt-in hidden actions so standalone callers retain their default behavior.
+
+## Redirect after publication — 2026-11-08
+The page now observes the current matching publication receipt and navigates once to
+../requests/{requestId} when a complete/recovery result exists and operations/setup
+have settled. This preserves the shell mount path and lets the existing canDeactivate
+guard permit the transition without a discard prompt. A pending receipt, missing
+publish attempt or mismatched ID does not redirect; request failures without receipts
+retain the existing recovery state. Restored terminal published runs can also open
+their receipt detail. Confirmation guidance now describes the automatic receipt page.
+
+All 115 ChromeHeadless tests pass. New HTTP-backed routed tests cover complete and
+needs_recovery publication responses under /ai-publisher, actual generated request ID,
+no pre-response redirect, ignored prior receipt without an attempt, no discard prompt
+and the detail page's independent get_publishing_run read. Architecture, strict app/test
+types, production build/license and diff checks pass. Tests use HTTP doubles; no live
+publication was triggered. Existing unrelated receipt-page edits remain untouched.
+Local implementation complete; not deployed.

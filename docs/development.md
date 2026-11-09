@@ -246,3 +246,20 @@ shows progress alone during non-idle operations and restores phase panels at idl
 Activity-only view released in 4776c3e (2026-11-08). Deployment 42452383130 and
 validation 42452383173 succeeded with 113 tests; published application chunk matches
 the verified build. See spec 011 handoff for links and production verification.
+
+Publication panels (2026-11-08): 113 tests, architecture, strict app/test types,
+production build/license and diff checks pass. Isolated production sample confirms
+side-by-side confirmation/embedded checks on desktop and stacked panels at 390px
+without document overflow or receipt lookup controls. No live workshop operations
+or deployment performed. See spec 011 handoff.
+
+Single publication panel (2026-11-08): 113 tests and architecture/types/build/license/
+diff checks pass. Isolated production preview verified the centered 765px glass panel,
+viewport background and 358px mobile panel without overflow. No checks or lookup
+controls render on Publication. No live operations or deployment performed. This
+supersedes the earlier local two-panel layout; see spec 011 handoff.
+
+Publication receipt redirect (2026-11-08): 115 tests pass, including HTTP-backed mounted
+success/recovery redirects, current-run identity, no discard prompt and receipt detail
+loading. Architecture/types/build/license/diff checks pass. No live publication or
+deployment performed. See spec 011 handoff.

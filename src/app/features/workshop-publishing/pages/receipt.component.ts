@@ -1,4 +1,3 @@
-import { PublishingPreparationComponent } from '../components/publishing-preparation.component';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -18,9 +17,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgxInlineStatus } from '@tmdjr/ngx-workshop-design-system';
 import { PublishingActionsComponent } from '../components/publishing-actions.component';
+import { PublishingPreparationComponent } from '../components/publishing-preparation.component';
 import { PublishingStatusComponent } from '../components/publishing-status.component';
-import { ReceiptWorkspacePanelComponent } from '../components/receipt-workspace-panel.component';
 import { ReceiptStepResultComponent } from '../components/receipt-step-result.component';
+import { ReceiptWorkspacePanelComponent } from '../components/receipt-workspace-panel.component';
 import { ReceiptViewModel } from './receipt.view-model';
 
 @Component({
@@ -47,6 +47,7 @@ import { ReceiptViewModel } from './receipt.view-model';
       heading="Publishing receipt"
       (heightChange)="actionBarHeight.set($event)"
       [showBack]="true"
+      [showCreate]="false"
       [disabled]="vm.busy()"
       (back)="back()"
       (createWorkshop)="createWorkshop()"
@@ -56,15 +57,6 @@ import { ReceiptViewModel } from './receipt.view-model';
       aria-label="Publishing receipt"
       [attr.aria-busy]="vm.busy()"
     >
-      @if (vm.receipt()?.preparation; as preparation) {
-        <details>
-          <summary>Preparation skills and checks</summary>
-          <ngx-publishing-preparation
-            [report]="preparation"
-            [locked]="true"
-          />
-        </details>
-      }
       <div #workspace class="receipt__workspace">
         <div
           class="receipt__switch"
@@ -117,72 +109,67 @@ import { ReceiptViewModel } from './receipt.view-model';
           </button>
           <div class="receipt__summary">
             @if (vm.receipt(); as receipt) {
-              <ngx-publishing-status [status]="receipt.status" />
+            <ngx-publishing-status [status]="receipt.status" />
             }
             <h2>Request ID</h2>
             <p class="receipt__id">{{ vm.requestId() }}</p>
             @if (vm.busy()) {
-              <mat-progress-bar
-                mode="indeterminate"
-                aria-label="Loading publishing receipt"
-              />
-              <p role="status">Loading receipt…</p>
-            }
-            @if (vm.error()) {
-              <div class="receipt__error" role="alert">
-                {{ vm.error() }}
-                @if (!vm.invalid()) {
-                  <button
-                    mat-button
-                    type="button"
-                    [disabled]="vm.busy()"
-                    (click)="vm.refresh()"
-                  >
-                    Retry
-                  </button>
-                }
-              </div>
-            }
-            @if (vm.receipt(); as receipt) {
-              <h2>Progress</h2>
-              <p>{{ vm.progress() }}</p>
-              @if (vm.failedVerifications().length) {
-                <div
-                  class="receipt__verification-warning"
-                  role="status"
-                >
-                  <h2>Coding lab verification failed</h2>
-                  <p>
-                    Completed steps count finished operations, not
-                    passing tests. Review the failed verification
-                    results and fix the coding lab before continuing.
-                  </p>
-                  @for (
-                    failed of vm.failedVerifications();
-                    track failed.name
-                  ) {
-                    @if (failed.labEditorUrl; as url) {
-                      <a
-                        [href]="url"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        >Open {{ failed.label }} in coding lab editor
-                        ↗</a
-                      >
-                    }
-                  }
-                </div>
+            <mat-progress-bar
+              mode="indeterminate"
+              aria-label="Loading publishing receipt"
+            />
+            <p role="status">Loading receipt…</p>
+            } @if (vm.error()) {
+            <div class="receipt__error" role="alert">
+              {{ vm.error() }}
+              @if (!vm.invalid()) {
+              <button
+                mat-button
+                type="button"
+                [disabled]="vm.busy()"
+                (click)="vm.refresh()"
+              >
+                Retry
+              </button>
               }
-              @if (receipt.message) {
-                <h2>Message</h2>
-                <p>{{ receipt.message }}</p>
-              }
-              @if (receipt.status === 'needs_recovery') {
-                <p class="receipt__recovery">
-                  Keep this request ID and check its receipt before
-                  starting another publish attempt.
-                </p>
-              }
+            </div>
+            } @if (vm.receipt(); as receipt) {
+            <h2>Progress</h2>
+            <p>{{ vm.progress() }}</p>
+            @if (vm.failedVerifications().length) {
+            <div class="receipt__verification-warning" role="status">
+              <h2>Coding lab verification failed</h2>
+              <p>
+                Completed steps count finished operations, not passing
+                tests. Review the failed verification results and fix
+                the coding lab before continuing.
+              </p>
+              @for ( failed of vm.failedVerifications(); track
+              failed.name ) { @if (failed.labEditorUrl; as url) {
+              <a
+                [href]="url"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Open {{ failed.label }} in coding lab editor ↗</a
+              >
+              } }
+            </div>
+            } @if (receipt.message) {
+            <h2>Message</h2>
+            <p>{{ receipt.message }}</p>
+            } @if (receipt.status === 'needs_recovery') {
+            <p class="receipt__recovery">
+              Keep this request ID and check its receipt before
+              starting another publish attempt.
+            </p>
+            } } @if (vm.receipt()?.preparation; as preparation) {
+
+            <ngx-publishing-preparation
+              [report]="preparation"
+              [embedded]="true"
+              [locked]="true"
+            />
+
             }
           </div>
           <span receiptPanelFooter
@@ -202,58 +189,54 @@ import { ReceiptViewModel } from './receipt.view-model';
           >
           <ol class="receipt__steps" role="list">
             @for (step of vm.steps(); track $index) {
-              <li class="receipt__step">
-                <button
-                  class="receipt__step-button"
-                  type="button"
-                  [title]="step.label"
-                  [attr.aria-pressed]="vm.selectedIndex() === $index"
-                  (click)="selectStep($index)"
-                >
-                  <span class="receipt__step-number">{{
-                    $index + 1
-                  }}</span>
-                  <span class="receipt__step-label"
-                    >{{ step.label }}
-                    @if (step.verification; as verification) {
-                      <small
-                        class="receipt__verification-label"
-                        [class.receipt__verification-label--failed]="
-                          !verification.passed
-                        "
-                        >{{
-                          verification.passed
-                            ? 'Verification passed'
-                            : 'Verification failed'
-                        }}</small
-                      >
-                    }
-                  </span>
-                  <ngx-inline-status
-                    [label]="
-                      step.status === 'complete'
-                        ? 'Completed'
-                        : 'Pending'
+            <li class="receipt__step">
+              <button
+                class="receipt__step-button"
+                type="button"
+                [title]="step.label"
+                [attr.aria-pressed]="vm.selectedIndex() === $index"
+                (click)="selectStep($index)"
+              >
+                <span class="receipt__step-number">{{
+                  $index + 1
+                }}</span>
+                <span class="receipt__step-label"
+                  >{{ step.label }}
+                  @if (step.verification; as verification) {
+                  <small
+                    class="receipt__verification-label"
+                    [class.receipt__verification-label--failed]="
+                      !verification.passed
                     "
-                    [tone]="
-                      step.status === 'complete'
-                        ? 'success'
-                        : 'neutral'
-                    "
-                  />
-                  <mat-icon aria-hidden="true"
-                    >chevron_right</mat-icon
+                    >{{
+                      verification.passed
+                        ? 'Verification passed'
+                        : 'Verification failed'
+                    }}</small
                   >
-                </button>
-              </li>
+                  }
+                </span>
+                <ngx-inline-status
+                  [label]="
+                    step.status === 'complete'
+                      ? 'Completed'
+                      : 'Pending'
+                  "
+                  [tone]="
+                    step.status === 'complete' ? 'success' : 'neutral'
+                  "
+                />
+                <mat-icon aria-hidden="true">chevron_right</mat-icon>
+              </button>
+            </li>
             } @empty {
-              <li class="receipt__empty">
-                {{
-                  vm.busy()
-                    ? 'Loading publishing steps…'
-                    : 'No publishing steps reported yet.'
-                }}
-              </li>
+            <li class="receipt__empty">
+              {{
+                vm.busy()
+                  ? 'Loading publishing steps…'
+                  : 'No publishing steps reported yet.'
+              }}
+            </li>
             }
           </ol>
           <span receiptPanelFooter
@@ -272,15 +255,15 @@ import { ReceiptViewModel } from './receipt.view-model';
           scrollLabel="Scrollable selected step details"
         >
           @if (vm.selectedStep(); as step) {
-            <ngx-receipt-step-result [step]="step" />
+          <ngx-receipt-step-result [step]="step" />
           } @else {
-            <p class="receipt__empty">
-              {{
-                vm.busy()
-                  ? 'Loading step details…'
-                  : 'Select a publishing step to view its details.'
-              }}
-            </p>
+          <p class="receipt__empty">
+            {{
+              vm.busy()
+                ? 'Loading step details…'
+                : 'Select a publishing step to view its details.'
+            }}
+          </p>
           }
           <span receiptPanelFooter
             >Result JSON can be copied from the code block.</span

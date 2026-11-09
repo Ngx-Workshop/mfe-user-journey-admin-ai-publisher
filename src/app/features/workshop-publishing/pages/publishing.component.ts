@@ -24,6 +24,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   NgxButton,
+  NgxBackground,
+  NgxEntrance,
   NgxPanel,
 } from '@tmdjr/ngx-workshop-design-system';
 import { PublishingActionsComponent } from '../components/publishing-actions.component';
@@ -51,6 +53,8 @@ import { PublishingViewModel } from './publishing.view-model';
   },
   selector: 'ngx-workshop-publishing',
   imports: [
+    NgxBackground,
+    NgxEntrance,
     NgxPanel,
     NgTemplateOutlet,
     NgxButton,
@@ -119,31 +123,7 @@ import { PublishingViewModel } from './publishing.view-model';
       />
     </ngx-publishing-actions>
     <main #workspace class="publisher" aria-label="New workshop">
-      @if (
-        vm.operation() !== 'idle' ||
-        vm.step() === 0 ||
-        vm.step() === 1
-      ) {
-        <ng-container [ngTemplateOutlet]="workspaceContent" />
-      } @else {
-        <ngx-panel
-          [heading]="
-            vm.operation() === 'generate'
-              ? 'Creating your workshop draft'
-              : vm.step() === 0
-                ? 'Shape your workshop'
-                : vm.step() === 1
-                  ? 'Review your workshop'
-                  : 'Publish and confirm'
-          "
-          eyebrow="PUBLISHER / CREATE"
-          shape="stepped"
-          background="solid"
-          class="publisher__workspace"
-        >
-          <ng-container [ngTemplateOutlet]="workspaceContent" />
-        </ngx-panel>
-      }
+      <ng-container [ngTemplateOutlet]="workspaceContent" />
       <ng-template #workspaceContent>
         <h1 #phaseHeading class="publisher__title" tabindex="-1">
           {{
@@ -179,16 +159,6 @@ import { PublishingViewModel } from './publishing.view-model';
             [elapsed]="vm.elapsed()"
           />
         } @else {
-          @if (vm.step() === 2 && vm.preparation(); as report) {
-            <ngx-publishing-preparation
-              [report]="report"
-              [locked]="vm.working() || vm.attempted()"
-              (resume)="vm.resumeChecks()"
-              [repairOptions]="vm.repairOptions()"
-              [repairModel]="vm.model.value"
-              (repair)="vm.repair($event)"
-            />
-          }
           @if (vm.step() === 0) {
             <ngx-publishing-setup
               [model]="vm.model"
@@ -328,29 +298,78 @@ import { PublishingViewModel } from './publishing.view-model';
               </ngx-publishing-checks-panel>
             </div>
           } @else {
-            @if (vm.draft(); as draft) {
-              <ngx-publishing-confirmation
-                [draft]="draft"
-                [locked]="
-                  vm.working() || vm.initializing() || vm.attempted()
-                "
-                [reviewed]="vm.reviewed()"
-                (back)="vm.navigate(1)"
-                (publish)="vm.publish()"
-              />
-            }
-            <ngx-publishing-receipts
-              [showHistory]="false"
-              [history]="vm.history()"
-              [unconfirmed]="vm.unconfirmedRequests()"
-              [requestId]="vm.requestId()"
-              [receiptId]="vm.receiptId"
-              [receipt]="vm.receipt()"
-              [busy]="vm.working()"
-              [initializing]="vm.initializing()"
-              [attempted]="vm.attempted()"
-              (inspect)="vm.inspect()"
-            />
+            <div class="publisher__publication-layout">
+              <ngx-background placement="viewport" />
+              <ngx-panel
+                class="publisher__publication"
+                heading="Publish and confirm"
+                eyebrow="PUBLISHER / CREATE"
+                shape="stepped"
+                background="glass"
+                ngxEntrance="fade"
+              >
+                @if (vm.draft(); as draft) {
+                  <ngx-publishing-confirmation
+                    [draft]="draft"
+                    [locked]="
+                      vm.working() ||
+                      vm.initializing() ||
+                      vm.attempted()
+                    "
+                    [reviewed]="vm.reviewed()"
+                    [showActions]="false"
+                  />
+                }
+                <ngx-publishing-receipts
+                  [showHistory]="false"
+                  [showLookup]="false"
+                  [history]="vm.history()"
+                  [unconfirmed]="vm.unconfirmedRequests()"
+                  [requestId]="vm.requestId()"
+                  [receiptId]="vm.receiptId"
+                  [receipt]="vm.receipt()"
+                  [busy]="vm.working()"
+                  [initializing]="vm.initializing()"
+                  [attempted]="vm.attempted()"
+                />
+                <div
+                  ngxPanelActions
+                  class="publisher__publication-actions"
+                >
+                  <button
+                    mat-button
+                    ngxButton
+                    surface="outline"
+                    type="button"
+                    [disabled]="
+                      vm.working() ||
+                      vm.initializing() ||
+                      vm.attempted()
+                    "
+                    (click)="vm.navigate(1)"
+                  >
+                    Back to review
+                  </button>
+                  <button
+                    mat-flat-button
+                    ngxButton
+                    shape="chevron"
+                    type="button"
+                    [disabled]="
+                      !vm.draft() ||
+                      !vm.reviewed() ||
+                      !vm.checksReady() ||
+                      vm.working() ||
+                      vm.initializing() ||
+                      vm.attempted()
+                    "
+                    (click)="vm.publish()"
+                  >
+                    Publish reviewed workshop
+                  </button>
+                </div>
+              </ngx-panel>
+            </div>
           }
         }
       </ng-template>
@@ -466,6 +485,27 @@ import { PublishingViewModel } from './publishing.view-model';
         var(--publisher-sticky-top) +
           var(--publisher-action-height, 70px) + 16px
       );
+    }
+    .publisher__publication-layout {
+      position: relative;
+      isolation: isolate;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 765px;
+      min-width: 0;
+      margin-inline: auto;
+    }
+    .publisher__publication {
+      display: block;
+      min-width: 0;
+      height: auto;
+    }
+    .publisher__publication-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      width: 100%;
+      gap: 0.75rem;
     }
     .publisher__workspace {
       display: block;
@@ -672,6 +712,7 @@ export class PublishingComponent implements OnInit {
   }
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private redirectedReceiptId: string | null = null;
   private readonly generating = computed(
     () => this.vm.operation() === 'generate'
   );
@@ -715,6 +756,23 @@ export class PublishingComponent implements OnInit {
       if (this.refineRef) this.refineRef.disableClose = working;
       if (this.vm.step() !== 0 && this.sourceOpen)
         this.refineRef?.close();
+    });
+    effect(() => {
+      const receipt = this.vm.receipt();
+      if (
+        !receipt ||
+        receipt.status === 'running' ||
+        !this.vm.attempted() ||
+        this.vm.working() ||
+        this.vm.initializing() ||
+        receipt.requestId !== this.vm.requestId() ||
+        this.redirectedReceiptId === receipt.requestId
+      )
+        return;
+      this.redirectedReceiptId = receipt.requestId;
+      void this.router.navigate(['../requests', receipt.requestId], {
+        relativeTo: this.route,
+      });
     });
     afterRenderEffect(() => {
       this.vm.step();

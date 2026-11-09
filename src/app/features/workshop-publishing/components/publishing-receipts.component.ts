@@ -86,29 +86,37 @@ import { PublishingReceipt } from '../models/publishing.models';
       </p>
       @if (attempted()) {
         <p>
-          Keep this ID. Check its receipt if the connection fails
-          before starting another workshop.
+          Keep this ID.
+          @if (showLookup()) {
+            Check its receipt if the connection fails before starting
+            another workshop.
+          } @else {
+            Open Request history to check its receipt if the
+            connection fails before starting another workshop.
+          }
         </p>
       }
-      <mat-form-field class="receipts__field" appearance="outline">
-        <mat-label>Receipt request ID (optional)</mat-label>
-        <input
-          matInput
-          [formControl]="receiptId()"
-          placeholder="Leave blank to check this workshop"
-        />
-      </mat-form-field>
-      <button
-        class="receipts__button"
-        mat-flat-button
-        ngxButton
-        surface="outline"
-        type="button"
-        [disabled]="busy()"
-        (click)="inspect.emit()"
-      >
-        Check publishing receipt
-      </button>
+      @if (showLookup()) {
+        <mat-form-field class="receipts__field" appearance="outline">
+          <mat-label>Receipt request ID (optional)</mat-label>
+          <input
+            matInput
+            [formControl]="receiptId()"
+            placeholder="Leave blank to check this workshop"
+          />
+        </mat-form-field>
+        <button
+          class="receipts__button"
+          mat-flat-button
+          ngxButton
+          surface="outline"
+          type="button"
+          [disabled]="busy()"
+          (click)="inspect.emit()"
+        >
+          Check publishing receipt
+        </button>
+      }
       @if (receipt(); as current) {
         <div class="receipts__panel" role="status">
           <h3>
@@ -172,6 +180,7 @@ import { PublishingReceipt } from '../models/publishing.models';
   ],
 })
 export class PublishingReceiptsComponent {
+  readonly showLookup = input(true);
   readonly showHistory = input(true);
   readonly history = input.required<readonly PublishingReceipt[]>();
   readonly unconfirmed = input.required<readonly string[]>();

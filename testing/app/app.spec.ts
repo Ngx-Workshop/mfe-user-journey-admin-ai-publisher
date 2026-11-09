@@ -12,7 +12,10 @@ import { App } from '../../src/app/app';
 import { Routes } from '../../src/app/app.routes';
 import { OverviewComponent } from '../../src/app/features/workshop-publishing/pages/overview.component';
 import { PublishingComponent } from '../../src/app/features/workshop-publishing/pages/publishing.component';
-import { PublishingReceipt } from '../../src/app/features/workshop-publishing/models/publishing.models';
+import {
+  PublishingReceipt,
+  WorkshopDraft,
+} from '../../src/app/features/workshop-publishing/models/publishing.models';
 
 const run: PublishingReceipt = {
   requestId: '11111111-1111-4111-8111-111111111111',
@@ -73,6 +76,80 @@ describe('AI Publisher routed journey', () => {
       },
     });
     history();
+  }
+
+  for (const status of ['complete', 'needs_recovery'] as const) {
+    it(`opens the actual receipt detail after publishing finishes with ${status}`, async () => {
+      const harness = await RouterTestingHarness.create(
+        '/ai-publisher/new'
+      );
+      setup();
+      harness.detectChanges();
+      await harness.fixture.whenStable();
+      const page = harness.routeDebugElement!
+        .componentInstance as PublishingComponent;
+      const vm = page.vm;
+      const draft: WorkshopDraft = {
+        sectionId: 'angular',
+        name: 'Routing workshop',
+        summary: 'Learn routes',
+        level: 1,
+        pages: [],
+        labs: [],
+        assessment: {
+          name: 'Quiz',
+          subject: 'angular',
+          level: 1,
+          testQuestions: [],
+        },
+      };
+      vm.draft.set(draft);
+      vm.preparation.set({
+        preparationId: '22222222-2222-4222-8222-222222222222',
+        status: 'complete',
+        ready: true,
+        createdAt: '2026-11-08T12:00:00Z',
+        updatedAt: '2026-11-08T12:00:00Z',
+        activities: [],
+        repairCount: 0,
+        draft,
+      });
+      vm.step.set(2);
+      vm.reviewed.set(true);
+      vm.form.markAsDirty();
+      const confirm = spyOn(window, 'confirm');
+      const receipt = { ...run, requestId: vm.requestId(), status };
+      const router = TestBed.inject(Router);
+      vm.receipt.set({ ...receipt, status: 'complete' });
+      harness.detectChanges();
+      await harness.fixture.whenStable();
+      expect(router.url).toBe('/ai-publisher/new'); // Old/inspected receipts are not publish results.
+      vm.receipt.set(null);
+      vm.publish();
+      const publish = http.expectOne('/api/publisher/tools');
+      expect(publish.request.body.name).toBe('publish_workshop');
+      expect(publish.request.body.input.requestId).toBe(
+        receipt.requestId
+      );
+      expect(router.url).toBe('/ai-publisher/new');
+      publish.flush({ structuredContent: { data: receipt } });
+      harness.detectChanges();
+      await harness.fixture.whenStable();
+      expect(router.url).toBe(
+        '/ai-publisher/requests/' + receipt.requestId
+      );
+      expect(confirm).not.toHaveBeenCalled();
+      const read = http.expectOne('/api/publisher/tools');
+      expect(read.request.body).toEqual({
+        name: 'get_publishing_run',
+        input: { requestId: receipt.requestId },
+      });
+      read.flush({ structuredContent: { data: receipt } });
+      harness.detectChanges();
+      expect(harness.routeNativeElement!.textContent).toContain(
+        receipt.requestId
+      );
+    });
   }
   it('shows a draft in Request history, filters it, and continues the stable review link without a separate panel', async () => {
     const draftId = '22222222-2222-4222-8222-222222222222';
