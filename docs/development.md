@@ -1,6 +1,6 @@
 # Development and verification
 
-Updated 2026-10-14. Use Node 22 and the committed lockfile.
+Updated 2026-11-08. Use Node 22 and the committed lockfile.
 
 The webpack-based Angular builder is pinned to `@angular-devkit/build-angular`
 `21.2.26` as a direct dev dependency. An npm `overrides` entry pins webpack to
@@ -25,6 +25,25 @@ Npm 11 can omit optional peer entries that npm 10 requires for a clean install.
 | Test types | npx tsc --noEmit -p tsconfig.spec.json |
 
 Tests mirror runtime folders under testing/app and use HTTP/store doubles for publishing and application composition. Manual acceptance covers section browsing, generation, JSON import/edit, draft validation/review, publication and receipt recovery. These actions require a real administrator shell session and configured server-side model/owner services. Synthetic tests do not prove live generation or publication.
+
+Journey orchestration/tests are grouped under `pages/creation`, `pages/overview`
+and `pages/receipt`. Presenters/tests use `components/creation`, `overview`,
+`receipt` and `shared`. The Karma builder resolves `--include` relative to `src`,
+so targeted tests outside production source need the `../testing` prefix:
+
+```sh
+npm test -- --watch=false --browsers=ChromeHeadless \
+  --include=../testing/app/app.spec.ts \
+  --include=../testing/app/features/workshop-publishing/pages/creation/publishing.component.spec.ts
+```
+
+Spec 018 local verification: 118 ChromeHeadless tests, strict application/test
+types, architecture checks and isolated production build/license pass on Node
+22.23.3. The creation session provides both PublishingViewModel and
+DraftPersistenceViewModel; isolated VM tests must provide both. Progress replaces
+step content without resetting the session. Verify dialog teardown/locks, selected
+material retention, visible save/conflict retry and receipt navigation when changing
+these boundaries. Existing URLs remain unchanged; no deployment is implied.
 
 The local proxy routes /api/publisher to service-ai-publisher on port 3014, rewriting /api/publisher to /publisher. Runtime schemas/types come from @tmdjr/service-ai-publisher-contracts. The browser endpoint remains /api/publisher/tools with administrator credentials. The API has a 180-second timeout; a timeout may leave a server run active. Keep the displayed request ID and inspect its receipt before another publish. The shell's localhost remote override can load the local bundle. Build in an isolated output directory to avoid competing with a running watcher.
 
@@ -55,7 +74,7 @@ The publisher API and store return cold Observables: subscribe to execute them.
 The scoped VM owns lifetime-bound command subscriptions; do not call API clients
 from views or presenters. New presenters consume typed controls/data and emit
 intent. The architecture command checks API/state stream boundaries and blocks
-VM imports in presentation components (overview/wizard pages are explicit orchestrators).
+VM imports in presentation components (`pages/` contains explicit orchestrators).
 
 Tests cover cancellation, ordered setup after failures, duplicate commands,
 publication recovery, JSON edits, typed presentation intents and App composition.

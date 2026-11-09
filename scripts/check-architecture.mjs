@@ -6,11 +6,6 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const app = join(root, 'src/app');
 const errors = [];
 const warnings = [];
-const orchestrators = new Set([
-  'features/workshop-publishing/pages/publishing.component.ts',
-  'features/workshop-publishing/pages/overview.component.ts',
-  'features/workshop-publishing/pages/receipt.component.ts',
-]);
 const bem =
   /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:__[a-z0-9]+(?:-[a-z0-9]+)*)?(?:--[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
 function files(directory) {
@@ -56,7 +51,7 @@ for (const path of files(app)) {
       if (
         target.endsWith('.view-model') &&
         /@Component\s*\(/.test(text) &&
-        !orchestrators.has(name)
+        !name.includes('/pages/')
       ) {
         errors.push(
           `${name}: presentation components use typed inputs/outputs, not view models.`

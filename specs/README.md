@@ -48,6 +48,8 @@ the largest folder number is not automatically the active feature.
 
 | 017 Persistent workshop drafts | Deployed; live recovery verified | [Spec](017-persistent-drafts/spec.md) | [Plan](017-persistent-drafts/plan.md) | [Tasks](017-persistent-drafts/tasks.md) | [Handoff](017-persistent-drafts/handoff.md) |
 
+| 018 Journey composition | Complete locally; not deployed | [Spec](018-journey-composition/spec.md) | [Plan](018-journey-composition/plan.md) | [Tasks](018-journey-composition/tasks.md) | [Handoff](018-journey-composition/handoff.md) |
+
 Spec 011 brief workspace polish (2026-11-07): complete locally; baseline test failures
 and authenticated responsive evidence recorded in its handoff. Not deployed.
 

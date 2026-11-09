@@ -1,6 +1,6 @@
 # Architecture and external context
 
-Updated 2026-11-04 for [011 Publishing journey](../specs/011-publishing-journey/spec.md).
+Updated 2026-11-08 for [018 Journey composition](../specs/018-journey-composition/spec.md).
 
 ## Responsibilities and source map
 AI Publisher owns administrator workshop generation, import, review, validation, publication and receipt inspection. App provides a RouterOutlet. The exported Routes mount the overview and workshop creation workspace; standalone appConfig registers those routes. MCP catalog exploration and browser OAuth have moved to the independently federated mfe-user-journey-admin-mcp-gateway.
@@ -23,51 +23,92 @@ on subscription. Model credentials stay server-side.
   cancellation. Operation ownership prevents a previous finalizer unlocking the
   next ordered read. Cancelling browser writes retains unconfirmed IDs because
   server work may continue.
-- `pages/publishing.view-model.ts`: view-scoped typed forms, selected image,
+- `pages/creation/publishing.view-model.ts`: view-scoped typed forms, selected image,
   editable/reviewed draft, validation, current ID and receipt. An exhaustMap
   command stream rejects duplicates; concatMap orders setup reads and retains
   each setup error. JSON control changes invalidate review. takeUntilDestroyed
   cancels subscriptions; pass the explicitly injected shared-core DestroyRef to
   avoid implicit injection-context assumptions across federation secondaries.
-- `pages/publishing.component.ts`: creation lifecycle/composition, phase focus and
-  measured action-bar offset. Three explicit brief/review/publication workspaces
-  replace the Material stepper. PublishingJourneyComponent exposes guarded phase
-  navigation; successful generation/validation opens review. Publication requires
-  validated content and explicit review confirmation at both UI and VM boundaries.
-  The existing route guard blocks active work and confirms discarding drafts.
-- `components/publishing-{setup,journey,progress,confirmation}.component.ts`:
+- `pages/creation/draft-persistence.view-model.ts`: scoped JSON control, saved
+  revision, serialized/debounced autosave, conflict feedback and retry state.
+  The creation VM owns restoration of preparation/approval/publication state;
+  neither VM is provided at root.
+- `pages/creation/publishing.component.ts`: creation session, route/unsaved guard,
+  phase focus, action-bar offset, persistent material selection and receipt redirect.
+  It provides the shared creation VM, persistence VM and refinement controller.
+- `pages/creation/publishing-{brief,review,publication}-step.component.ts`: distinct
+  orchestration for each workspace, consuming the same session VM. Review alone
+  owns responsive tab orientation and sticky preview/checks layout. Step components
+  are recreated during progress; form and material selection survive in the session.
+- `pages/creation/publishing-refinement.component.ts`: import/refinement dialog UI
+  and scoped controller. Explicit injector sharing retains the creation session;
+  dialogs lock while working, close imports after validation and close on teardown.
+  Save failures are visible in both the page and dialog.
+- `components/creation/publishing-{setup,journey,progress,confirmation}.component.ts`:
   stateless brief/context composition, phase navigation, operation-specific activity
   display and publication checkpoint. The action presenter accepts an explicit status;
   existing overview/receipt callers retain a loading fallback.
-- `components/publishing-review.component.ts`: local material-type/outline selection;
+- `components/creation/publishing-review.component.ts`: material-type/outline selection;
   document/lab/assessment children render one selected resource. Source/image controls
   remain secondary refinements; source edits remove the validated preview until validation.
 - `utils/publishing-preview.ts`: pure block projection and HTTPS image URL checks.
   Rich HTML and Marked-rendered lab Markdown use Angular's normal sanitization.
   NgxCodeBlock renders code without execution. Diagrams/interactive quizzes have
   labeled source previews; assessment answers/feedback are explicitly revealed.
-- `pages/overview.view-model.ts`: scoped search/status state with computed
+- `pages/overview/overview.view-model.ts`: scoped search/status state with computed
   history rows and lifetime-bound exhaustMap read commands. No new HTTP contracts.
-- `pages/overview.component.ts`: history page composition and relative navigation.
-  `components/publishing-history.component.ts`: stateless history/filter presenter;
+- `pages/overview/overview.component.ts`: history page composition and relative navigation.
+  `components/overview/`: stateless history/filter/request presenters;
   includes session unconfirmed requests, empty/no-results/loading/error/retry states.
-- `components/publishing-{brief,model,images,source,review,receipts}.component.ts`:
+- `pages/receipt/`: receipt route, read cancellation, selection and responsive panel
+  layout. `components/receipt/`: typed summary/progress/result/panel presenters.
+  Summary emits retry; progress emits selection; neither injects a VM or store.
+- `components/shared/`: action bar, status and preparation/activity evidence used
+  across journeys. Only genuine cross-journey presentation belongs here.
+- `components/creation/publishing-{brief,model,images,source,review,receipts}.component.ts`:
   presentation only, typed inputs and user-intent outputs; no service/VM injection.
   Controls are supplied by the VM. `forms/publishing-form.ts` names the brief form.
 
-The creation compositor (347 lines) and review compositor (295 lines) are
-cohesive size exceptions: their inline phase/preview composition and responsive
-styles stay together while content rendering and setup are extracted. Existing
-receipt/history/filter size exceptions remain separate. HTML and SCSS are inline. Global standalone
+The creation shell is now 296 lines (formerly 822), receipt page 306 (formerly
+507), review-step compositor 265, and refinement dialog/controller 173. The shell
+keeps route protection, accessible phase focus and status/recovery composition;
+receipt keeps one responsive three-panel layout; review keeps one sticky
+three-column layout. These are cohesive inline-template/style exceptions, not
+permission to put step content back in the shell.
+
+Existing cohesive presenter exceptions: filters (340 lines, shared desktop/mobile
+fields and sizing), history (249, responsive request/issues layout), request panel
+(240, bounded list/loading/empty/error states), request row (265, identity/status/
+links/copy feedback), material review (263, content selection and safe previews),
+and preparation (241, compact/expanded evidence). No presenter owns server state.
+The creation command VM deliberately retains one exhaustMap stream for setup,
+preparation, repair, images and publication rather than parallel command owners
+that could bypass operation locks. Persistence is separate but still session-scoped.
+
+The checker permits VM-consuming orchestrators only in `pages/`; components may
+not import VMs, stores or APIs. Tests mirror the journey folders under `testing/app`.
+HTML and SCSS remain inline. Global standalone
 theme foundations remain in src/styles.scss; federated views inherit shell tokens.
 App/Routes/config remain entry points rather than feature state owners.
 
 ## External contracts and federation
-Published DTOs and Ajv schemas use installed @tmdjr/service-ai-publisher-contracts 1.0.5 (mcpPublisherContract). service-ai-publisher owns the browser facade and preparation state. The same-origin /api/publisher/tools path is routed through the verified Nginx TLS backhaul directly to publisher port 3014; the catalog gateway is outside this request path.
+Published DTOs and Ajv schemas use installed @tmdjr/service-ai-publisher-contracts 1.2.9 (mcpPublisherContract). service-ai-publisher owns the browser facade and preparation state. The same-origin /api/publisher/tools path is routed through the verified Nginx TLS backhaul directly to publisher port 3014; the catalog gateway is outside this request path.
 
 Keep named/default App, named Routes, federation name, ./Component, ./Routes, remoteEntry.js and Angular shared singletons. Default path redirects to overview; console redirects to new for existing creation links and hello-world redirects to overview. The new route is protected by the draft-preservation guard. Host route consumers mount the exported Routes under their prefix; a component-only consumer must register those child routes for the RouterOutlet entry. Standalone appConfig owns HTTP/Material animations/zoneless setup; the consuming shell supplies its existing HttpClient/session interceptors and theme.
 
 Build/deployment targets remain dist/mfe-user-journey-admin-ai-publisher and /opt/mfe-remotes/mfe-user-journey-admin-ai-publisher. No migration of stored content or publishing API changes. Historical specs 002/003 describe the former catalog/OAuth implementation; current ownership and migration evidence are in spec 005.
+
+The three creation phases intentionally remain under `/new`, with `?draft=` for
+durable restoration. Internal step composition does not require public step URLs
+or imply that approval survives refresh. Existing overview, receipt and legacy
+redirects are unchanged.
+
+## Historical migration notes
+
+The dated notes below explain prior iterations, not the current source tree or
+component-size allowances. The ownership map above and spec 018 supersede their
+flat paths and monolithic composition decisions. Earlier contract versions describe
+those releases; use the installed manifest and current external contract section.
 
 ## Publisher options — 2026-10-13
 PublishingComponent initializes ordered section/model/history reads through its scoped VM. PublishingOptionsComponent composes model/image presenters using that VM. The store retains unconfirmed submitted IDs for this app session; durable administrator-owned receipts come from list_publishing_runs (latest 100 by receipt modification time). The gateway enforces model choices. Prices are server reference rates; configuration can replace the model catalog. Unknown configured model prices are explicitly unavailable. Images are reviewed, inserted into the first documentation page as existing editor blocks and validated before publication. Images are not a separate workshop cover field.

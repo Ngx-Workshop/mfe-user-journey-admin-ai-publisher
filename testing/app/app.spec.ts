@@ -1,4 +1,5 @@
 import { MatDialog } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -10,8 +11,8 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { App } from '../../src/app/app';
 import { Routes } from '../../src/app/app.routes';
-import { OverviewComponent } from '../../src/app/features/workshop-publishing/pages/overview.component';
-import { PublishingComponent } from '../../src/app/features/workshop-publishing/pages/publishing.component';
+import { OverviewComponent } from '../../src/app/features/workshop-publishing/pages/overview/overview.component';
+import { PublishingComponent } from '../../src/app/features/workshop-publishing/pages/creation/publishing.component';
 import {
   PublishingReceipt,
   WorkshopDraft,
@@ -318,6 +319,124 @@ describe('AI Publisher routed journey', () => {
       'Enter a valid publishing request ID.'
     );
     http.expectNone('/api/publisher/tools');
+  });
+  it('surfaces invalid saved draft links with retry guidance without reading a draft', async () => {
+    const harness = await RouterTestingHarness.create(
+      '/ai-publisher/new?draft=invalid'
+    );
+    setup();
+    harness.detectChanges();
+    expect(
+      harness.routeNativeElement!.querySelector('[role="alert"]')
+        ?.textContent
+    ).toContain('Invalid saved draft link.');
+    expect(harness.routeNativeElement!.textContent).toContain(
+      'Retry save'
+    );
+    http.expectNone('/api/publisher/tools');
+  });
+  it('keeps refinement in the creation session during work and destroys it on departure', async () => {
+    const harness = await RouterTestingHarness.create(
+      '/ai-publisher/new'
+    );
+    setup();
+    harness.detectChanges();
+    const page = harness.routeDebugElement!
+      .componentInstance as PublishingComponent;
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>(
+        '[aria-label="Import workshop draft JSON"]'
+      )!
+      .click();
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    const dialog = TestBed.inject(MatDialog).openDialogs[0];
+    expect(dialog).toBeDefined();
+    page.vm.operation.set('validate');
+    harness.detectChanges();
+    expect(dialog.disableClose).toBeTrue();
+    expect(
+      harness.routeNativeElement!.querySelector(
+        'ngx-publishing-brief-step'
+      )
+    ).toBeNull();
+    expect(
+      document.querySelector('ngx-publishing-refinement')
+    ).not.toBeNull();
+    expect(
+      await TestBed.inject(Router).navigateByUrl(
+        '/ai-publisher/overview'
+      )
+    ).toBeFalse();
+    page.vm.operation.set('idle');
+    harness.detectChanges();
+    expect(dialog.disableClose).toBeFalse();
+    const closed = firstValueFrom(dialog.afterClosed());
+    await harness.navigateByUrl('/ai-publisher/overview');
+    history();
+    harness.detectChanges();
+    await closed;
+    expect(TestBed.inject(MatDialog).openDialogs.length).toBe(0);
+  });
+  it('renders saved-source conflicts and retries without losing edits or session identity', async () => {
+    const id = '22222222-2222-4222-8222-222222222222';
+    const saved = {
+      draftId: id,
+      version: 3,
+      name: 'Unfinished workshop',
+      status: 'edited',
+      createdAt: '2026-11-07T12:00:00Z',
+      updatedAt: '2026-11-07T12:00:00Z',
+      json: '{"name":"Unfinished workshop",',
+    };
+    const harness = await RouterTestingHarness.create(
+      '/ai-publisher/new?draft=' + id
+    );
+    setup();
+    http
+      .expectOne('/api/publisher/tools')
+      .flush({ structuredContent: { data: saved } });
+    const page = harness.routeDebugElement!
+      .componentInstance as PublishingComponent;
+    page.vm.json.setValue('local unfinished edits');
+    page.vm.retrySave();
+    http
+      .expectOne('/api/publisher/tools')
+      .flush({}, { status: 409, statusText: 'Conflict' });
+    harness.detectChanges();
+    expect(
+      harness.routeNativeElement!.querySelector('[role="alert"]')
+        ?.textContent
+    ).toContain('Copy your changes');
+    expect(harness.routeNativeElement!.textContent).toContain(
+      'Unsaved changes'
+    );
+    const retry = [
+      ...harness.routeNativeElement!.querySelectorAll('button'),
+    ].find((button) => button.textContent?.includes('Retry save'))!;
+    retry.click();
+    const request = http.expectOne('/api/publisher/tools');
+    expect(request.request.body.input).toEqual({
+      draftId: id,
+      version: 3,
+      json: 'local unfinished edits',
+    });
+    request.flush({
+      structuredContent: {
+        data: {
+          ...saved,
+          version: 4,
+          json: 'local unfinished edits',
+        },
+      },
+    });
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.textContent).toContain(
+      'Draft saved'
+    );
+    expect(page.vm.json.value).toBe('local unfinished edits');
+    expect(page.vm.savedDraftId()).toBe(id);
+    expect(page.vm.saveError()).toBe('');
   });
   it('replaces receipt reads on parameter changes without displaying a previous receipt', async () => {
     const harness = await RouterTestingHarness.create(
