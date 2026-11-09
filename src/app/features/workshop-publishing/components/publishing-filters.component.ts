@@ -98,10 +98,10 @@ import { observePanelBody } from '../utils/panel-body-viewport';
         aria-label="Publishing request summary"
       >
         @for (item of summary(); track item.label) {
-          <div>
-            <strong>{{ item.count }}</strong
-            ><span>{{ item.label }}</span>
-          </div>
+        <div>
+          <strong>{{ item.count }}</strong
+          ><span>{{ item.label }}</span>
+        </div>
         }
       </div>
       <!-- <p class="filters__scope">
@@ -203,6 +203,7 @@ import { observePanelBody } from '../utils/panel-body-viewport';
         display: flex;
         flex-direction: column;
         justify-content: center;
+        margin-top: 1rem;
       }
       .publishing-filters__search-row {
         display: grid;
@@ -254,6 +255,22 @@ import { observePanelBody } from '../utils/panel-body-viewport';
         .filters__summary div {
           padding: 0.5rem 0.2rem;
           font-size: 0.6rem;
+        }
+      }
+      @media (min-width: 901px) and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+        :host {
+          top: calc(
+            var(--publisher-toolbar-top, 52px) +
+              var(--publisher-action-bar-height, 64px) + 12px
+          );
+        }
+        // Two column layout for compact screens
+        .filters__summary {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        // Last child in .filters__summary should be hidden on compact layout
+        .filters__summary div:last-child {
+          display: none;
         }
       }
     `,
