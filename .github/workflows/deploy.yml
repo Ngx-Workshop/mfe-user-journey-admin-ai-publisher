@@ -52,7 +52,17 @@ jobs:
           npm run build -- --configuration production
           test -f dist/mfe-user-journey-admin-ai-publisher/index.html
 
-      - name: Copy static assets to frontend
+      - name: Prepare isolated static deployment
+        run: |
+          set -eu
+          mkdir -p .frontend-deploy/site
+          cp -R 'dist/mfe-user-journey-admin-ai-publisher/.' .frontend-deploy/site/
+          cp scripts/deploy-static.sh .frontend-deploy/
+          test -s .frontend-deploy/site/index.html
+          test -s .frontend-deploy/site/remoteEntry.js
+
+      - name: Upload complete build to staging
+        id: upload
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           version: '1.8.0'
@@ -60,7 +70,33 @@ jobs:
           username: root
           key: ${{ secrets.MFE_SSH_PRIVATE_KEY }}
           fingerprint: ${{ secrets.MFE_SSH_HOST_FINGERPRINT }}
-          source: 'dist/mfe-user-journey-admin-ai-publisher/*'
-          target: '/opt/mfe-remotes/mfe-user-journey-admin-ai-publisher/'
-          strip_components: 2
+          source: '.frontend-deploy/*'
+          target: '/opt/ngx-frontend-staging/mfe-user-journey-admin-ai-publisher/${{ github.run_id }}-${{ github.run_attempt }}'
+          strip_components: 1
           overwrite: true
+
+      - name: Promote validated build and remove obsolete assets
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
+        with:
+          host: ${{ secrets.MFE_DROPLET_IP }}
+          username: root
+          key: ${{ secrets.MFE_SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.MFE_SSH_HOST_FINGERPRINT }}
+          command_timeout: 15m
+          script: |
+            set -eu
+            sh '/opt/ngx-frontend-staging/mfe-user-journey-admin-ai-publisher/${{ github.run_id }}-${{ github.run_attempt }}/deploy-static.sh' '${{ github.run_id }}-${{ github.run_attempt }}'
+
+      - name: Clean upload staging
+        if: always() && steps.upload.outcome != 'skipped'
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
+        with:
+          host: ${{ secrets.MFE_DROPLET_IP }}
+          username: root
+          key: ${{ secrets.MFE_SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.MFE_SSH_HOST_FINGERPRINT }}
+          command_timeout: 5m
+          script: |
+            set -eu
+            staging='/opt/ngx-frontend-staging/mfe-user-journey-admin-ai-publisher/${{ github.run_id }}-${{ github.run_attempt }}'
+            if [ ! -d "$staging/previous" ]; then rm -rf -- "$staging"; fi

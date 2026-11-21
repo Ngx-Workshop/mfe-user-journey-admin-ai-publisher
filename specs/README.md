@@ -62,3 +62,5 @@ selection and below-fold measurements recorded in handoff. Not deployed.
 Production release 2026-11-08: brief and review layout follow-ups (011/014) deployed
 in fa03543. All 113 tests and both deployment/validation workflows pass; see spec 011
 production handoff for evidence. This supersedes prior local-only status notes.
+
+- [019-static-deployment-cleanup](019-static-deployment-cleanup/spec.md): Static deployment cleanup; helper verified, Actions rollout pending.
